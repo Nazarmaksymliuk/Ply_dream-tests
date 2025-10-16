@@ -35,7 +35,6 @@ public class SignIntoApplicationTest {
         Assertions.assertThat(signInPage.getTitle()).contains("Welcome back, sign in!");
         //Sign in to application
         signInPage.signIntoApplication(email, password);
-
     }
 
     @DisplayName("Sign into application negative test")
@@ -50,4 +49,5 @@ public class SignIntoApplicationTest {
         assertThat(signInPage.error())
                 .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(10000));
     }
+
 }

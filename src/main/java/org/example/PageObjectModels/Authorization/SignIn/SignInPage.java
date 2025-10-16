@@ -42,10 +42,9 @@ public class SignInPage {
         return errorAlert.isVisible();
     }
 
-
-
     public String getTheErrorMessageText(){
         return errorAlert.innerText();
     }
+
     public Locator error() { return errorAlert; }
 }
