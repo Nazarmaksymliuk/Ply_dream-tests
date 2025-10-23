@@ -112,7 +112,5 @@ public class WarehouseTest extends PlaywrightBaseTest {
 
         waitForElementPresent(firstWarehouseName);
         Assertions.assertThat(warehousesListPage.getWarehousesNamesList()).doesNotContain(firstWarehouseName);
-
     }
-
 }

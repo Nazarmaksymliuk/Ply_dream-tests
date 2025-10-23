@@ -28,7 +28,6 @@ public class WarehousePage {private final Page page;
         );
     }
 
-    // === Actions ===
     public MaterialSpecsPage clickOnAddNewMaterialButton() {
         addNewMaterialButton.waitFor(
                 new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE)
@@ -37,7 +36,6 @@ public class WarehousePage {private final Page page;
         return new MaterialSpecsPage(page);
     }
 
-    // (опційно) чек готовності сторінки
     public void waitForLoaded() {
         addNewMaterialButton.waitFor(
                 new Locator.WaitForOptions()

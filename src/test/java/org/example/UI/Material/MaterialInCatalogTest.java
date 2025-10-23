@@ -7,6 +7,7 @@ import org.example.PageObjectModels.Catalog.MaterialsTab.MaterialSpecsPage;
 import org.example.PageObjectModels.Catalog.MaterialsTab.PriceAndVariantsPage;
 import org.example.PageObjectModels.Catalog.MaterialsTab.StockSetupPage;
 import org.example.PageObjectModels.Material.MaterialPage;
+import org.example.PageObjectModels.Material.MaterialsListPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
     MaterialSpecsPage materialSpecsPage;
     PriceAndVariantsPage priceAndVariantsPage;
     StockSetupPage stockSetupPage;
+    MaterialsListPage materialsListPage;
 
     private final String defaultVariation = "Single";
     private final String defaultUnitOfMeasurement = "Ea";
@@ -32,6 +34,7 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
         openPath("/catalog");
         catalogPage = new CatalogPage(page);
         materialPage = new MaterialPage(page);
+        materialsListPage = new MaterialsListPage(page);
     }
 
     @DisplayName("Create material in Catalog Test")
@@ -53,38 +56,31 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
         );
 
         catalogPage.waitForLoaded();
-        // 2️⃣ Відкрити форму створення матеріалу
         materialSpecsPage =
                 catalogPage.clickAddItem(MaterialSpecsPage.class);
 
-        // 3️⃣ Заповнити основну інформацію
         materialSpecsPage.setMaterialName(material.name);
         materialSpecsPage.setItemNumber(material.itemNumber);
         materialSpecsPage.setDescription(material.description);
         materialSpecsPage.setBrand(material.brand);
         materialSpecsPage.setManufacturer(material.manufacturer);
 
-        // 4️⃣ Додати варіант
         materialSpecsPage.clickAddMaterialVariantButton();
         materialSpecsPage.setVariantName(material.variationName);
         materialSpecsPage.setVariantDescription(material.variationDescription);
 
-        // 5️⃣ Перейти на сторінку цін
         priceAndVariantsPage = materialSpecsPage.clickNextButton();
         priceAndVariantsPage.setCostForClient(material.costForClient);
         priceAndVariantsPage.setCostForBusiness(material.costForBusiness);
 
-        // 6️⃣ Перейти на сторінку складу
         stockSetupPage = priceAndVariantsPage.clickNextButton();
         stockSetupPage.clickAddLocationButton();
         stockSetupPage.clickChooseLocationButton();
 
-        // Вибрати склад і задати кількість
         stockSetupPage.selectWarehouse(warehouse);
         stockSetupPage.setQuantity(material.quantity);
         stockSetupPage.clickSaveLocationButton();
 
-        // 7️⃣ Зберегти створений матеріал
         stockSetupPage.clickSaveButton();
 
         AlertUtils.waitForAlertVisible(page);
@@ -92,14 +88,14 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
         Assertions.assertThat(alert).isEqualTo("%s has been successfully added", material.name);
         AlertUtils.waitForAlertHidden(page);
 
-        Assertions.assertThat(catalogPage.getFirstMaterialNameInTheList()).isEqualTo(material.name);
-        Assertions.assertThat(catalogPage.getFirstItemNumberInTheList()).isEqualTo(material.itemNumber);
+        Assertions.assertThat(materialsListPage.getFirstMaterialNameInTheList()).isEqualTo(material.name);
+        Assertions.assertThat(materialsListPage.getFirstItemNumberInTheList()).isEqualTo(material.itemNumber);
 
-        catalogPage.clickOnTheFirstLocationArrowDownButton();
+        materialsListPage.clickFirstLocationArrowDown();
 
-        Assertions.assertThat(catalogPage.getMaterialLocationInTheDropDown()).isEqualTo(warehouse);
-        Assertions.assertThat(catalogPage.getMaterialVariation()).isEqualTo(material.variationName);
-        Assertions.assertThat(catalogPage.getQtyInMaterialLocation()).isEqualTo(material.quantity);
+        Assertions.assertThat(materialsListPage.getMaterialLocationFromDropdown()).isEqualTo(warehouse);
+        Assertions.assertThat(materialsListPage.getFirstMaterialVariation()).isEqualTo(material.variationName);
+        Assertions.assertThat(materialsListPage.getQtyFromMaterialLocation()).isEqualTo(material.quantity);
     }
 
     @DisplayName("Update Material in the Catalog")
@@ -136,8 +132,8 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
 
         materialSpecsPage.clickSaveButtonInTheEditMaterialFlow();
 
-        Assertions.assertThat(catalogPage.getFirstMaterialNameInTheList()).isEqualTo(editedMaterial.name);
-        Assertions.assertThat(catalogPage.getFirstItemNumberInTheList()).isEqualTo(editedMaterial.itemNumber);
+        Assertions.assertThat(materialsListPage.getFirstMaterialNameInTheList()).isEqualTo(editedMaterial.name);
+        Assertions.assertThat(materialsListPage.getFirstItemNumberInTheList()).isEqualTo(editedMaterial.itemNumber);
 
     }
 
@@ -146,13 +142,13 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
     public void deleteMaterialInCatalogTest(){
         catalogPage.waitForLoaded();
 
-        String firstNameForDeleting = catalogPage.getFirstMaterialNameInTheList();
+        String firstNameForDeleting = materialsListPage.getFirstMaterialNameInTheList();
 
         catalogPage.openFirstRowThreeDots();
         catalogPage.chooseMenuDeleteMaterial();
-        catalogPage.clickDeleteMaterialInConfirmationModalButton();
+        catalogPage.confirmDeleteMaterialInModal();
 
-        Assertions.assertThat(catalogPage.getMaterialNamesList()).doesNotContain(firstNameForDeleting);
+        Assertions.assertThat(materialsListPage.getMaterialNamesList()).doesNotContain(firstNameForDeleting);
     }
 
 
