@@ -18,5 +18,8 @@ public class Job {
         this.truckName = truckName;
     }
 
-
+    public Job(String jobName, String truckName) {
+        this.jobName = jobName;
+        this.truckName = truckName;
+    }
 }

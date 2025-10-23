@@ -1,16 +1,13 @@
 package org.example.BaseTestExtension;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.*;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+
 import java.nio.file.Paths;
 import java.util.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.*;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
@@ -72,6 +69,8 @@ public abstract class PlaywrightBaseTest {
         playwright = Playwright.create();
         api = playwright.request().newContext(
                 new APIRequest.NewContextOptions().setBaseURL(API_BASE)
+                        .setIgnoreHTTPSErrors(true)
+
         );
 
         // 2) Логін
@@ -106,12 +105,30 @@ public abstract class PlaywrightBaseTest {
                 new BrowserType.LaunchOptions()
                         .setHeadless(false)   // ← зроби true у CI
                         .setSlowMo(80)        // ← зручно локально, можна прибрати у CI
+                        .setArgs(Arrays.asList(
+                                "--disk-cache-size=0",
+                                "--disable-application-cache",
+                                "--disable-dev-shm-usage"
+                        ))
         );
         context = browser.newContext(
                 new Browser.NewContextOptions()
                         //.setExtraHTTPHeaders(Map.of("Authorization", "Bearer " + auth.token)
                         .setIgnoreHTTPSErrors(true)
+                        .setBypassCSP(true) // іноді рятує, якщо SW/скрипт блокує
+
         );
+
+        // Додаємо no-cache до всіх запитів
+        context.route("**/*", route -> {
+            Request req = route.request();
+            Map<String, String> headers = new HashMap<>(req.headers());
+            headers.put("Cache-Control", "no-cache, no-store, must-revalidate");
+            headers.put("Pragma", "no-cache");
+            headers.put("Expires", "0");
+            route.resume(new Route.ResumeOptions().setHeaders(headers));
+        });
+
 
         // 6) Поставити ключі ДО старту сторінки
         String initScript = """
@@ -125,16 +142,20 @@ public abstract class PlaywrightBaseTest {
         );
         context.addInitScript(initScript);
 
-//        // 7) Відкрити корінь — уже авторизовано
+        // 7) Відкрити корінь — уже авторизовано
         page = context.newPage();
-        page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
 
-        // 8) Переконатися, що бек прийняв токен (чекаємо /users == 200)
-        page.waitForResponse(r -> r.url().contains("/users") && r.status() == 200, () -> {
-        });
-        // (опційно) можна зачекати стабільний селектор
-        //page.waitForSelector("[class='header_dashboard_title']");
 
+
+        //ЗАБРАВ, для того, щоб швидше піднімався тест і юзер зразу заходив на правильну сторінку
+        //page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED).setTimeout(60000));
+
+//        // 8) Переконатися, що бек прийняв токен (чекаємо /users == 200)
+//        page.waitForResponse(r -> r.url().contains("/users") && r.status() == 200, () -> {
+//        });
+//        // (опційно) можна зачекати стабільний селектор
+//        //page.waitForSelector("[class='header_dashboard_title']");
+//
         // 9) (опційно) зберегти state для перезапусків/паралелі
         context.storageState(new BrowserContext.StorageStateOptions()
                 .setPath(Paths.get("build/auth-storage-state.json")));
@@ -157,12 +178,38 @@ public abstract class PlaywrightBaseTest {
         return context.newPage();
     }
 
+
+
     /**
      * Відкрити шлях у поточній сторінці (наприклад, "/invoices").
      */
     protected void openPath(String path) {
-        page.navigate(UI_BASE + path, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+        page.navigate(
+                UI_BASE + path,
+                new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(80000) // таймаут у мілісекундах (тут 60 секунд)
+        );
     }
+
+
+    //WAITS
+    public void waitForElementPresent(String elementName) {
+        page.getByText(elementName).waitFor(
+                new Locator.WaitForOptions()
+                        .setState(WaitForSelectorState.VISIBLE)
+                        .setTimeout(15000)
+        );
+    }
+
+    public void waitForElementRemoved(String elementName) {
+        page.getByText(elementName).waitFor(
+                new Locator.WaitForOptions()
+                        .setState(WaitForSelectorState.DETACHED)
+                        .setTimeout(15000)
+        );
+    }
+
 
     /**
      * Доступ до токена, якщо потрібен у тесті.

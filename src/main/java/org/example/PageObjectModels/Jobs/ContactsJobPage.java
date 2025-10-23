@@ -2,6 +2,7 @@ package org.example.PageObjectModels.Jobs;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.AriaRole;
 
 public class ContactsJobPage {
     private final Page page;
@@ -10,6 +11,8 @@ public class ContactsJobPage {
     private final Locator clientPhoneNumber;
     private final Locator noteField;
     private final Locator addJobButton;
+    private final Locator editJobButton;
+
 
     public ContactsJobPage(Page page) {
         this.page = page;
@@ -17,7 +20,8 @@ public class ContactsJobPage {
         clientName = page.getByPlaceholder("Enter client's name");
         clientPhoneNumber = page.getByPlaceholder("Enter phone number");
         noteField = page.getByPlaceholder("If necessary, you can leave a note");
-        addJobButton = page.getByText("Add Job");
+        addJobButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Job"));
+        editJobButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Edit Job"));
     }
 
     public void setClientName(String clientNameValue) {
@@ -35,6 +39,9 @@ public class ContactsJobPage {
 
     public void clickAddJobButton() {
         addJobButton.click();
+    }
+    public void clickEditJobButton() {
+        editJobButton.click();
     }
 
     public boolean isAddJobButtonVisible() {

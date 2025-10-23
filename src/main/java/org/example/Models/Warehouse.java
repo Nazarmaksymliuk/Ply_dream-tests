@@ -16,4 +16,11 @@ public class Warehouse {
         this.zip = zip;
         this.apt = apt;
     }
+    public Warehouse(String name, String address, String city, String zip, String apt) {
+        this.name = name;
+        this.address = address;
+        this.city = city;
+        this.zip = zip;
+        this.apt = apt;
+    }
 }
