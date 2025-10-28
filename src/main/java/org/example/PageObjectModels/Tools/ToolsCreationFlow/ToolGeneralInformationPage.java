@@ -1,11 +1,11 @@
-package org.example.PageObjectModels.Catalog.ToolsTab;
+package org.example.PageObjectModels.Tools.ToolsCreationFlow;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
-public class GeneralInformationPage {
+public class ToolGeneralInformationPage {
     private final Page page;
     // === Локатори за placeholder ===
     private final Locator toolNameInput;
@@ -15,13 +15,13 @@ public class GeneralInformationPage {
     private final Locator nextButton;
 
 
-    public GeneralInformationPage(Page page) {
+    public ToolGeneralInformationPage(Page page) {
         this.page = page;
 
         toolNameInput = page.getByPlaceholder("Enter tool name");
         mfgNumberInput = page.getByPlaceholder("Enter MFG #");
         toolDescriptionInput = page.getByPlaceholder("Enter tool description");
-        tagsInput = page.getByPlaceholder("Enter Tags");
+        tagsInput = page.locator("[class='react_select__input']");
         nextButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Next"));
 
 
@@ -49,9 +49,9 @@ public class GeneralInformationPage {
         page.keyboard().press("Enter");
     }
 
-    public AddUnitsPage clickNextPage(){
+    public AddEditUnitsPage clickNextPage(){
         nextButton.click();
-        return new AddUnitsPage(page);
+        return new AddEditUnitsPage(page);
     }
 
 

@@ -32,7 +32,7 @@ public class CreateWarehousePopUpPage {
         warehouseCityInput    = page.locator("input[placeholder='Enter city'][name='city']");
         warehouseZipInput     = page.locator("input[placeholder='Zip Code']");
 
-        stateDropdown = page.locator("text=State / Province").first();
+        stateDropdown = page.getByText("State / Province").nth(1);
         firstStateOption = page.locator(".react_select__option")
                 .or(page.locator("div[role='option']:not(.disabled)"))
                 .first();
@@ -70,7 +70,7 @@ public class CreateWarehousePopUpPage {
 
     /** Встановити значення в поле State (якщо там не select, а input з автодоповненням) */
     public void setWarehouseState(String state) {
-        openStateList(); // відкриваємо список
+        setFirstStateForLocation(); // відкриваємо список
         // вибрати опцію за текстом (стабільніше за індекс)
         page.locator(".react_select__option").filter(new Locator.FilterOptions().setHasText(state))
                 .first()
@@ -78,15 +78,16 @@ public class CreateWarehousePopUpPage {
     }
 
     /** Клік по дропдауну, щоб відкрити список штатів/провінцій */
-    public void openStateList() {
+    public void setFirstStateForLocation() {
         stateDropdown.scrollIntoViewIfNeeded();
         stateDropdown.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         stateDropdown.click();
+        page.keyboard().press("Enter");
     }
 
     /** Вибрати першу доступну опцію штату/провінції у списку */
     public void chooseFirstWarehouseState() {
-        openStateList();
+        setFirstStateForLocation();
         firstStateOption.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
         firstStateOption.click();
     }

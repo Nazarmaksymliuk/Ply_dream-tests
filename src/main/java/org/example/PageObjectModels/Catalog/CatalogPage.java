@@ -4,7 +4,9 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
-import org.example.PageObjectModels.Catalog.MaterialsTab.MaterialSpecsPage;
+import org.example.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
+import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
+import org.example.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
 
 import java.util.List;
 
@@ -15,13 +17,24 @@ public class CatalogPage {
     private final Locator addItemButton;
     private final Locator consumablesTab;
     private final Locator toolsTab;
-    private final Locator firstRowThreeDots;
-    private final Locator menuItemEdit;
-    private final Locator menuItemDelete;
+    private final Locator kitsTab;
+    private final Locator firstRowMaterialThreeDots;
+    private final Locator firstRowKitThreeDots;
+    private final Locator menuMaterialEdit;
+    private final Locator menuMaterialDelete;
+    private final Locator menuItemDeleteTool;
     private final Locator editPricePenButton;
     private final Locator pageHeader;
     private final Locator materialNamesInTheList;
     private final Locator deleteMaterialInConfirmationModalButton;
+    private final Locator deleteItemInConfirmationModalButton;
+    private final Locator menuItemEditToolUnit;
+    private final Locator menuKitInfoEdit;
+
+
+    private final Locator menuItemEdit;
+    private final Locator menuItemDelete;
+
 
 
 
@@ -40,16 +53,44 @@ public class CatalogPage {
                 AriaRole.TAB,
                 new Page.GetByRoleOptions().setName("Tools")
         );
-        firstRowThreeDots = page
-                .locator("[div^='_table_item_'][data-testid='MoreHorizIcon']");
+        kitsTab = page.getByRole(
+                AriaRole.TAB,
+                new Page.GetByRoleOptions().setName("Kits")
+        );
+        firstRowMaterialThreeDots = page
+                .locator("[class^='_table_body_']")
+                .locator("[data-testid='MoreHorizIcon']").first();
 
-        menuItemEdit = page.getByRole(
+        firstRowKitThreeDots = page
+                .locator("[data-testid='MoreHorizIcon']").first();
+
+        menuMaterialEdit = page.getByRole(
                 AriaRole.MENUITEM,
                 new Page.GetByRoleOptions().setName("Edit Material")
         );
-        menuItemDelete = page.getByRole(
+        menuItemEdit = page.getByRole(
+                AriaRole.MENUITEM,
+                new Page.GetByRoleOptions().setName("Edit") //// MAINNNNNNNNNN
+        );
+        menuKitInfoEdit = page.getByRole(
+                AriaRole.MENUITEM,
+                new Page.GetByRoleOptions().setName("Edit Kit Info") //// MAINNNNNNNNNN
+        );
+        menuItemEditToolUnit = page.getByRole(
+                AriaRole.MENUITEM,
+                new Page.GetByRoleOptions().setName("Edit Unit Info")
+        );
+        menuMaterialDelete = page.getByRole(
                 AriaRole.MENUITEM,
                 new Page.GetByRoleOptions().setName("Delete Material")
+        );
+        menuItemDelete = page.getByRole(
+                AriaRole.MENUITEM,
+                new Page.GetByRoleOptions().setName("Delete")   ////MAINNNNNNNN
+        );
+        menuItemDeleteTool = page.getByRole(
+                AriaRole.MENUITEM,
+                new Page.GetByRoleOptions().setName("Delete Tool")
         );
         editPricePenButton = page
                 .getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Edit price"))
@@ -61,6 +102,10 @@ public class CatalogPage {
         materialNamesInTheList      = page.locator("a.link_black[href^='/material/']");
         deleteMaterialInConfirmationModalButton =
                 page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete Material"));
+
+        deleteItemInConfirmationModalButton =
+                page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete"));
+
 
 
     }
@@ -83,6 +128,22 @@ public class CatalogPage {
         }
     }
 
+    public <T> T chooseMenuActionEdit(Class<T> returnPageClass) {
+        menuItemEdit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuItemEdit.click();
+        try {
+            return returnPageClass.getDeclaredConstructor(Page.class).newInstance(page);
+        } catch (Exception e) {
+            throw new RuntimeException("Не вдалося створити екземпляр сторінки: " + returnPageClass.getSimpleName(), e);
+        }
+    }
+
+    public void chooseMenuActionDelete() {
+        menuItemDelete.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuItemDelete.click();
+
+    }
+
     public void openConsumablesTab() {
         consumablesTab.click();
     }
@@ -90,21 +151,44 @@ public class CatalogPage {
     public void openToolsTab() {
         toolsTab.click();
     }
+    public void openKitsTab() {
+        kitsTab.click();
+    }
 
-    public void openFirstRowThreeDots() {
-        firstRowThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-        firstRowThreeDots.click();
+    public void openFirstRowMaterialThreeDots() {
+        firstRowMaterialThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        firstRowMaterialThreeDots.click();
+    }
+    public void openFirstRowKitThreeDots() {
+        firstRowKitThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        firstRowKitThreeDots.click();
     }
 
     public MaterialSpecsPage chooseMenuEditMaterial() {
-        menuItemEdit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-        menuItemEdit.click();
+        menuMaterialEdit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuMaterialEdit.click();
         return new MaterialSpecsPage(page);
     }
 
+    public AddEditUnitsPage chooseMenuEditToolUnit() {
+        menuItemEditToolUnit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuItemEditToolUnit.click();
+        return new AddEditUnitsPage(page);
+    }
+    public KitGeneralInformationPage chooseMenuEditKit() {
+        menuKitInfoEdit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuKitInfoEdit.click();
+        return new KitGeneralInformationPage(page);
+    }
+
     public MaterialSpecsPage chooseMenuDeleteMaterial() {
-        menuItemDelete.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-        menuItemDelete.click();
+        menuMaterialDelete.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuMaterialDelete.click();
+        return new MaterialSpecsPage(page);
+    }
+    public MaterialSpecsPage chooseMenuDeleteTool() {
+        menuItemDeleteTool.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuItemDeleteTool.click();
         return new MaterialSpecsPage(page);
     }
 
@@ -114,6 +198,10 @@ public class CatalogPage {
     }
     public void confirmDeleteMaterialInModal() {
         deleteMaterialInConfirmationModalButton.click();
+    }
+
+    public void confirmDeleteItemInModal() {
+        deleteItemInConfirmationModalButton.click();
     }
 
     public List<String> getMaterialNamesList(){

@@ -83,7 +83,7 @@ public class JobsTest extends PlaywrightBaseTest {
         Assertions.assertThat(activeJobsPage.getFirstJobName()).isVisible();
         Assertions.assertThat(activeJobsPage.getFirstJobName()).isEqualTo(customJob.jobName);
         Assertions.assertThat(activeJobsPage.getJobList()).contains(customJob.jobName);
-        Assertions.assertThat(activeJobsPage.getFirstClientsPhoneNumber()).isEqualTo( "+1" + customJob.clientPhone);
+        Assertions.assertThat(activeJobsPage.getFirstClientsPhoneNumber()).isEqualTo( "+1" + clientContacts.clientPhone);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         LocalDate actualDate = LocalDate.parse(activeJobsPage.getFirstStartDate(), formatter);
@@ -118,11 +118,11 @@ public class JobsTest extends PlaywrightBaseTest {
         PlaywrightAssertions.assertThat(activeJobsPage.getAlertMessageLocator()).isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(15000));
 
 
-        activeJobsPage.waitForJobVisible(customJob.jobName);
+        activeJobsPage.waitForJobVisible(editedJob.jobName);
         Assertions.assertThat(activeJobsPage.getFirstJobName()).isVisible();
-        Assertions.assertThat(activeJobsPage.getFirstJobName()).isEqualTo(customJob.jobName);
-        Assertions.assertThat(activeJobsPage.getJobList()).contains(customJob.jobName);
-        Assertions.assertThat(activeJobsPage.getFirstClientsPhoneNumber()).isEqualTo( "+1" + customJob.clientPhone);
+        Assertions.assertThat(activeJobsPage.getFirstJobName()).isEqualTo(editedJob.jobName);
+        Assertions.assertThat(activeJobsPage.getJobList()).contains(editedJob.jobName);
+        Assertions.assertThat(activeJobsPage.getFirstClientsPhoneNumber()).isEqualTo( "+1" + editedeClientContacts.clientPhone);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         LocalDate actualDate = LocalDate.parse(activeJobsPage.getFirstStartDate(), formatter);
@@ -160,6 +160,8 @@ public class JobsTest extends PlaywrightBaseTest {
         Assertions.assertThat(finishedJobsPage.getJobList()).contains(jobForFinishName);
 
     }
+
+
 
 
 

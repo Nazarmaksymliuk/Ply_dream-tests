@@ -5,6 +5,7 @@ import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
 import org.example.Models.Supplier;
+import org.example.PageObjectModels.Alerts.AlertUtils;
 import org.example.PageObjectModels.Suppliers.SupplierPopUpPage;
 import org.example.PageObjectModels.Suppliers.SuppliersPage;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +50,12 @@ public class SuppliersTest extends PlaywrightBaseTest {
 
         supplierPopUpPage.clickSaveButton();
 
-        PlaywrightAssertions.assertThat(suppliersPage.getFirstSupplierNameLocator()).isVisible();
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Supplier successfully added");
+        AlertUtils.waitForAlertHidden(page);
+
+        waitForElementPresent(expectedSupplier.name);
         Assertions.assertThat(suppliersPage.getFirstSupplierName()).isEqualTo(expectedSupplier.name);
         Assertions.assertThat(suppliersPage.getFirstContactName()).isEqualTo(expectedSupplier.contactName);
         Assertions.assertThat(suppliersPage.getFirstSupplierEmail()).isEqualTo(expectedSupplier.contactEmail);
@@ -64,7 +70,7 @@ public class SuppliersTest extends PlaywrightBaseTest {
             "Fast delivery every Monday note edited", // note
             faker.name().fullName() + " " + "edited" ,
             // contactName
-            faker.internet().emailAddress() + " " + "edited",    // contactEmail
+            faker.internet().emailAddress() + "edited",    // contactEmail
             "0987654321"           // contactPhone
     );
     @DisplayName("Update Supplier Test")
@@ -84,13 +90,16 @@ public class SuppliersTest extends PlaywrightBaseTest {
 
         supplierPopUpPage.clickSaveButton();
 
-        waitForElementPresent(editedSupplier.name);
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Supplier successfully updated");
+        AlertUtils.waitForAlertHidden(page);
 
-        PlaywrightAssertions.assertThat(suppliersPage.getFirstSupplierNameLocator()).isVisible();
+        waitForElementPresent(editedSupplier.name);
         Assertions.assertThat(suppliersPage.getFirstSupplierName()).isEqualTo(editedSupplier.name);
         Assertions.assertThat(suppliersPage.getFirstContactName()).isEqualTo(editedSupplier.contactName);
         Assertions.assertThat(suppliersPage.getFirstSupplierEmail()).isEqualTo(editedSupplier.contactEmail);
-        Assertions.assertThat(suppliersPage.getFirstSupplierPhone()).isEqualTo(editedSupplier.contactPhone);
+        Assertions.assertThat(suppliersPage.getFirstSupplierPhone()).isEqualTo("+1" + editedSupplier.contactPhone);
         Assertions.assertThat(suppliersPage.getFirstSupplierCity()).isEqualTo(editedSupplier.city);
 
     }
@@ -105,6 +114,12 @@ public class SuppliersTest extends PlaywrightBaseTest {
         suppliersPage.clickOnThreeDotsButton();
         suppliersPage.clickDeleteSupplierMenuButton();
         suppliersPage.clickDeleteSupplierInConfirmationModalButton();
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Supplier successfully deleted");
+        AlertUtils.waitForAlertHidden(page);
+
 
         waitForElementRemoved(supplierName);
         Assertions.assertThat(suppliersPage.getSuppliersList()).doesNotContain(supplierName);

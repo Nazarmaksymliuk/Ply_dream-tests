@@ -1,4 +1,4 @@
-package org.example.PageObjectModels.Catalog.MaterialsTab;
+package org.example.PageObjectModels.Material.MaterialsCreationFlow;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
@@ -7,7 +7,7 @@ import com.microsoft.playwright.options.WaitForSelectorState;
 
 import java.util.List;
 
-public class StockSetupPage {
+public class MaterialStockSetupPage {
     private final Page page;
 
     // === Locators ===
@@ -23,7 +23,7 @@ public class StockSetupPage {
     private final Locator errorToast;
 
     // === Constructor ===
-    public StockSetupPage(Page page) {
+    public MaterialStockSetupPage(Page page) {
         this.page = page;
 
         addLocationButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Location"));

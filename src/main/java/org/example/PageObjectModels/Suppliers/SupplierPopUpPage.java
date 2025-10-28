@@ -45,6 +45,13 @@ public class SupplierPopUpPage {
         supplierContactEmail.fill(supplierContactEmailValue);
     }
     public void setSupplierContactPhone(String supplierContactPhoneValue) {
+        supplierContactPhone.click();
+        // очищаємо, поки не залишиться лише +1
+        while (!supplierContactPhone.inputValue().equals("+1")) {
+            supplierContactPhone.press("Backspace");
+            if (supplierContactPhone.inputValue().equals("+1")) break;
+        }
+
         supplierContactPhone.type(supplierContactPhoneValue);
     }
     public void clickSaveButton() {

@@ -13,12 +13,15 @@ public class StockPage {
     private final Locator warehousesTabButton;
     private final Locator trucksTabButton;
 
+    private final Locator menuItemEdit;
+
+
     // === Конструктор ===
     public StockPage(Page page) {
         this.page = page;
 
         warehousesTabButton = page.getByRole(
-                AriaRole.BUTTON,
+                AriaRole.TAB,
                 new Page.GetByRoleOptions().setName("Warehouses")
         );
 
@@ -26,7 +29,17 @@ public class StockPage {
                 AriaRole.TAB,
                 new Page.GetByRoleOptions().setName("Fleet")
         ).or(page.getByText("Fleet"));
+
+
+        menuItemEdit = page.getByRole(
+                AriaRole.MENUITEM,
+                new Page.GetByRoleOptions().setName("Edit") //// MAINNNNNNNNNN FIRSTTTTTTTTT
+        )
+                .first();
+
     }
+
+
 
     public WarehousesListPage clickWarehousesTabButton() {
         warehousesTabButton.waitFor(
@@ -40,6 +53,15 @@ public class StockPage {
         return warehousesTabButton;
     }
 
+    public <T> T chooseMenuActionEdit(Class<T> returnPageClass) {
+        menuItemEdit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuItemEdit.click();
+        try {
+            return returnPageClass.getDeclaredConstructor(Page.class).newInstance(page);
+        } catch (Exception e) {
+            throw new RuntimeException("Не вдалося створити екземпляр сторінки: " + returnPageClass.getSimpleName(), e);
+        }
+    }
 
 
     // (опційно) Можеш додати вейт на завантаження сторінки

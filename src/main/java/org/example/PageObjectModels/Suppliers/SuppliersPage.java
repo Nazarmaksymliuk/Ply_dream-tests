@@ -26,12 +26,12 @@ public class SuppliersPage {
         this.page = page;
 
         addSupplierButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Supplier"));
-        firstSupplierName = page.locator("[class^='truncate'][href='/supplier']").first();
+        firstSupplierName = page.locator("[class^='truncate'][href^='/supplier']").first();
         supplierNames = page.locator("[class^='truncate'][href='/supplier']");
         firstContactName = page.locator("[role='cell'][data-field='contactName']").first();
         firstSupplierEmail = page.locator("[role='cell'][data-field='businessEmail']").first();
         firstSupplierPhone = page.locator("[role='cell'][data-field='phoneNumber']").first();
-        firstSupplierCity = page.locator("[role='cell'][data-field='city']");
+        firstSupplierCity = page.locator("[role='cell'][data-field='city']").first();
         threeDotsButton = page.getByTestId("MoreHorizIcon").first();
         editSupplierButton = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Edit"));
         deleteSupplierButton = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Delete"));

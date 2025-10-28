@@ -32,8 +32,7 @@ public class LocationSelect {
         this.input   = page.locator("div.react_select__input-container input");
         this.options = page.locator("div.react_select__menu-list div.react_select__option");
 
-        locationSelect      = page.getByPlaceholder("Select location")
-                .or(page.getByText("Select location").first());
+        locationSelect      = page.locator("input[class='react_select__input']").first();
 
     }
 

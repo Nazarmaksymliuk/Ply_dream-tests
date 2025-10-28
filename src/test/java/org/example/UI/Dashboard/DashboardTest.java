@@ -12,7 +12,7 @@ public class DashboardTest extends PlaywrightBaseTest {
     DashboardPage dashboardPage;
     @BeforeEach
     public void setUp() {
-        openPath("/dashboard"); //NOT necessary cause we open the browser in the dashboard
+        openPath("/dashboard");
         dashboardPage = new DashboardPage(page);
     }
 

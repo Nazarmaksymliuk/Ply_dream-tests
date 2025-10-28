@@ -4,7 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
-import org.example.PageObjectModels.Catalog.MaterialsTab.MaterialSpecsPage;
+import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 
 public class WarehousePage {private final Page page;
 

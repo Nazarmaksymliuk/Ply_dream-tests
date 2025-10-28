@@ -1,15 +1,12 @@
-package org.example.PageObjectModels.Catalog.ToolsTab;
+package org.example.PageObjectModels.Tools.ToolsCreationFlow;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
-import net.bytebuddy.asm.Advice;
 import org.example.components.LocationSelect;
 
-import java.util.List;
-
-public class AddUnitsPage {
+public class AddEditUnitsPage {
     private final Page page;
 
     // === Detailed Information ===
@@ -48,7 +45,10 @@ public class AddUnitsPage {
     private final LocationSelect locationSelectByEnter;
 
 
-    public AddUnitsPage(Page page) {
+    private final Locator warehouseForToolUnitInput;
+
+
+    public AddEditUnitsPage(Page page) {
         this.page = page;
 
         // --- inputs by placeholder ---
@@ -86,11 +86,20 @@ public class AddUnitsPage {
                 AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Save Information")
         );
 
-        saveButton = page.locator("[class^=_actions_]").getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Save"));
+        saveButton = page.locator("[class^=_actions_]")
+                .getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Save")
+                        .setExact(true))  // ПО ФАКТУ ЦЕ ГОЛОВНИЙ СЕЛЕКТОР
+                .or(page.getByRole(AriaRole.BUTTON,
+                        new Page.GetByRoleOptions().setName("Save"))
+                        .last()       //приклад використання OR
+                );
 
 
         warehouseDropdown = page.locator("div.react_select__control");
         warehouseInput = page.locator("div.react_select__input-container input");
+
+
+        warehouseForToolUnitInput = page.locator("[class='react_select__input']").nth(1);
 
 
 
@@ -146,6 +155,12 @@ public class AddUnitsPage {
 
     public void setWarehouseUsingUtility(String warehouseName){
         locationSelectByEnter.setLocationByEnter(warehouseName);
+    }
+
+    public void setWarehouseWithoutUtility(String warehouseName){
+        warehouseForToolUnitInput.type(warehouseName);
+        page.keyboard().press("Enter");
+
     }
 
     public void selectEmployee(String employeeText) {

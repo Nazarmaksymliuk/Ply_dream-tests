@@ -9,6 +9,7 @@ public class Tool {
     public String mfgNumber;       // MFG #
     public String description;     // Tool Description
     public String tags;      // Tags (multi)
+    public List<ToolUnit> toolsUnits;
 
     public Tool() {}
 

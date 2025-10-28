@@ -16,6 +16,7 @@ public class EditWarehousePopUpPage {
     private final Locator warehouseZipInput;
     private final Locator warehouseStateDropdown;
     private final Locator saveChangesButton;
+    private final Locator stateDropdownInTheEditingMode;
 
     // === Constructor ===
     public EditWarehousePopUpPage(Page page) {
@@ -28,13 +29,14 @@ public class EditWarehousePopUpPage {
         warehouseCityInput = page.getByPlaceholder("Enter city");
         warehouseZipInput = page.getByPlaceholder("Zip Code");
 
+        stateDropdownInTheEditingMode = page.locator(".react_select__single-value");
+
+
         // Dropdown “State / Province”
         warehouseStateDropdown = page.getByText("State / Province");
 
         // Кнопка “Save changes”
-        saveChangesButton = page.getByRole(
-                AriaRole.BUTTON,
-                new Page.GetByRoleOptions().setName("Save changes"));
+        saveChangesButton = page.getByText("Save changes");
     }
 
     // === Actions ===
@@ -63,16 +65,11 @@ public class EditWarehousePopUpPage {
         warehouseZipInput.fill(zip);
     }
 
-    public void setWarehouseState(String state) {
-        warehouseStateDropdown.scrollIntoViewIfNeeded();
-        warehouseStateDropdown.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-        warehouseStateDropdown.click();
-
-        // вибрати штат по тексту (перший збіг)
-        page.locator(".react_select__option")
-                .filter(new Locator.FilterOptions().setHasText(state))
-                .first()
-                .click();
+    public void setFirstStateForLocation() {
+        stateDropdownInTheEditingMode.scrollIntoViewIfNeeded();
+        stateDropdownInTheEditingMode.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        stateDropdownInTheEditingMode.click();
+        page.keyboard().press("Enter");
     }
 
     public void clickSaveChangesButton() {

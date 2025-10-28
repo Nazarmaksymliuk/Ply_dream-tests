@@ -1,4 +1,4 @@
-package org.example.PageObjectModels.Catalog.MaterialsTab;
+package org.example.PageObjectModels.Material.MaterialsCreationFlow;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
@@ -38,12 +38,12 @@ public class PriceAndVariantsPage {
         costForBusinessInput.fill(String.valueOf(costForBusinessValue));
     }
 
-    public StockSetupPage clickNextButton() {
+    public MaterialStockSetupPage clickNextButton() {
         nextButton.waitFor(
                 new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE)
         );
         nextButton.click();
-        return new StockSetupPage(page);
+        return new MaterialStockSetupPage(page);
     }
 
 }

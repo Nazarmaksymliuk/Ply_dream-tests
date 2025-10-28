@@ -1,0 +1,135 @@
+package org.example.UI.Kits;
+
+import org.assertj.core.api.Assertions;
+import org.example.BaseTestExtension.PlaywrightBaseTest;
+import org.example.Models.Kit;
+import org.example.PageObjectModels.Alerts.AlertUtils;
+import org.example.PageObjectModels.Catalog.CatalogPage;
+import org.example.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
+import org.example.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
+import org.example.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
+import org.example.PageObjectModels.Kits.KitsListPage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.Random;
+
+public class KitsTests extends PlaywrightBaseTest {
+    KitGeneralInformationPage generalInformationPage;
+    KitsListPage kitsListPage;
+    CatalogPage catalogPage;
+    KitStockSetupPage kitStockSetupPage;
+    KitSettingsPage kitSettingsPage;
+
+    @BeforeEach
+    public void setUp() {
+        openPath("/catalog");
+        catalogPage = new CatalogPage(page);
+        kitsListPage = new KitsListPage(page);
+    }
+
+    Kit kit = new Kit(
+            "Kit-" + new Random().nextInt(100000),
+            "High-performance kit for any type of work.",
+            "test tag",
+            "WarehouseMain"
+    );
+
+    @DisplayName("Create Kit Test")
+    @Test
+    public void testCreateKit() {
+        catalogPage.waitForLoaded();
+
+        catalogPage.openKitsTab();
+
+        generalInformationPage = catalogPage.clickAddItem(KitGeneralInformationPage.class);
+        generalInformationPage.setKitName(kit.name);
+        generalInformationPage.setDescription(kit.description);
+        generalInformationPage.setTag(kit.tags);
+
+        kitStockSetupPage = generalInformationPage.clickNext();
+        kitStockSetupPage.clickAddLocation();
+
+        kitStockSetupPage.clickGenerateCode();
+        kitStockSetupPage.clickAddCode();
+        kitStockSetupPage.setWarehouseUsingUtility(kit.location);
+
+        kitSettingsPage = kitStockSetupPage.clickNext();
+        kitSettingsPage.addFirstMaterialByName("Test");
+        kitSettingsPage.addFirstToolByName("Test");
+        Double kitPrice = kitSettingsPage.getTheKitPrice();
+
+        kitSettingsPage.clickBottomSave();
+
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Kit"+ " "   + kit.name + "has been successfully created");
+        AlertUtils.waitForAlertHidden(page);
+
+        waitForElementPresent(kit.name);
+        Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(kit.name);
+        Assertions.assertThat(kitsListPage.getFirstKitCostInTheListAsDouble()).isEqualTo(kitPrice);
+
+    }
+
+    Kit editedKit = new Kit(
+            "Kit-edited" + new Random().nextInt(100000),
+            "High-performance kit for any type of work-edited",
+            "test tag-edited",
+            "WarehouseMain"
+    );
+
+    @DisplayName("Update Kit Test")
+    @Test
+    public void testUpdateKit() {
+
+        catalogPage.waitForLoaded();
+
+        catalogPage.openKitsTab();
+
+        catalogPage.openFirstRowKitThreeDots();
+
+        generalInformationPage = catalogPage.chooseMenuEditKit();
+        generalInformationPage.setKitName(editedKit.name);
+        generalInformationPage.setDescription(editedKit.description);
+        generalInformationPage.setTag(editedKit.tags);
+
+        generalInformationPage.clickSave();
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully updated", editedKit.name);
+        AlertUtils.waitForAlertHidden(page);
+
+        //waitForElementPresent(editedKit.name);
+        Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(editedKit.name);
+
+    }
+
+    @DisplayName("Delete Kit Test")
+    @Test
+    public void testDeleteKit() {
+        catalogPage.waitForLoaded();
+        catalogPage.openKitsTab();
+
+        String kitName = kitsListPage.getFirstKitNameInTheList();
+
+        catalogPage.openFirstRowKitThreeDots();
+
+        catalogPage.chooseMenuActionDelete();
+        catalogPage.confirmDeleteItemInModal();
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Kit has been successfully deleted");
+        AlertUtils.waitForAlertHidden(page);
+
+        waitForElementRemoved(kitName);
+        Assertions.assertThat(kitsListPage.getKitNamesList()).doesNotContain(kitName);
+
+    }
+
+
+}

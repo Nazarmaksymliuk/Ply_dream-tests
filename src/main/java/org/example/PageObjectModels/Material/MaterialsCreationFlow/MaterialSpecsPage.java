@@ -1,4 +1,4 @@
-package org.example.PageObjectModels.Catalog.MaterialsTab;
+package org.example.PageObjectModels.Material.MaterialsCreationFlow;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
@@ -19,7 +19,7 @@ public class MaterialSpecsPage {
     private final Locator variantNameInput;
     private final Locator variantDescriptionInput;
     private final Locator addVariantButton;
-    private final Locator saveInTheEditMaterialFlowButton;
+    private final Locator saveButton;
 
     // === Constructor ===
     public MaterialSpecsPage(Page page) {
@@ -35,7 +35,7 @@ public class MaterialSpecsPage {
         variantNameInput = page.locator("input[placeholder='Enter name']");
         variantDescriptionInput = page.locator("input[placeholder='Enter description']");
         addVariantButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Material Variant"));
-        saveInTheEditMaterialFlowButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Save"));
+        saveButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Save"));
 
     }
 
@@ -96,6 +96,6 @@ public class MaterialSpecsPage {
     }
 
     public void clickSaveButtonInTheEditMaterialFlow(){
-        saveInTheEditMaterialFlowButton.click();
+        saveButton.click();
     }
 }

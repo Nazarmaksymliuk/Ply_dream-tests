@@ -3,9 +3,9 @@ package org.example.UI.Material;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
 import org.example.PageObjectModels.Alerts.AlertUtils;
 import org.example.PageObjectModels.Catalog.CatalogPage;
-import org.example.PageObjectModels.Catalog.MaterialsTab.MaterialSpecsPage;
-import org.example.PageObjectModels.Catalog.MaterialsTab.PriceAndVariantsPage;
-import org.example.PageObjectModels.Catalog.MaterialsTab.StockSetupPage;
+import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
+import org.example.PageObjectModels.Material.MaterialsCreationFlow.PriceAndVariantsPage;
+import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialStockSetupPage;
 import org.example.PageObjectModels.Material.MaterialPage;
 import org.example.PageObjectModels.Material.MaterialsListPage;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +22,7 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
     CatalogPage catalogPage;
     MaterialSpecsPage materialSpecsPage;
     PriceAndVariantsPage priceAndVariantsPage;
-    StockSetupPage stockSetupPage;
+    MaterialStockSetupPage stockSetupPage;
     MaterialsListPage materialsListPage;
 
     private final String defaultVariation = "Single";
@@ -37,23 +37,24 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
         materialsListPage = new MaterialsListPage(page);
     }
 
+    Material material = new Material(
+            "Material" + new Random().nextInt(100000),
+            "ITEM-" + new Random().nextInt(100000),
+            "Sample description",
+            "BrandXXX",
+            "ManufacturerYYY",
+            "CategoryZZZ",
+            defaultUnitOfMeasurement,
+            defaultVariation,
+            "Single Description",
+            25.5,
+            15.5,
+            10
+    );
+
     @DisplayName("Create material in Catalog Test")
     @Test
     public void createMaterialInCatalogTest(){
-        Material material = new Material(
-                "Material" + new Random().nextInt(100000),
-                "ITEM-" + new Random().nextInt(100000),
-                "Sample description",
-                "BrandXXX",
-                "ManufacturerYYY",
-                "CategoryZZZ",
-                defaultUnitOfMeasurement,
-                defaultVariation,
-                "Single Description",
-                25.5,
-                15.5,
-                10
-        );
 
         catalogPage.waitForLoaded();
         materialSpecsPage =
@@ -93,34 +94,34 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
 
         materialsListPage.clickFirstLocationArrowDown();
 
-        Assertions.assertThat(materialsListPage.getMaterialLocationFromDropdown()).isEqualTo(warehouse);
+        Assertions.assertThat(materialsListPage.getMaterialLocationFromDropdown()).contains(warehouse);
         Assertions.assertThat(materialsListPage.getFirstMaterialVariation()).isEqualTo(material.variationName);
         Assertions.assertThat(materialsListPage.getQtyFromMaterialLocation()).isEqualTo(material.quantity);
     }
 
+    Material editedMaterial = new Material(
+            "Material-edited" + new Random().nextInt(100000),
+            "ITEM-edited" + new Random().nextInt(100000),
+            "Sample description-edited",
+            "BrandXXX-edited",
+            "ManufacturerYYY-edited",
+            "CategoryZZZ",
+            defaultUnitOfMeasurement,
+            defaultVariation,
+            "Single Description-edited",
+            25.5,
+            15.5,
+            1000
+    );
+
+
     @DisplayName("Update Material in the Catalog")
     @Test
     public void updateMaterialInCatalogTest(){
-        Material editedMaterial = new Material(
-                "Material-edited" + new Random().nextInt(100000),
-                "ITEM-edited" + new Random().nextInt(100000),
-                "Sample description-edited",
-                "BrandXXX-edited",
-                "ManufacturerYYY-edited",
-                "CategoryZZZ",
-                defaultUnitOfMeasurement,
-                defaultVariation,
-                "Single Description-edited",
-                25.5,
-                15.5,
-                1000
-        );
-
         catalogPage.waitForLoaded();
 
 
-
-        catalogPage.openFirstRowThreeDots();
+        catalogPage.openFirstRowMaterialThreeDots();
         materialSpecsPage = catalogPage.chooseMenuEditMaterial();
 
         // 3️⃣ Заповнити основну інформацію
@@ -132,6 +133,7 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
 
         materialSpecsPage.clickSaveButtonInTheEditMaterialFlow();
 
+        waitForElementPresent(editedMaterial.name);
         Assertions.assertThat(materialsListPage.getFirstMaterialNameInTheList()).isEqualTo(editedMaterial.name);
         Assertions.assertThat(materialsListPage.getFirstItemNumberInTheList()).isEqualTo(editedMaterial.itemNumber);
 
@@ -144,10 +146,16 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
 
         String firstNameForDeleting = materialsListPage.getFirstMaterialNameInTheList();
 
-        catalogPage.openFirstRowThreeDots();
+        catalogPage.openFirstRowMaterialThreeDots();
         catalogPage.chooseMenuDeleteMaterial();
         catalogPage.confirmDeleteMaterialInModal();
 
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Material deleted successfully");
+        AlertUtils.waitForAlertHidden(page);
+
+        waitForElementRemoved(firstNameForDeleting);
         Assertions.assertThat(materialsListPage.getMaterialNamesList()).doesNotContain(firstNameForDeleting);
     }
 

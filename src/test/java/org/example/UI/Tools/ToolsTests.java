@@ -6,8 +6,8 @@ import org.example.Models.Tool;
 import org.example.Models.ToolUnit;
 import org.example.PageObjectModels.Alerts.AlertUtils;
 import org.example.PageObjectModels.Catalog.CatalogPage;
-import org.example.PageObjectModels.Catalog.ToolsTab.AddUnitsPage;
-import org.example.PageObjectModels.Catalog.ToolsTab.GeneralInformationPage;
+import org.example.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
+import org.example.PageObjectModels.Tools.ToolsCreationFlow.ToolGeneralInformationPage;
 import org.example.PageObjectModels.Tools.ToolsListPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,8 +20,8 @@ import java.util.Random;
 public class ToolsTests extends PlaywrightBaseTest {
     CatalogPage catalogPage;
     ToolsListPage toolsListPage;
-    GeneralInformationPage generalInformationPage;
-    AddUnitsPage addUnitsPage;
+    ToolGeneralInformationPage generalInformationPage;
+    AddEditUnitsPage addUnitsPage;
 
     @BeforeEach
     public void setUp() {
@@ -31,18 +31,18 @@ public class ToolsTests extends PlaywrightBaseTest {
     }
 
     Tool tool = new Tool(
-            "Tool-" + new Random().nextInt(100000),     // name
-            "MFG-" + new Random().nextInt(100000),                 // mfgNumber
+            "Tool-" + new Random().nextInt(100000),
+            "MFG-" + new Random().nextInt(100000),
             "High-performance tool for any type of work.",
-            "test tag"// description
+            "test tag"
     );
 
     ToolUnit toolUnit = new ToolUnit(
-            "Impact Driver Unit A",  // unitName
-            "SN-DRILL-12345",       // serialNumber
-            "WarehouseMain",        // location
-            250.00,                 // purchaseCost
-            400.00                  // unitValue
+            "Impact Driver Unit-" + new Random().nextInt(100000) ,
+            "SerialNumber-" + new Random().nextInt(100000),
+            "WarehouseMain",
+            250.00,
+            400.00
     );
 
     @DisplayName("Create Tool in the Catalog Test")
@@ -53,7 +53,7 @@ public class ToolsTests extends PlaywrightBaseTest {
 
         catalogPage.openToolsTab();
 
-        generalInformationPage = catalogPage.clickAddItem(GeneralInformationPage.class);
+        generalInformationPage = catalogPage.clickAddItem(ToolGeneralInformationPage.class);
         generalInformationPage.setToolName(tool.name);
         generalInformationPage.setMfgNumber(tool.mfgNumber);
         generalInformationPage.setToolDescription(tool.description);
@@ -64,7 +64,7 @@ public class ToolsTests extends PlaywrightBaseTest {
         addUnitsPage.setUnitName(toolUnit.unitName);
         addUnitsPage.setSerialNumber(toolUnit.serialNumber);
         addUnitsPage.selectFirstStatus();
-        addUnitsPage.setWarehouseUsingUtility(toolUnit.location);
+        addUnitsPage.setWarehouseWithoutUtility(toolUnit.location);
         addUnitsPage.setPurchaseCost(toolUnit.purchaseCost);
         addUnitsPage.setValue(toolUnit.unitValue);
 
@@ -74,12 +74,13 @@ public class ToolsTests extends PlaywrightBaseTest {
 
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
-        Assertions.assertThat(alert).isEqualTo("Tool"  + tool.name + "has been successfully created");
+        Assertions.assertThat(alert).isEqualTo("Tool \"%s\" has been successfully created", tool.name);
         AlertUtils.waitForAlertHidden(page);
 
+        //waitForElementPresent(tool.name);
         Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(tool.name);
         Assertions.assertThat(toolsListPage.getFirstUnitNameInTheList()).isEqualTo(toolUnit.unitName);
-        Assertions.assertThat(toolsListPage.getFirstToolMFGInTheList()).isEqualTo(tool.mfgNumber);
+        Assertions.assertThat(toolsListPage.getFirstToolMFGInTheList()).isEqualTo(toolUnit.serialNumber);
         Assertions.assertThat(toolsListPage.getFirstToolUnitWarehouseLocationInTheList()).isEqualTo(toolUnit.location);
         Assertions.assertThat(toolsListPage.getFirstToolStatusLocationInTheList()).isEqualTo("Available");
 
@@ -89,7 +90,68 @@ public class ToolsTests extends PlaywrightBaseTest {
         Assertions.assertThat(actualDate)
                 .as("Start date should be today's date")
                 .isEqualTo(today);
+    }
 
+
+    ToolUnit editedToolUnit = new ToolUnit(
+            "Impact Driver Unit A",  // unitName
+            "SN-DRILL-12345",       // serialNumber
+            "WarehouseMain",        // location
+            250.00,                 // purchaseCost
+            400.00                  // unitValue
+    );
+    @DisplayName("Edit Tool Unit in the Catalog Test")
+    @Test
+    public void testEditToolUnit() {
+        catalogPage.waitForLoaded();
+        catalogPage.openToolsTab();
+        catalogPage.openFirstRowMaterialThreeDots();
+
+        addUnitsPage = catalogPage.chooseMenuEditToolUnit();
+
+        addUnitsPage.setUnitName(toolUnit.unitName);
+        addUnitsPage.setSerialNumber(toolUnit.serialNumber);
+        addUnitsPage.selectFirstStatus();
+        addUnitsPage.setWarehouseUsingUtility(toolUnit.location);
+        addUnitsPage.setPurchaseCost(toolUnit.purchaseCost);
+        addUnitsPage.setValue(toolUnit.unitValue);
+
+        addUnitsPage.clickSaveInformationButton();
+
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Unit updated successfully");
+        AlertUtils.waitForAlertHidden(page);
+
+        Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(tool.name);
+        Assertions.assertThat(toolsListPage.getFirstUnitNameInTheList()).isEqualTo(toolUnit.unitName);
+        Assertions.assertThat(toolsListPage.getFirstToolMFGInTheList()).isEqualTo(toolUnit.serialNumber);
+        Assertions.assertThat(toolsListPage.getFirstToolUnitWarehouseLocationInTheList()).isEqualTo(toolUnit.location);
+        Assertions.assertThat(toolsListPage.getFirstToolStatusLocationInTheList()).isEqualTo("Available");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+        LocalDate actualDate = LocalDate.parse(toolsListPage.getFirstToolDateInTheList(), formatter);
+        LocalDate today = LocalDate.now();
+        Assertions.assertThat(actualDate)
+                .as("Start date should be today's date")
+                .isEqualTo(today);
+    }
+
+    @DisplayName("Delete Tool Test")
+    @Test
+    public void testDeleteTool() {
+        catalogPage.waitForLoaded();
+        catalogPage.openToolsTab();
+
+        String toolName = toolsListPage.getFirstUnitNameInTheList();
+
+        catalogPage.openFirstRowMaterialThreeDots();
+        catalogPage.chooseMenuDeleteTool();
+
+        waitForElementRemoved(toolName);
+        Assertions.assertThat(toolsListPage.getToolNamesList()).doesNotContain(toolName);
 
     }
+
 }
