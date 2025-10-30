@@ -18,6 +18,7 @@ public class CatalogPage {
     private final Locator consumablesTab;
     private final Locator toolsTab;
     private final Locator kitsTab;
+    private final Locator consumableitsTab;
     private final Locator firstRowMaterialThreeDots;
     private final Locator firstRowKitThreeDots;
     private final Locator menuMaterialEdit;
@@ -30,6 +31,8 @@ public class CatalogPage {
     private final Locator deleteItemInConfirmationModalButton;
     private final Locator menuItemEditToolUnit;
     private final Locator menuKitInfoEdit;
+
+    private final Locator firstRowToolThreeDots;
 
 
     private final Locator menuItemEdit;
@@ -57,8 +60,16 @@ public class CatalogPage {
                 AriaRole.TAB,
                 new Page.GetByRoleOptions().setName("Kits")
         );
+        consumableitsTab = page.getByRole(
+                AriaRole.TAB,
+                new Page.GetByRoleOptions().setName("Consumables")
+        );
         firstRowMaterialThreeDots = page
                 .locator("[class^='_table_body_']")
+                .locator("[data-testid='MoreHorizIcon']").first();
+
+        firstRowToolThreeDots = page
+                .locator("[class^='relative']")
                 .locator("[data-testid='MoreHorizIcon']").first();
 
         firstRowKitThreeDots = page
@@ -154,10 +165,17 @@ public class CatalogPage {
     public void openKitsTab() {
         kitsTab.click();
     }
+    public void openConsumableTab() {
+        consumableitsTab.click();
+    }
 
     public void openFirstRowMaterialThreeDots() {
         firstRowMaterialThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         firstRowMaterialThreeDots.click();
+    }
+    public void openFirstRowToolThreeDots() {
+        firstRowToolThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        firstRowToolThreeDots.click();
     }
     public void openFirstRowKitThreeDots() {
         firstRowKitThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));

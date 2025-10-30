@@ -8,15 +8,18 @@ public class Consumable {
     public double costForBusiness;
     public Double quantity;
     public String tag;
+    public String location;
 
 
-    public Consumable(String name, String itemNumber, String description, String unitOfMeasurement, double costForBusiness, double qty) {
+    public Consumable(String name, String itemNumber, String description, String unitOfMeasurement, double costForBusiness, double qty,String location, String tag) {
         this.name = name;
         this.itemNumber = itemNumber;
         this.description = description;
         this.unitOfMeasurement = unitOfMeasurement;
         this.costForBusiness = costForBusiness;
         this.quantity = qty;
+        this.location = location;
+        this.tag = tag;
     }
     public Consumable(String name, double costForBusiness, double qty) {
         this.name = name;

@@ -73,6 +73,7 @@ public abstract class PlaywrightBaseTest {
 
         );
 
+
         // 2) Логін
         APIResponse login = api.post(
                 LOGIN_PATH,
@@ -104,7 +105,7 @@ public abstract class PlaywrightBaseTest {
         browser = playwright.chromium().launch(
                 new BrowserType.LaunchOptions()
                         .setHeadless(false)   // ← зроби true у CI
-                        .setSlowMo(80)        // ← зручно локально, можна прибрати у CI
+                        .setSlowMo(0)        // ← зручно локально, можна прибрати у CI
                         .setArgs(Arrays.asList(
                                 "--disk-cache-size=0",
                                 "--disable-application-cache",
@@ -119,33 +120,69 @@ public abstract class PlaywrightBaseTest {
 
         );
 
-        // Додаємо no-cache до всіх запитів
-        context.route("**/*", route -> {
-            Request req = route.request();
-            Map<String, String> headers = new HashMap<>(req.headers());
+
+        String bearer = "Bearer " + auth.token;
+
+        // Додаємо no-cache до всіх запитів       //MAINNNNNNNNNN
+        // Додаємо no-cache до всіх запитів       //MAINNNNNNNNNN
+//        context.route("**/*", route -> {
+//            Request req = route.request();
+//            Map<String, String> headers = new HashMap<>(req.headers());
+//            headers.put("Authorization", bearer);
+//            headers.put("Cache-Control", "no-cache, no-store, must-revalidate");
+//            headers.put("Pragma", "no-cache");
+//            headers.put("Expires", "0");
+//            route.resume(new Route.ResumeOptions().setHeaders(headers));
+//        });
+
+        context.route("**/*", route -> {   //SECOND MAINNNN
+            var req = route.request();
+            var url = req.url();
+            var headers = new HashMap<>(req.headers());
+
             headers.put("Cache-Control", "no-cache, no-store, must-revalidate");
             headers.put("Pragma", "no-cache");
             headers.put("Expires", "0");
+
+            // НЕ чіпати Unleash
+            if (url.contains("unleash-hosted.com")) {
+                route.resume(new Route.ResumeOptions().setHeaders(headers));
+                return;
+            }
+            // Для решти (або тільки вашого API) додати Bearer
+            if (url.startsWith(API_BASE)) {
+                headers.put("Authorization", "Bearer " + auth.token);
+            }
             route.resume(new Route.ResumeOptions().setHeaders(headers));
         });
 
 
-        // 6) Поставити ключі ДО старту сторінки
+        // 6) Поставити ключі ДО старту сторінки      ///////////MAINNNNNNNNNN
+//        String initScript = """
+//                (() => {
+//                  localStorage.setItem('ply_mfa_loginState', %s);
+//                  localStorage.setItem('ply_user', %s);
+//                })();
+//                """.formatted(
+//                gson.toJson(mfaLoginStateJson),
+//                gson.toJson(plyUserJson)
+//        );
+//        context.addInitScript(initScript);
+
         String initScript = """
-                (() => {
-                  localStorage.setItem('ply_mfa_loginState', %s);
-                  localStorage.setItem('ply_user', %s);
-                })();
-                """.formatted(
-                gson.toJson(mfaLoginStateJson),
-                gson.toJson(plyUserJson)
+  (() => {
+    localStorage.setItem('ply_mfa_loginState', %s);
+    localStorage.setItem('ply_user', %s);
+  })();
+  """.formatted(
+                mfaLoginStateJson,  // без gson.toJson(...)
+                plyUserJson         // без gson.toJson(...)
         );
         context.addInitScript(initScript);
 
+
         // 7) Відкрити корінь — уже авторизовано
         page = context.newPage();
-
-
 
         //ЗАБРАВ, для того, щоб швидше піднімався тест і юзер зразу заходив на правильну сторінку
         //page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED).setTimeout(60000));
@@ -160,6 +197,8 @@ public abstract class PlaywrightBaseTest {
         context.storageState(new BrowserContext.StorageStateOptions()
                 .setPath(Paths.get("build/auth-storage-state.json")));
     }
+
+
 
     @AfterAll
     void afterAllClose() {

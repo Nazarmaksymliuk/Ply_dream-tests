@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
+import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -13,7 +14,7 @@ import java.util.stream.Stream;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
-public class SmokeTests extends PlaywrightBaseTest {
+public class SmokeTests extends PlaywrightUiLoginBaseTest {
 
     // окремий метод — повертає один з локаторів, які тут вказані
     private Locator pageTitle(Page p) {
@@ -47,8 +48,7 @@ public class SmokeTests extends PlaywrightBaseTest {
     @MethodSource("routes")
     void route_hasExpectedTitle(String path, String expectedTitleSubstring) {
         // контекст і сторінка вже авторизовані завдяки PlaywrightBaseTest
-        page.navigate(UI_BASE + path,
-                new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+        openPath(path);
 
         // дочекайся заголовка
         Locator title = pageTitle(page);

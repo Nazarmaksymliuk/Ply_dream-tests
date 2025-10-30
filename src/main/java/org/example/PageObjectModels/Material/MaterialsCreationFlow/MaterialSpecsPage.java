@@ -43,7 +43,11 @@ public class MaterialSpecsPage {
 
     public void setMaterialName(String materialValue) {
         materialNameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        materialNameInput.click();    // THIS CLICK IS NEEDED CAUSE PLACEHOLDER CLEARED AND THE NEW DATA IS NOT FILLED
         materialNameInput.fill(materialValue);
+    }
+    public Locator materialNameLocator() {
+        return materialNameInput;
     }
 
     public void setItemNumber(String itemNumberValue) {

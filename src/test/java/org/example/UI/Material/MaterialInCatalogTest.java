@@ -1,6 +1,8 @@
 package org.example.UI.Material;
 
+import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
+import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
 import org.example.PageObjectModels.Alerts.AlertUtils;
 import org.example.PageObjectModels.Catalog.CatalogPage;
 import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
@@ -8,16 +10,15 @@ import org.example.PageObjectModels.Material.MaterialsCreationFlow.PriceAndVaria
 import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialStockSetupPage;
 import org.example.PageObjectModels.Material.MaterialPage;
 import org.example.PageObjectModels.Material.MaterialsListPage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import org.assertj.core.api.Assertions;
 import org.example.Models.Material;
 
 import java.util.Random;
 
-public class MaterialInCatalogTest extends PlaywrightBaseTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
     MaterialPage materialPage;
     CatalogPage catalogPage;
     MaterialSpecsPage materialSpecsPage;
@@ -53,6 +54,7 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
     );
 
     @DisplayName("Create material in Catalog Test")
+    @Order(0)
     @Test
     public void createMaterialInCatalogTest(){
 
@@ -116,13 +118,17 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
 
 
     @DisplayName("Update Material in the Catalog")
+    @Order(1)
     @Test
     public void updateMaterialInCatalogTest(){
         catalogPage.waitForLoaded();
 
+        String firstNameForEditing = materialsListPage.getFirstMaterialNameInTheList();
 
         catalogPage.openFirstRowMaterialThreeDots();
         materialSpecsPage = catalogPage.chooseMenuEditMaterial();
+
+        waitForElementPresent(firstNameForEditing);
 
         // 3️⃣ Заповнити основну інформацію
         materialSpecsPage.setMaterialName(editedMaterial.name);
@@ -140,6 +146,7 @@ public class MaterialInCatalogTest extends PlaywrightBaseTest {
     }
 
     @DisplayName("Delete Material Test")
+    @Order(2)
     @Test
     public void deleteMaterialInCatalogTest(){
         catalogPage.waitForLoaded();

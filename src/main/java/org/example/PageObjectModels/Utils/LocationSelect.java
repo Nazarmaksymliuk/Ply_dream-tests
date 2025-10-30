@@ -38,6 +38,7 @@ public class LocationSelect {
 
     public void setLocationByEnter(String location) {
         locationSelect.type(location);
+        page.waitForTimeout(1000);
         page.keyboard().press("Enter");
     }
 

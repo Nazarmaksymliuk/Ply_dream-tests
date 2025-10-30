@@ -159,6 +159,7 @@ public class AddEditUnitsPage {
 
     public void setWarehouseWithoutUtility(String warehouseName){
         warehouseForToolUnitInput.type(warehouseName);
+        page.waitForTimeout(1000);
         page.keyboard().press("Enter");
 
     }

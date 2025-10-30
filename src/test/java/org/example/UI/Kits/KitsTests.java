@@ -2,6 +2,7 @@ package org.example.UI.Kits;
 
 import org.assertj.core.api.Assertions;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
+import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
 import org.example.Models.Kit;
 import org.example.PageObjectModels.Alerts.AlertUtils;
 import org.example.PageObjectModels.Catalog.CatalogPage;
@@ -9,13 +10,11 @@ import org.example.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationP
 import org.example.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
 import org.example.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
 import org.example.PageObjectModels.Kits.KitsListPage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Random;
-
-public class KitsTests extends PlaywrightBaseTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class KitsTests extends PlaywrightUiLoginBaseTest {
     KitGeneralInformationPage generalInformationPage;
     KitsListPage kitsListPage;
     CatalogPage catalogPage;
@@ -37,6 +36,7 @@ public class KitsTests extends PlaywrightBaseTest {
     );
 
     @DisplayName("Create Kit Test")
+    @Order(0)
     @Test
     public void testCreateKit() {
         catalogPage.waitForLoaded();
@@ -55,6 +55,7 @@ public class KitsTests extends PlaywrightBaseTest {
         kitStockSetupPage.clickAddCode();
         kitStockSetupPage.setWarehouseUsingUtility(kit.location);
 
+
         kitSettingsPage = kitStockSetupPage.clickNext();
         kitSettingsPage.addFirstMaterialByName("Test");
         kitSettingsPage.addFirstToolByName("Test");
@@ -65,10 +66,10 @@ public class KitsTests extends PlaywrightBaseTest {
 
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
-        Assertions.assertThat(alert).isEqualTo("Kit"+ " "   + kit.name + "has been successfully created");
+        Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully created", kit.name);
         AlertUtils.waitForAlertHidden(page);
 
-        waitForElementPresent(kit.name);
+        //waitForElementPresent(kit.name);
         Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(kit.name);
         Assertions.assertThat(kitsListPage.getFirstKitCostInTheListAsDouble()).isEqualTo(kitPrice);
 
@@ -82,6 +83,7 @@ public class KitsTests extends PlaywrightBaseTest {
     );
 
     @DisplayName("Update Kit Test")
+    @Order(1)
     @Test
     public void testUpdateKit() {
 
@@ -109,6 +111,7 @@ public class KitsTests extends PlaywrightBaseTest {
     }
 
     @DisplayName("Delete Kit Test")
+    @Order(2)
     @Test
     public void testDeleteKit() {
         catalogPage.waitForLoaded();
@@ -130,6 +133,7 @@ public class KitsTests extends PlaywrightBaseTest {
         Assertions.assertThat(kitsListPage.getKitNamesList()).doesNotContain(kitName);
 
     }
+
 
 
 }

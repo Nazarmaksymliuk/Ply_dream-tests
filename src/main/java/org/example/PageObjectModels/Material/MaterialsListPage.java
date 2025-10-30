@@ -88,8 +88,10 @@ public class MaterialsListPage {
         return materialLocationInTheDropDown.innerText();
     }
 
-    public String getQtyFromMaterialLocation() {
-        return qtyInMaterialLocation.innerText().replaceAll("\\D+", "");
+    public double getQtyFromMaterialLocation() {
+        String text = qtyInMaterialLocation.innerText().replaceAll("[^\\d.]+", ""); // залишає цифри й крапку
+        if (text.isEmpty()) return 0.0;
+        return Double.parseDouble(text);
     }
 
     // ===== Getters from list =====

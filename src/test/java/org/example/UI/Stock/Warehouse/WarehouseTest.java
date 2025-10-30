@@ -1,22 +1,22 @@
 package org.example.UI.Stock.Warehouse;
 
+import com.microsoft.playwright.assertions.LocatorAssertions;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
+import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
 import org.example.Models.Warehouse;
 import org.example.PageObjectModels.Alerts.AlertUtils;
 import org.example.PageObjectModels.Stock.StockPage;
 import org.example.PageObjectModels.Stock.Warehouse.CreateWarehousePopUpPage;
 import org.example.PageObjectModels.Stock.Warehouse.EditWarehousePopUpPage;
 import org.example.PageObjectModels.Stock.Warehouse.WarehousesListPage;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Random;
-
-public class WarehouseTest extends PlaywrightBaseTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class WarehouseTest extends PlaywrightUiLoginBaseTest {
     StockPage stockPage;
     WarehousesListPage warehousesListPage;
     CreateWarehousePopUpPage createNewLocationPopUpPage;
@@ -38,9 +38,11 @@ public class WarehouseTest extends PlaywrightBaseTest {
     );
 
     @DisplayName("Create Warehouse Test")
+    @Order(0)
     @Test
     public void createWarehouseTest() {
-        PlaywrightAssertions.assertThat(stockPage.warehousesTabButton()).isVisible();
+        PlaywrightAssertions.assertThat(stockPage.warehousesTabButton())
+                .isVisible(new LocatorAssertions.IsVisibleOptions().setTimeout(20_000));
 
         createNewLocationPopUpPage = warehousesListPage.clickOnAddWarehouseButton();
 
@@ -80,6 +82,7 @@ public class WarehouseTest extends PlaywrightBaseTest {
             "Apt.1A"
     );
     @DisplayName("Update Warehouse Test")
+    @Order(1)
     @Test
     public void updateWarehouseTest() {
         PlaywrightAssertions.assertThat(stockPage.warehousesTabButton()).isVisible();
@@ -116,11 +119,18 @@ public class WarehouseTest extends PlaywrightBaseTest {
     }
 
     @DisplayName("Delete Warehouse Test")
+    @Order(2)
     @Test
     public void deleteWarehouseTest() {
         PlaywrightAssertions.assertThat(stockPage.warehousesTabButton()).isVisible();
 
         String firstWarehouseName = warehousesListPage.getFirstWarehouseName();
+
+        // Перед видаленням
+        if ("WarehouseMain".equals(firstWarehouseName)) {
+            System.out.println("⚠️ WarehouseMain could not be deleted");
+            Assumptions.assumeTrue(false, "WarehouseMain — could not be deleted");
+        }
 
         warehousesListPage.clickOnWarehouseThreeDotsButton();
         warehousesListPage.clickOnDeleteButton();

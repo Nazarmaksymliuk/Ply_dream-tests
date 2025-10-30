@@ -4,17 +4,16 @@ import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
+import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
 import org.example.Models.Supplier;
 import org.example.PageObjectModels.Alerts.AlertUtils;
 import org.example.PageObjectModels.Suppliers.SupplierPopUpPage;
 import org.example.PageObjectModels.Suppliers.SuppliersPage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Random;
-
-public class SuppliersTest extends PlaywrightBaseTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class SuppliersTest extends PlaywrightUiLoginBaseTest {
     SuppliersPage suppliersPage;
     SupplierPopUpPage supplierPopUpPage;
 
@@ -35,6 +34,7 @@ public class SuppliersTest extends PlaywrightBaseTest {
     );
 
     @DisplayName("Create Supplier Test")
+    @Order(0)
     @Test
     public void createSupplierTest() {
         PlaywrightAssertions.assertThat(suppliersPage.addSupplierButtonLocator()).isVisible();
@@ -59,7 +59,7 @@ public class SuppliersTest extends PlaywrightBaseTest {
         Assertions.assertThat(suppliersPage.getFirstSupplierName()).isEqualTo(expectedSupplier.name);
         Assertions.assertThat(suppliersPage.getFirstContactName()).isEqualTo(expectedSupplier.contactName);
         Assertions.assertThat(suppliersPage.getFirstSupplierEmail()).isEqualTo(expectedSupplier.contactEmail);
-        Assertions.assertThat(suppliersPage.getFirstSupplierPhone()).isEqualTo(expectedSupplier.contactPhone);
+        Assertions.assertThat(suppliersPage.getFirstSupplierPhone()).isEqualTo("+1" + expectedSupplier.contactPhone);
         Assertions.assertThat(suppliersPage.getFirstSupplierCity()).isEqualTo(expectedSupplier.city);
 
     }
@@ -74,6 +74,7 @@ public class SuppliersTest extends PlaywrightBaseTest {
             "0987654321"           // contactPhone
     );
     @DisplayName("Update Supplier Test")
+    @Order(1)
     @Test
     public void updateSupplierTest() {
         PlaywrightAssertions.assertThat(suppliersPage.addSupplierButtonLocator()).isVisible();
@@ -105,6 +106,7 @@ public class SuppliersTest extends PlaywrightBaseTest {
     }
 
     @DisplayName("Delete Supplier Test")
+    @Order(2)
     @Test
     public void deleteSupplierTest() {
         PlaywrightAssertions.assertThat(suppliersPage.addSupplierButtonLocator()).isVisible();

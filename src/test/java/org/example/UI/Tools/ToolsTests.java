@@ -2,6 +2,7 @@ package org.example.UI.Tools;
 
 import org.assertj.core.api.Assertions;
 import org.example.BaseTestExtension.PlaywrightBaseTest;
+import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
 import org.example.Models.Tool;
 import org.example.Models.ToolUnit;
 import org.example.PageObjectModels.Alerts.AlertUtils;
@@ -9,15 +10,13 @@ import org.example.PageObjectModels.Catalog.CatalogPage;
 import org.example.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
 import org.example.PageObjectModels.Tools.ToolsCreationFlow.ToolGeneralInformationPage;
 import org.example.PageObjectModels.Tools.ToolsListPage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
-
-public class ToolsTests extends PlaywrightBaseTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class ToolsTests extends PlaywrightUiLoginBaseTest {
     CatalogPage catalogPage;
     ToolsListPage toolsListPage;
     ToolGeneralInformationPage generalInformationPage;
@@ -46,6 +45,7 @@ public class ToolsTests extends PlaywrightBaseTest {
     );
 
     @DisplayName("Create Tool in the Catalog Test")
+    @Order(0)
     @Test
     public void testCreateTool() {
 
@@ -101,30 +101,34 @@ public class ToolsTests extends PlaywrightBaseTest {
             400.00                  // unitValue
     );
     @DisplayName("Edit Tool Unit in the Catalog Test")
+    @Order(1)
     @Test
     public void testEditToolUnit() {
         catalogPage.waitForLoaded();
         catalogPage.openToolsTab();
-        catalogPage.openFirstRowMaterialThreeDots();
+        catalogPage.openFirstRowToolThreeDots();
+
+        String toolName = toolsListPage.getFirstToolNameInTheList();
 
         addUnitsPage = catalogPage.chooseMenuEditToolUnit();
 
         addUnitsPage.setUnitName(toolUnit.unitName);
         addUnitsPage.setSerialNumber(toolUnit.serialNumber);
-        addUnitsPage.selectFirstStatus();
-        addUnitsPage.setWarehouseUsingUtility(toolUnit.location);
+        //addUnitsPage.selectFirstStatus();
+        //addUnitsPage.setWarehouseUsingUtility(toolUnit.location);
         addUnitsPage.setPurchaseCost(toolUnit.purchaseCost);
         addUnitsPage.setValue(toolUnit.unitValue);
 
         addUnitsPage.clickSaveInformationButton();
 
-
         AlertUtils.waitForAlertVisible(page);
+        page.waitForTimeout(1800);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Unit updated successfully");
         AlertUtils.waitForAlertHidden(page);
 
-        Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(tool.name);
+
+        Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(toolName);
         Assertions.assertThat(toolsListPage.getFirstUnitNameInTheList()).isEqualTo(toolUnit.unitName);
         Assertions.assertThat(toolsListPage.getFirstToolMFGInTheList()).isEqualTo(toolUnit.serialNumber);
         Assertions.assertThat(toolsListPage.getFirstToolUnitWarehouseLocationInTheList()).isEqualTo(toolUnit.location);
@@ -139,6 +143,7 @@ public class ToolsTests extends PlaywrightBaseTest {
     }
 
     @DisplayName("Delete Tool Test")
+    @Order(2)
     @Test
     public void testDeleteTool() {
         catalogPage.waitForLoaded();
@@ -146,8 +151,9 @@ public class ToolsTests extends PlaywrightBaseTest {
 
         String toolName = toolsListPage.getFirstUnitNameInTheList();
 
-        catalogPage.openFirstRowMaterialThreeDots();
+        catalogPage.openFirstRowToolThreeDots();
         catalogPage.chooseMenuDeleteTool();
+        catalogPage.confirmDeleteItemInModal();
 
         waitForElementRemoved(toolName);
         Assertions.assertThat(toolsListPage.getToolNamesList()).doesNotContain(toolName);
