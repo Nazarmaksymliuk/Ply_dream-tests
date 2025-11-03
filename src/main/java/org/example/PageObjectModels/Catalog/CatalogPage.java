@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
 import org.example.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
 import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 import org.example.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
@@ -18,8 +19,9 @@ public class CatalogPage {
     private final Locator consumablesTab;
     private final Locator toolsTab;
     private final Locator kitsTab;
-    private final Locator consumableitsTab;
+    private final Locator consumableTab;
     private final Locator firstRowMaterialThreeDots;
+    private final Locator firstRowConsumableThreeDots;
     private final Locator firstRowKitThreeDots;
     private final Locator menuMaterialEdit;
     private final Locator menuMaterialDelete;
@@ -31,6 +33,7 @@ public class CatalogPage {
     private final Locator deleteItemInConfirmationModalButton;
     private final Locator menuItemEditToolUnit;
     private final Locator menuKitInfoEdit;
+    private final Locator menuConsumableInfoEdit;
 
     private final Locator firstRowToolThreeDots;
 
@@ -60,10 +63,14 @@ public class CatalogPage {
                 AriaRole.TAB,
                 new Page.GetByRoleOptions().setName("Kits")
         );
-        consumableitsTab = page.getByRole(
+        consumableTab = page.getByRole(
                 AriaRole.TAB,
                 new Page.GetByRoleOptions().setName("Consumables")
         );
+        firstRowConsumableThreeDots = page
+                .locator("[class^='_table_body_']")
+                .locator("[data-testid='MoreHorizIcon']").first();
+
         firstRowMaterialThreeDots = page
                 .locator("[class^='_table_body_']")
                 .locator("[data-testid='MoreHorizIcon']").first();
@@ -86,6 +93,10 @@ public class CatalogPage {
         menuKitInfoEdit = page.getByRole(
                 AriaRole.MENUITEM,
                 new Page.GetByRoleOptions().setName("Edit Kit Info") //// MAINNNNNNNNNN
+        );
+        menuConsumableInfoEdit = page.getByRole(
+                AriaRole.MENUITEM,
+                new Page.GetByRoleOptions().setName("Edit Consumable") //// MAINNNNNNNNNN
         );
         menuItemEditToolUnit = page.getByRole(
                 AriaRole.MENUITEM,
@@ -155,9 +166,6 @@ public class CatalogPage {
 
     }
 
-    public void openConsumablesTab() {
-        consumablesTab.click();
-    }
 
     public void openToolsTab() {
         toolsTab.click();
@@ -166,12 +174,16 @@ public class CatalogPage {
         kitsTab.click();
     }
     public void openConsumableTab() {
-        consumableitsTab.click();
+        consumableTab.click();
     }
 
     public void openFirstRowMaterialThreeDots() {
         firstRowMaterialThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         firstRowMaterialThreeDots.click();
+    }
+    public void openFirstRowConsumableThreeDots() {
+        firstRowConsumableThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        firstRowConsumableThreeDots.click();
     }
     public void openFirstRowToolThreeDots() {
         firstRowToolThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
@@ -193,10 +205,16 @@ public class CatalogPage {
         menuItemEditToolUnit.click();
         return new AddEditUnitsPage(page);
     }
+
     public KitGeneralInformationPage chooseMenuEditKit() {
         menuKitInfoEdit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         menuKitInfoEdit.click();
         return new KitGeneralInformationPage(page);
+    }
+    public ConsumableGeneralInfoPage chooseMenuEditConsumable() {
+        menuConsumableInfoEdit.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        menuConsumableInfoEdit.click();
+        return new ConsumableGeneralInfoPage(page);
     }
 
     public MaterialSpecsPage chooseMenuDeleteMaterial() {

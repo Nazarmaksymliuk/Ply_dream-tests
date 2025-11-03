@@ -122,7 +122,7 @@ public class ToolsTests extends PlaywrightUiLoginBaseTest {
         addUnitsPage.clickSaveInformationButton();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(1800);
+        page.waitForTimeout(2000);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Unit updated successfully");
         AlertUtils.waitForAlertHidden(page);
@@ -154,6 +154,13 @@ public class ToolsTests extends PlaywrightUiLoginBaseTest {
         catalogPage.openFirstRowToolThreeDots();
         catalogPage.chooseMenuDeleteTool();
         catalogPage.confirmDeleteItemInModal();
+
+        AlertUtils.waitForAlertVisible(page);
+        page.waitForTimeout(2000);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Tool deleted successfully");
+        AlertUtils.waitForAlertHidden(page);
+
 
         waitForElementRemoved(toolName);
         Assertions.assertThat(toolsListPage.getToolNamesList()).doesNotContain(toolName);

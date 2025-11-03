@@ -113,6 +113,7 @@ public class AddEditUnitsPage {
 
     // ===== setters (inputs) =====
     public void setUnitName(String unitName) {
+        unitNameInput.click();
         unitNameInput.fill(unitName);
     }
     public void setSerialNumber(String serial) {

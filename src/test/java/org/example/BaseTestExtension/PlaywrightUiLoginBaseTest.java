@@ -85,7 +85,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     void loginOnce() {
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(true));
+                .setHeadless(false));
 
         // Якщо state вже є — просто використовуй його
         if (java.nio.file.Files.exists(STORAGE_STATE)) {
@@ -164,7 +164,7 @@ public abstract class PlaywrightUiLoginBaseTest {
 
 
     public void waitForElementPresent(String elementName) {
-        page.getByText(elementName).waitFor(
+        page.getByText(elementName).first().waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.VISIBLE)
                         .setTimeout(15000)

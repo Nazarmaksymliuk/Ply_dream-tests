@@ -16,6 +16,7 @@ public class ConsumableGeneralInfoPage {
     private final Locator tagsInput;
 
     private final Locator nextButton;
+    private final Locator saveButton;
 
     // === Constructor ===
     public ConsumableGeneralInfoPage(Page page) {
@@ -26,6 +27,7 @@ public class ConsumableGeneralInfoPage {
         descriptionTextArea = page.locator("textarea[placeholder='Enter Consumable Description']");
         costForBusinessInput = page.locator("input[placeholder='Enter cost']");
         nextButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Next"));
+        saveButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Save"));
 
         tagsInput           = page.locator("input[class='react_select__input']").last();
 
@@ -33,6 +35,7 @@ public class ConsumableGeneralInfoPage {
 
     // === Actions ===
     public void setName(String nameValue) {
+        nameInput.click();
         nameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         nameInput.fill(nameValue);
     }
@@ -58,6 +61,7 @@ public class ConsumableGeneralInfoPage {
     public void setTag(String tag) {
         tagsInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         tagsInput.fill(tag);
+        page.waitForTimeout(1000);
         page.keyboard().press("Enter");
     }
 
@@ -65,6 +69,12 @@ public class ConsumableGeneralInfoPage {
         nextButton.scrollIntoViewIfNeeded();
         nextButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         nextButton.click();
+        return new ConsumableStockSetupPage(page);
+    }
+    public ConsumableStockSetupPage clickSaveButton() {
+        saveButton.scrollIntoViewIfNeeded();
+        saveButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        saveButton.click();
         return new ConsumableStockSetupPage(page);
     }
 }

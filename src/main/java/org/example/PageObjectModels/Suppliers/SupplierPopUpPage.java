@@ -30,6 +30,7 @@ public class SupplierPopUpPage {
     }
 
     public void setSupplierName(String supplierNameValue) {
+        supplierName.click();
         supplierName.fill(supplierNameValue);
     }
     public void setSupplierCity(String supplierCityValue) {

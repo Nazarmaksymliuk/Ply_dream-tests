@@ -32,6 +32,7 @@ public class GeneralInfoJobPage {
     }
 
     public void setJobName(String jobNameValue) {
+        jobName.click();
         jobName.fill(jobNameValue);
     }
 
