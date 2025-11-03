@@ -21,6 +21,7 @@ public class CatalogPage {
     private final Locator kitsTab;
     private final Locator consumableTab;
     private final Locator firstRowMaterialThreeDots;
+    private final Locator firstRowMaterialStockThreeDots;
     private final Locator firstRowConsumableThreeDots;
     private final Locator firstRowKitThreeDots;
     private final Locator menuMaterialEdit;
@@ -73,6 +74,9 @@ public class CatalogPage {
 
         firstRowMaterialThreeDots = page
                 .locator("[class^='_table_body_']")
+                .locator("[data-testid='MoreHorizIcon']").first();
+        firstRowMaterialStockThreeDots = page
+                .locator("[class^='_table_item_']")
                 .locator("[data-testid='MoreHorizIcon']").first();
 
         firstRowToolThreeDots = page
@@ -180,6 +184,10 @@ public class CatalogPage {
     public void openFirstRowMaterialThreeDots() {
         firstRowMaterialThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         firstRowMaterialThreeDots.click();
+    }
+    public void openFirstRowMaterialStockThreeDots() {
+        firstRowMaterialStockThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        firstRowMaterialStockThreeDots.click();
     }
     public void openFirstRowConsumableThreeDots() {
         firstRowConsumableThreeDots.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));

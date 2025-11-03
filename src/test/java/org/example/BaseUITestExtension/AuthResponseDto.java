@@ -8,3 +8,4 @@ public class AuthResponseDto {
     public String expiresAt;
     public Integer onboardingStep;
 }
+

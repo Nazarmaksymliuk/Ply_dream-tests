@@ -84,7 +84,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE_PATH));
     }
 
-    //@BeforeAll
+    @BeforeAll
     void loginOnceMain() {
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
@@ -120,7 +120,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE));
     }
 
-    @BeforeAll
+    //@BeforeAll
     void loginOnce() {
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
@@ -168,6 +168,19 @@ public abstract class PlaywrightUiLoginBaseTest {
         if (context != null) context.close();
         if (browser != null) browser.close();
         if (playwright != null) playwright.close();
+    }
+    protected static boolean shouldDeleteStorage = true;
+
+    //@AfterAll
+    static void cleanupStorageState() {
+        if (shouldDeleteStorage) {
+            try {
+                java.nio.file.Files.deleteIfExists(STORAGE_STATE);
+                System.out.println("[INFO] Deleted STORAGE_STATE after full test suite.");
+            } catch (Exception e) {
+                System.out.println("[WARN] Failed to delete STORAGE_STATE: " + e.getMessage());
+            }
+        }
     }
 
     // ===== Helpers для тестів =====
