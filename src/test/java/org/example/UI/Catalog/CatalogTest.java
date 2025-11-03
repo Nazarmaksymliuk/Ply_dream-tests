@@ -1,12 +1,8 @@
 package org.example.UI.Catalog;
 
-import org.example.BaseTestExtension.PlaywrightBaseTest;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.PageObjectModels.Catalog.CatalogPage;
-import org.junit.jupiter.api.BeforeAll;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.PageObjectModels.Catalog.CatalogPage;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 public class CatalogTest extends PlaywrightUiLoginBaseTest {
     CatalogPage catalogPage;

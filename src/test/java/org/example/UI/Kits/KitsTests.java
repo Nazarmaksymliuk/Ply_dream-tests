@@ -1,15 +1,14 @@
 package org.example.UI.Kits;
 
 import org.assertj.core.api.Assertions;
-import org.example.BaseTestExtension.PlaywrightBaseTest;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.Models.Kit;
-import org.example.PageObjectModels.Alerts.AlertUtils;
-import org.example.PageObjectModels.Catalog.CatalogPage;
-import org.example.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
-import org.example.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
-import org.example.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
-import org.example.PageObjectModels.Kits.KitsListPage;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.Models.Kit;
+import org.example.UI.PageObjectModels.Alerts.AlertUtils;
+import org.example.UI.PageObjectModels.Catalog.CatalogPage;
+import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
+import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
+import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
+import org.example.UI.PageObjectModels.Kits.KitsListPage;
 import org.junit.jupiter.api.*;
 
 import java.util.Random;

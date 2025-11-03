@@ -1,19 +1,17 @@
 package org.example.UI.Material;
 
-import com.microsoft.playwright.assertions.PlaywrightAssertions;
-import org.example.BaseTestExtension.PlaywrightBaseTest;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.PageObjectModels.Alerts.AlertUtils;
-import org.example.PageObjectModels.Catalog.CatalogPage;
-import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
-import org.example.PageObjectModels.Material.MaterialsCreationFlow.PriceAndVariantsPage;
-import org.example.PageObjectModels.Material.MaterialsCreationFlow.MaterialStockSetupPage;
-import org.example.PageObjectModels.Material.MaterialPage;
-import org.example.PageObjectModels.Material.MaterialsListPage;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.PageObjectModels.Alerts.AlertUtils;
+import org.example.UI.PageObjectModels.Catalog.CatalogPage;
+import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
+import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.PriceAndVariantsPage;
+import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialStockSetupPage;
+import org.example.UI.PageObjectModels.Material.MaterialPage;
+import org.example.UI.PageObjectModels.Material.MaterialsListPage;
 import org.junit.jupiter.api.*;
 
 import org.assertj.core.api.Assertions;
-import org.example.Models.Material;
+import org.example.UI.Models.Material;
 
 import java.util.Random;
 

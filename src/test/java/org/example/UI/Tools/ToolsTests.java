@@ -1,15 +1,14 @@
 package org.example.UI.Tools;
 
 import org.assertj.core.api.Assertions;
-import org.example.BaseTestExtension.PlaywrightBaseTest;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.Models.Tool;
-import org.example.Models.ToolUnit;
-import org.example.PageObjectModels.Alerts.AlertUtils;
-import org.example.PageObjectModels.Catalog.CatalogPage;
-import org.example.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
-import org.example.PageObjectModels.Tools.ToolsCreationFlow.ToolGeneralInformationPage;
-import org.example.PageObjectModels.Tools.ToolsListPage;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.Models.Tool;
+import org.example.UI.Models.ToolUnit;
+import org.example.UI.PageObjectModels.Alerts.AlertUtils;
+import org.example.UI.PageObjectModels.Catalog.CatalogPage;
+import org.example.UI.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
+import org.example.UI.PageObjectModels.Tools.ToolsCreationFlow.ToolGeneralInformationPage;
+import org.example.UI.PageObjectModels.Tools.ToolsListPage;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;

@@ -3,19 +3,17 @@ package org.example.UI.Jobs;
 import com.microsoft.playwright.assertions.LocatorAssertions;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import org.assertj.core.api.Assertions;
-import org.example.BaseTestExtension.PlaywrightBaseTest;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.Models.ClientContacts;
-import org.example.Models.Job;
-import org.example.PageObjectModels.Jobs.ActiveJobsPage;
-import org.example.PageObjectModels.Jobs.ContactsJobPage;
-import org.example.PageObjectModels.Jobs.FinishedJobsPage;
-import org.example.PageObjectModels.Jobs.GeneralInfoJobPage;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.Models.ClientContacts;
+import org.example.UI.Models.Job;
+import org.example.UI.PageObjectModels.Jobs.ActiveJobsPage;
+import org.example.UI.PageObjectModels.Jobs.ContactsJobPage;
+import org.example.UI.PageObjectModels.Jobs.FinishedJobsPage;
+import org.example.UI.PageObjectModels.Jobs.GeneralInfoJobPage;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Random;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

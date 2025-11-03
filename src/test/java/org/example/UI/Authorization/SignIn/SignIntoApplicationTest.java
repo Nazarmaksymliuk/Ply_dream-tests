@@ -1,12 +1,9 @@
 package org.example.UI.Authorization.SignIn;
 
-import com.microsoft.playwright.Page;
 import com.microsoft.playwright.assertions.LocatorAssertions;
-import com.microsoft.playwright.junit.UsePlaywright;
 import org.assertj.core.api.Assertions;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.HeadlessChromeOptions;
-import org.example.PageObjectModels.Authorization.SignIn.SignInPage;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,14 +1,13 @@
 package org.example.UI.Consumable;
 
-import junit.framework.TestCase;
 import org.assertj.core.api.Assertions;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.Models.Consumable;
-import org.example.PageObjectModels.Alerts.AlertUtils;
-import org.example.PageObjectModels.Catalog.CatalogPage;
-import org.example.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
-import org.example.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableStockSetupPage;
-import org.example.PageObjectModels.Consumable.ConsumableListPage;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.Models.Consumable;
+import org.example.UI.PageObjectModels.Alerts.AlertUtils;
+import org.example.UI.PageObjectModels.Catalog.CatalogPage;
+import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
+import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableStockSetupPage;
+import org.example.UI.PageObjectModels.Consumable.ConsumableListPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;

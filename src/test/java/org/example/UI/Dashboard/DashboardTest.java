@@ -1,9 +1,7 @@
 package org.example.UI.Dashboard;
 
-import org.example.BaseTestExtension.PlaywrightBaseTest;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.PageObjectModels.Dashboard.DashboardPage;
-import org.junit.jupiter.api.BeforeAll;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.PageObjectModels.Dashboard.DashboardPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

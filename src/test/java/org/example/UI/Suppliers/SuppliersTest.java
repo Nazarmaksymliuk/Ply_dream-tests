@@ -3,12 +3,11 @@ package org.example.UI.Suppliers;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
-import org.example.BaseTestExtension.PlaywrightBaseTest;
-import org.example.BaseTestExtension.PlaywrightUiLoginBaseTest;
-import org.example.Models.Supplier;
-import org.example.PageObjectModels.Alerts.AlertUtils;
-import org.example.PageObjectModels.Suppliers.SupplierPopUpPage;
-import org.example.PageObjectModels.Suppliers.SuppliersPage;
+import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.UI.Models.Supplier;
+import org.example.UI.PageObjectModels.Alerts.AlertUtils;
+import org.example.UI.PageObjectModels.Suppliers.SupplierPopUpPage;
+import org.example.UI.PageObjectModels.Suppliers.SuppliersPage;
 import org.junit.jupiter.api.*;
 
 import java.util.Random;
