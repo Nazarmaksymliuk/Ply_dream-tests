@@ -15,6 +15,7 @@ public class StockPage {
     private final Locator trucksTabButton;
 
     private final Locator menuItemEdit;
+    private final Locator templatesTab;
 
 
     // === Конструктор ===
@@ -26,6 +27,8 @@ public class StockPage {
                 new Page.GetByRoleOptions().setName("Warehouses")
         );
 
+
+
         trucksTabButton = page.getByRole(
                 AriaRole.TAB,
                 new Page.GetByRoleOptions().setName("Fleet"));
@@ -36,6 +39,9 @@ public class StockPage {
                 new Page.GetByRoleOptions().setName("Edit") //// MAINNNNNNNNNN FIRSTTTTTTTTT
         )
                 .first();
+
+        this.templatesTab = page.getByRole(AriaRole.TAB, new Page.GetByRoleOptions().setName("Templates"));
+
 
     }
 
@@ -70,6 +76,13 @@ public class StockPage {
         }
     }
 
+    public void clickOnTemplatesTab() {
+        templatesTab.click();
+    }
+
+    public Locator templatesTabButton() {
+        return templatesTab;
+    }
 
     // (опційно) Можеш додати вейт на завантаження сторінки
     public void waitForLoaded() {
@@ -79,4 +92,6 @@ public class StockPage {
                         .setTimeout(15000)
         );
     }
+
+
 }
