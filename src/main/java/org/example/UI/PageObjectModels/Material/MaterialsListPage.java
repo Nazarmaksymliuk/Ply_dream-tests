@@ -3,10 +3,15 @@ package org.example.UI.PageObjectModels.Material;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 
 import java.util.List;
+
+
+import static com.microsoft.playwright.Page.*;
+
 
 public class MaterialsListPage {
     private final Page page;
@@ -31,6 +36,7 @@ public class MaterialsListPage {
 
     private final Locator qtySpan;
 
+    private final Locator searchByItemInput;
 
 
     public MaterialsListPage(Page page) {
@@ -42,13 +48,13 @@ public class MaterialsListPage {
         firstMaterialVariation      = page.locator(".status_xs.variation_name").first();
 
         firstRowThreeDots = page.locator("[class^='_table_item_'][data-testid='MoreHorizIcon']");
-        menuItemEdit      = page.getByRole(AriaRole.MENUITEM,   new Page.GetByRoleOptions().setName("Edit Material"));
-        menuItemEditAvailability      = page.getByRole(AriaRole.MENUITEM,   new Page.GetByRoleOptions().setName("Edit availability"));
-        menuItemDelete    = page.getByRole(AriaRole.MENUITEM,   new Page.GetByRoleOptions().setName("Delete"));
+        menuItemEdit      = page.getByRole(AriaRole.MENUITEM,   new GetByRoleOptions().setName("Edit Material"));
+        menuItemEditAvailability      = page.getByRole(AriaRole.MENUITEM,   new GetByRoleOptions().setName("Edit availability"));
+        menuItemDelete    = page.getByRole(AriaRole.MENUITEM,   new GetByRoleOptions().setName("Delete"));
         deleteMaterialInConfirmationModalButton =
-                page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete"));
+                page.getByRole(AriaRole.BUTTON, new GetByRoleOptions().setName("Delete"));
 
-        openLocationsListButton     = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Locations"));
+        openLocationsListButton     = page.getByRole(AriaRole.BUTTON, new GetByRoleOptions().setName("Locations"));
         firstLocationArrowDownButton= page.getByTestId("KeyboardArrowDownIcon").first();
         materialLocationInTheDropDown = page.locator("[href^='/stock/warehouse']");
         qtyInMaterialLocation       = page.locator("b.flex.items-center.gap-1");
@@ -57,6 +63,9 @@ public class MaterialsListPage {
 
         qtySpan = page.locator("div[role='button'][class^='_edit_wrapper_'] b span:nth-of-type(1)").first();
 
+
+        searchByItemInput = page.getByPlaceholder("Search by item")
+                .or(page.getByPlaceholder("Search material"));
     }
 
     // ===== Waits =====
@@ -64,6 +73,50 @@ public class MaterialsListPage {
         materialFirstNameInTheList.waitFor(
                 new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(60000)
         );
+    }
+
+    // вузький якір: рядок матеріалу за назвою
+    private Locator materialRowByName(String name) {
+        return page.locator("a.link_black[href^='/material/']")
+                .filter(new Locator.FilterOptions().setHasText(name))
+                .first();
+    }
+
+    // опційний спінер (fallback: будь-який прогресбар)
+    private Locator searchSpinner() {
+        return page.getByRole(com.microsoft.playwright.options.AriaRole.PROGRESSBAR);
+    }
+
+    // «введи терм і дочекайся, що з’явився конкретний матеріал»
+    public void searchByItem(String expectedName) {
+        // 1) фокус та чистка поля
+        searchByItemInput.click();
+        searchByItemInput.fill("");
+        page.keyboard().press("Control+A");
+        page.keyboard().press("Backspace");
+
+        page.waitForTimeout(2500);
+        // 3) якщо є спінер — дочекаємося, що він зник (не валимося, якщо його немає)
+
+        // 2) вводимо терм
+        searchByItemInput.fill(expectedName);
+
+        page.waitForTimeout(2500);
+
+        waitFirstRowVisible();
+        // якщо пошук підтверджується Enter — розкоментуй:
+        // page.keyboard().press("Enter");
+
+
+    }
+
+    public void clearSearch() {
+        searchByItemInput.fill("");
+        waitFirstRowVisible();
+    }
+
+    public boolean isMaterialWithNamePresent(String name) {
+        return materialFirstNameInTheList.filter(new Locator.FilterOptions().setHasText(name)).count() > 0;
     }
 
     // ===== Row menus =====

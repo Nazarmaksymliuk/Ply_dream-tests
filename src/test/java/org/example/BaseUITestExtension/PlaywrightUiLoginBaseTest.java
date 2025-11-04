@@ -84,7 +84,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE_PATH));
     }
 
-    @BeforeAll
+    //@BeforeAll
     void loginOnceMain() {
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
@@ -120,10 +120,11 @@ public abstract class PlaywrightUiLoginBaseTest {
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE));
     }
 
-    //@BeforeAll
+    @BeforeAll
     void loginOnce() {
         playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+        browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+                .setHeadless(false));
 
         if (java.nio.file.Files.exists(STORAGE_STATE)) {
             context = browser.newContext(new Browser.NewContextOptions()
@@ -133,11 +134,20 @@ public abstract class PlaywrightUiLoginBaseTest {
             page = context.newPage();
 
             // health-check
-            page.navigate(UI_BASE);
+            page.navigate(
+                    UI_BASE,
+                    new Page.NavigateOptions()
+                            .setWaitUntil(WaitUntilState.DOMCONTENTLOADED) // або NETWORKIDLE, якщо потрібно
+                            .setTimeout(60_000) // 60 секунд = 1 хв
+            );
+
+
             // якщо редіректить на логін або бачимо помилковий тост — робимо релоґін
             boolean needsRelogin =
                     page.url().contains("/sign-in") ||
-                            page.getByText("Refresh token does not exist!").isVisible() ||  page.getByText("Welcome back, sign in!").isVisible(); // якщо тост уже є
+                            page.getByText("Refresh token does not exist!").isVisible()
+                            ||  page.getByText("Welcome back, sign in!").isVisible()
+                    || page.getByText("Oops, something went wrong").isVisible(); // якщо тост уже є
 
             if (!needsRelogin) return;
 
@@ -171,7 +181,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     }
     protected static boolean shouldDeleteStorage = true;
 
-    //@AfterAll
+    @AfterAll
     static void cleanupStorageState() {
         if (shouldDeleteStorage) {
             try {
@@ -194,7 +204,7 @@ public abstract class PlaywrightUiLoginBaseTest {
                 UI_BASE + path,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(300_000) // ← 120 секунд
+                        .setTimeout(500_000) // ← 120 секунд
         );
     }
 

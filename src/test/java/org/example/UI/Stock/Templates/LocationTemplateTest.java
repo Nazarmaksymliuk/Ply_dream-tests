@@ -65,7 +65,7 @@ public class LocationTemplateTest extends PlaywrightUiLoginBaseTest {
         // Assert: name is present on the grid
         Assertions.assertThat(templatesListPage.getTemplateNamesList()).contains(templateName);
     }
-    @DisplayName("Update Location Template name")
+    @DisplayName("Update Location Template Name")
     @Order(1)
     @Test
     public void updateTemplateNameTest() {
@@ -100,7 +100,7 @@ public class LocationTemplateTest extends PlaywrightUiLoginBaseTest {
     }
 
     @DisplayName("Delete Location Template (via 3 dots → Delete)")
-    @Order(0)
+    @Order(2)
     @Test
     public void deleteTemplateTest() {
 
