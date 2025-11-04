@@ -182,7 +182,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     protected static boolean shouldDeleteStorage = true;
 
     @AfterAll
-    static void cleanupStorageState() {
+    static void cleanupStorageState() {          //CLEARS FILE AFTER EVERYTHING IS DONE
         if (shouldDeleteStorage) {
             try {
                 java.nio.file.Files.deleteIfExists(STORAGE_STATE);
