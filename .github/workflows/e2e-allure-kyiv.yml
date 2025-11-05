@@ -1,17 +1,10 @@
-name: E2E Tests & Allure Report (Kyiv 07:00)
+name: E2E Tests & Allure (Kyiv 07:00)
 
 on:
   schedule:
-    # Київ: UTC+2 (листопад–березень) → 05:00 UTC
-    - cron: "0 5 * 11,12,1,2,3 *"
-    # Київ: UTC+3 (березень–жовтень) → 04:00 UTC
-    - cron: "0 4 * 4-10 *"
-  workflow_dispatch: {}
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+    - cron: "0 4 * 4-10 *"        # 07:00 Kyiv у період DST
+    - cron: "0 5 * 11,12,1,2,3 *" # 07:00 Kyiv у стандартний час
+  workflow_dispatch:
 
 jobs:
   test-and-report:
@@ -22,7 +15,7 @@ jobs:
       PLAYWRIGHT_BROWSERS_PATH: "0"
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Java 21
@@ -38,28 +31,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ms-playwright-${{ runner.os }}-v1
 
-      - name: Install Playwright browsers
-        run: mvn -B com.microsoft.playwright:playwright:install
-
-      - name: Run tests
+      - name: Run tests (Failsafe:clean verify)
         run: mvn -B clean verify
-
+        
       - name: Generate Allure report
         run: mvn -B allure:report
 
-      - name: Upload Allure report artifact
+      - name: Upload Allure report (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: target/allure-report
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload report to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: target/allure-report
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
