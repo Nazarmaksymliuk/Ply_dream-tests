@@ -2,13 +2,13 @@ name: E2E Tests & Allure (Kyiv 07:00)
 
 on:
   schedule:
-    - cron: "0 4 * 4-10 *"
-    - cron: "0 5 * 11,12,1,2,3 *"
+    - cron: "0 4 * 4-10 *"        # 07:00 Kyiv (DST)
+    - cron: "0 5 * 11,12,1,2,3 *" # 07:00 Kyiv (standard)
   workflow_dispatch:
 
 jobs:
   test-and-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04   # <<< не ubuntu-latest
     env:
       MAVEN_OPTS: -Xmx2g
       PLAYWRIGHT_HEADLESS: "true"
@@ -25,11 +25,12 @@ jobs:
           java-version: "21"
           cache: maven
 
-      # СТАВИТЬ усі linux-залежності + браузери Playwright
-      - name: Install Playwright browsers & OS deps
-        uses: microsoft/playwright-github-action@v1
-        with:
-          version: stable
+      # Встановлюємо системні залежності + браузери через Java CLI
+      - name: Install Playwright system deps & browsers (Java CLI)
+        run: |
+          mvn -B org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+            -Dexec.mainClass=com.microsoft.playwright.CLI \
+            -Dexec.args="install --with-deps"
 
       - name: Run tests (Failsafe:clean verify)
         env:
