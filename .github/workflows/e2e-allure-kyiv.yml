@@ -25,6 +25,11 @@ jobs:
           java-version: "21"
           cache: maven
 
+      - name: Install Playwright browsers & OS deps
+        uses: microsoft/playwright-github-action@v1
+        with:
+          version: stable
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -32,12 +37,17 @@ jobs:
           key: ms-playwright-${{ runner.os }}-v1
 
       - name: Run tests (Failsafe:clean verify)
+        env:
+          PLAYWRIGHT_HEADLESS: "true"
+          PLAYWRIGHT_BROWSERS_PATH: "0"
         run: mvn -B clean verify
-        
+
       - name: Generate Allure report
+        if: always()
         run: mvn -B allure:report
 
       - name: Upload Allure report (artifact)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
