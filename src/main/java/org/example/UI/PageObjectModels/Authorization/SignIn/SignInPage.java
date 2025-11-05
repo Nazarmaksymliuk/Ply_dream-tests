@@ -1,6 +1,8 @@
-package org.example.PageObjectModels.Authorization.SignIn;
+package org.example.UI.PageObjectModels.Authorization.SignIn;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
+import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
@@ -27,7 +29,19 @@ public class SignInPage {
     public void signIntoApplication(String email, String password) {
         emailInput.fill(email);
         passwordInput.fill(password);
-        signInButton.click();
+
+        signInButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED));
+
+        try {
+            signInButton.click(new Locator.ClickOptions().setTimeout(15_000));
+        } catch (PlaywrightException e) {
+            // інколи допомагає мікропаузa + повтор
+            page.waitForTimeout(300);
+            signInButton.scrollIntoViewIfNeeded();
+            signInButton.click(new Locator.ClickOptions().setTimeout(15_000));
+        }
+
+        //signInButton.click();
     }
 
     public String getTitle() {
@@ -42,10 +56,9 @@ public class SignInPage {
         return errorAlert.isVisible();
     }
 
-
-
     public String getTheErrorMessageText(){
         return errorAlert.innerText();
     }
+
     public Locator error() { return errorAlert; }
 }
