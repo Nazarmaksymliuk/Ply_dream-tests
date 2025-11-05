@@ -4,6 +4,7 @@ import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.microsoft.playwright.options.WaitUntilState;
+import org.example.BaseUITestExtension.ScreenShoot.ScreenshotManager;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
 import org.junit.jupiter.api.*;
 
@@ -209,6 +210,11 @@ public abstract class PlaywrightUiLoginBaseTest {
                 System.out.println("[WARN] Failed to delete STORAGE_STATE: " + e.getMessage());
             }
         }
+    }
+
+    @AfterEach
+    void takeFinalScreenshot(){
+        ScreenshotManager.takeScreenshot(page, "Final screenshot");
     }
 
     // ===== Helpers для тестів =====
