@@ -36,7 +36,7 @@ jobs:
 
       - name: Run tests (Failsafe:clean verify)
         run: mvn -B clean verify
-
+        
       - name: Generate Allure report
         run: mvn -B allure:report
 
