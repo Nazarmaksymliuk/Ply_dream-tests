@@ -7,6 +7,7 @@ import com.microsoft.playwright.options.WaitUntilState;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -121,10 +122,10 @@ public abstract class PlaywrightUiLoginBaseTest {
     }
 
     @BeforeAll
-    void loginOnce() {
+    void loginOnce() throws IOException {
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(false));
+                .setHeadless(true));
 
         if (java.nio.file.Files.exists(STORAGE_STATE)) {
             context = browser.newContext(new Browser.NewContextOptions()
@@ -138,8 +139,14 @@ public abstract class PlaywrightUiLoginBaseTest {
                     UI_BASE,
                     new Page.NavigateOptions()
                             .setWaitUntil(WaitUntilState.DOMCONTENTLOADED) // або NETWORKIDLE, якщо потрібно
-                            .setTimeout(60_000) // 60 секунд = 1 хв
+                            .setTimeout(5000_000) // 60 секунд = 1 хв
             );
+
+            if (waitUntilDashboard(page, 20_000)) {
+                // ✅ ми на дашборді: state валідний, рухаємось далі
+                page.waitForLoadState(LoadState.NETWORKIDLE); // стабілізація SPA
+                return;
+            }
 
             page.waitForLoadState(LoadState.DOMCONTENTLOADED);
 
@@ -153,7 +160,8 @@ public abstract class PlaywrightUiLoginBaseTest {
             if (!needsRelogin) return;
 
             // інакше – закриваємо контекст і робимо чистий логін
-            context.close();
+            try { context.close(); } catch (Throwable ignored) {}
+            java.nio.file.Files.deleteIfExists(STORAGE_STATE);
         }
 
         // clean login
@@ -162,15 +170,21 @@ public abstract class PlaywrightUiLoginBaseTest {
                 .setBypassCSP(true));
         page = context.newPage();
 
-        page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+        page.navigate(
+                UI_BASE,
+                new Page.NavigateOptions()
+                        .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+                        .setTimeout(5000_000) // ⏳ чекаємо до 2 хвилин
+        );
         new SignInPage(page).signIntoApplication(EMAIL, PASSWORD);
+        // дочекатись, що ми НЕ на сторінці логіна, і UI стабільний
+
+        // 2) Чекаємо саме появу /dashboard (а не заперечення)
+        page.waitForURL("**/dashboard", new Page.WaitForURLOptions().setTimeout(600_000));
 
         //page.waitForLoadState(LoadState.NETWORKIDLE);
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
 
-        // дочекатись, що ми НЕ на сторінці логіна, і UI стабільний
-        page.waitForURL(u -> !u.toString().contains("/dashboard"),
-                new Page.WaitForURLOptions().setTimeout(60_000));
 
         // зберегти свіжий state (куки + LS з правильного origin)
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE));
@@ -185,7 +199,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     }
     protected static boolean shouldDeleteStorage = true;
 
-    //@AfterAll
+    @AfterAll
     static void cleanupStorageState() {          //CLEARS FILE AFTER EVERYTHING IS DONE
         if (shouldDeleteStorage) {
             try {
@@ -250,6 +264,17 @@ public abstract class PlaywrightUiLoginBaseTest {
                         .setState(WaitForSelectorState.DETACHED)
                         .setTimeout(15000)
         );
+    }
+
+    /** Повертає true, якщо протягом timeout ми опинились на /dashboard. */
+    private static boolean waitUntilDashboard(Page page, int timeoutMs) {
+        try {
+            page.waitForURL(u -> u.toString().contains("/dashboard"),
+                    new Page.WaitForURLOptions().setTimeout(timeoutMs));
+            return true;
+        } catch (PlaywrightException e) {
+            return false;
+        }
     }
 
 

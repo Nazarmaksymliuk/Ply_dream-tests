@@ -110,7 +110,7 @@ public class MaterialsListPage {
         // підтвердження — Enter (у codegen був клік по якомусь ._button_*)
         page.keyboard().press("Enter");
 
-        page.waitForTimeout(1000);
+        page.waitForTimeout(1500);
 
     }
 

@@ -23,7 +23,6 @@ public class ToolTransferTest extends PlaywrightUiLoginBaseTest {
     public void setUp() {
         openPath("/stock/warehouse/warehousemain/ac1f56fd-9919-137e-8199-1f504b6607e8");
         transferPage = new TransferPage(page);
-        transferPage.waitForReady();
         warehousePage = new WarehousePage(page);
         toolsListPage = new ToolsListPage(page);
     }
