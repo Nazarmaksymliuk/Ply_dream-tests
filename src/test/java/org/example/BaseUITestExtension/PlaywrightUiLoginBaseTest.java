@@ -125,6 +125,13 @@ public abstract class PlaywrightUiLoginBaseTest {
     @BeforeAll
     void loginOnce() throws IOException {
         playwright = Playwright.create();
+
+        // === читаємо прапор з системних властивостей або змінних середовища ===
+        boolean headless = Boolean.parseBoolean(
+                System.getProperty("headless",  // Maven: -Dheadless=true
+                        System.getenv().getOrDefault("PLAYWRIGHT_HEADLESS", "true"))
+        );
+
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
                 .setHeadless(true));
 
