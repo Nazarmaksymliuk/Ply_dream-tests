@@ -1,0 +1,53 @@
+name: E2E Tests & Allure (Kyiv 07:00)
+
+on:
+  # Щодня о 07:00 за Києвом. У GitHub cron = UTC, тому дві події:
+  schedule:
+    - cron: "0 4 * 4-10 *"      # березень–жовтень: 07:00 Kyiv == 04:00 UTC
+    - cron: "0 5 * 11,12,1,2,3 *" # листопад–лютий: 07:00 Kyiv == 05:00 UTC
+  workflow_dispatch: {}           # ручний запуск з вкладки Actions
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+    env:
+      MAVEN_OPTS: -Xmx2g
+      PLAYWRIGHT_HEADLESS: "true"
+      PLAYWRIGHT_BROWSERS_PATH: "0"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-v1
+
+      - name: Install Playwright browsers
+        run: mvn -B com.microsoft.playwright:playwright:install
+
+      - name: Run tests (Failsafe: clean verify)
+        run: mvn -B clean verify
+
+      - name: Generate Allure report
+        run: mvn -B allure:report
+
+      # Приватне репо: зберігаємо звіт як artifact (скачати з Actions)
+      - name: Upload Allure report (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: target/allure-report
