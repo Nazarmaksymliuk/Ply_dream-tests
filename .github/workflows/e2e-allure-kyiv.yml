@@ -39,7 +39,7 @@ jobs:
       - name: Install Playwright browsers
         run: mvn -B com.microsoft.playwright:playwright:install
 
-      - name: Run tests (Failsafe: clean verify)
+      - name: Run tests (Failsafe:clean verify)
         run: mvn -B clean verify
 
       - name: Generate Allure report
