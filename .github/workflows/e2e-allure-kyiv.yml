@@ -2,8 +2,8 @@ name: E2E Tests & Allure (Kyiv 07:00)
 
 on:
   schedule:
-    - cron: "0 4 * 4-10 *"        # 07:00 Kyiv у період DST
-    - cron: "0 5 * 11,12,1,2,3 *" # 07:00 Kyiv у стандартний час
+    - cron: "0 4 * 4-10 *"
+    - cron: "0 5 * 11,12,1,2,3 *"
   workflow_dispatch:
 
 jobs:
@@ -25,16 +25,11 @@ jobs:
           java-version: "21"
           cache: maven
 
+      # СТАВИТЬ усі linux-залежності + браузери Playwright
       - name: Install Playwright browsers & OS deps
         uses: microsoft/playwright-github-action@v1
         with:
           version: stable
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ms-playwright-${{ runner.os }}-v1
 
       - name: Run tests (Failsafe:clean verify)
         env:
