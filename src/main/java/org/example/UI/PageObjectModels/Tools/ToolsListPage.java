@@ -5,6 +5,8 @@ import com.microsoft.playwright.Page;
 
 import java.util.List;
 
+import static org.example.UI.PageObjectModels.Utils.Waits.WaitUtils.waitForVisible;
+
 public class ToolsListPage {
     private final Page page;
     private final Locator firstToolNameInTheList;
@@ -27,6 +29,7 @@ public class ToolsListPage {
     }
 
     public String getFirstToolNameInTheList() {
+        waitForVisible(firstToolNameInTheList);
         return firstToolNameInTheList.innerText();
     }
     public String getFirstUnitNameInTheList() {
@@ -49,7 +52,9 @@ public class ToolsListPage {
      return toolNamesList.allInnerTexts();
     }
 
-
+    public Locator getFirstToolNameLocator(){
+        return firstToolNameInTheList;
+    }
 
 
 }

@@ -141,6 +141,7 @@ public abstract class PlaywrightUiLoginBaseTest {
                             .setTimeout(60_000) // 60 секунд = 1 хв
             );
 
+            page.waitForLoadState(LoadState.DOMCONTENTLOADED);
 
             // якщо редіректить на логін або бачимо помилковий тост — робимо релоґін
             boolean needsRelogin =
@@ -164,8 +165,11 @@ public abstract class PlaywrightUiLoginBaseTest {
         page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
         new SignInPage(page).signIntoApplication(EMAIL, PASSWORD);
 
+        //page.waitForLoadState(LoadState.NETWORKIDLE);
+        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+
         // дочекатись, що ми НЕ на сторінці логіна, і UI стабільний
-        page.waitForURL(u -> !u.toString().contains("/sign-in"),
+        page.waitForURL(u -> !u.toString().contains("/dashboard"),
                 new Page.WaitForURLOptions().setTimeout(60_000));
 
         // зберегти свіжий state (куки + LS з правильного origin)
@@ -181,7 +185,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     }
     protected static boolean shouldDeleteStorage = true;
 
-    @AfterAll
+    //@AfterAll
     static void cleanupStorageState() {          //CLEARS FILE AFTER EVERYTHING IS DONE
         if (shouldDeleteStorage) {
             try {

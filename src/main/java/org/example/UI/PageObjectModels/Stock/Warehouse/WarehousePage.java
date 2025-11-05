@@ -12,6 +12,8 @@ public class WarehousePage {private final Page page;
     private final Locator addNewMaterialButton;
     private final Locator consumablesTabButton;
 
+    private final Locator toolsTabButton;
+
     // === Constructor ===
     public WarehousePage(Page page) {
         this.page = page;
@@ -26,6 +28,13 @@ public class WarehousePage {private final Page page;
                 AriaRole.BUTTON,
                 new Page.GetByRoleOptions().setName("Consumables")
         );
+        toolsTabButton = page.getByRole(
+                AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Tools")
+        );
+
+
+
     }
 
     public MaterialSpecsPage clickOnAddNewMaterialButton() {
@@ -43,4 +52,12 @@ public class WarehousePage {private final Page page;
                         .setTimeout(15000)
         );
     }
+
+    public void clickOnToolsTabButton() {
+        toolsTabButton.waitFor(new Locator.WaitForOptions()
+                .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
+                .setTimeout(10_000)); // чекаємо до 10 секунд, поки стане видимим
+        toolsTabButton.click();        toolsTabButton.click();
+    }
+
 }

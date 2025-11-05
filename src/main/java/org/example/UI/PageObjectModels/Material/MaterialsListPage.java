@@ -6,6 +6,7 @@ import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
+import org.example.UI.PageObjectModels.Transfer.TransferModalPage;
 
 import java.util.List;
 
@@ -38,6 +39,11 @@ public class MaterialsListPage {
 
     private final Locator searchByItemInput;
 
+    // === ДОПОВНЕНО ДЛЯ ТРАНСФЕРУ ===
+    private final Locator firstRowQtyButton;      // кнопка “X Each” у першому рядку
+    private final Locator firstRowCheckbox;       // чекбокс першого рядка
+    private final Locator transferToolbarButton;  // глобальна кнопка Transfer
+
 
     public MaterialsListPage(Page page) {
         this.page = page;
@@ -66,6 +72,13 @@ public class MaterialsListPage {
 
         searchByItemInput = page.getByPlaceholder("Search by item")
                 .or(page.getByPlaceholder("Search material"));
+
+        // === нові локатори для трансферу ===
+        // кнопка кількості у першому рядку — шукаємо кнопку, що містить "Each"
+        firstRowQtyButton = page.locator("div[role='button']:has(span[aria-label='Each'])").first();
+        firstRowCheckbox      = page.getByRole(AriaRole.CHECKBOX).nth(1);
+        transferToolbarButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Transfer"));
+
     }
 
     // ===== Waits =====
@@ -73,6 +86,42 @@ public class MaterialsListPage {
         materialFirstNameInTheList.waitFor(
                 new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(60000)
         );
+    }
+
+//    // ===== допоміжне: кількість у першому рядку з гріда
+//    public int getFirstRowQuantity() {
+//        Locator qtySpan = page.locator("div[role='button'][class^='_edit_wrapper_'] b span:nth-of-type(1)").first();
+//        String text = qtySpan.innerText().trim().replaceAll("[^\\d]", "");
+//        if (text.isEmpty()) return 0;
+//        return Integer.parseInt(text);
+//    }
+
+    // ===== редагування кількості першого рядка у гріді
+    public void setFirstRowGridQuantity(int value) {
+        // відкриваємо поповер/інлайн-редактор кількості
+        firstRowQtyButton.click();
+
+        // у деяких версіях інпут — це textbox всередині “кнопки з числом”
+        // спробуємо знайти перший видимий текстовий інпут у відкритому поповері
+        Locator qtyEditorInput = page.locator("div[class^='_table_item_'] [class^='_input_']").first();
+        qtyEditorInput.clear();
+        qtyEditorInput.fill(Integer.toString(value));
+
+        // підтвердження — Enter (у codegen був клік по якомусь ._button_*)
+        page.keyboard().press("Enter");
+
+        page.waitForTimeout(1000);
+
+    }
+
+    // ===== чекбокс + Transfer
+    public void checkFirstRow() {
+        firstRowCheckbox.check();
+    }
+
+    public TransferModalPage clickTransferButton() {
+        transferToolbarButton.click();
+        return new TransferModalPage(page);
     }
 
     // вузький якір: рядок матеріалу за назвою
