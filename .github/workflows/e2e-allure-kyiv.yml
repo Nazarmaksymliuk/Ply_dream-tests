@@ -48,3 +48,12 @@ jobs:
         with:
           name: allure-report
           path: target/allure-report
+
+      - name: Upload Allure site (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-site
+          path: target/allure-report/**      # статичний сайт (index.html, assets)
+          if-no-files-found: error
+          retention-days: 14
