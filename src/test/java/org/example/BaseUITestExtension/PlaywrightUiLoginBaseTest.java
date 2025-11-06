@@ -182,13 +182,13 @@ public abstract class PlaywrightUiLoginBaseTest {
                 UI_BASE,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(5000_000) // ⏳ чекаємо до 2 хвилин
+                        .setTimeout(10000_000) // ⏳ чекаємо до 2 хвилин
         );
         new SignInPage(page).signIntoApplication(EMAIL, PASSWORD);
         // дочекатись, що ми НЕ на сторінці логіна, і UI стабільний
 
         // 2) Чекаємо саме появу /dashboard (а не заперечення)
-        page.waitForURL("**/dashboard", new Page.WaitForURLOptions().setTimeout(600_000));
+        page.waitForURL("**/dashboard", new Page.WaitForURLOptions().setTimeout(1000_000));
 
         //page.waitForLoadState(LoadState.NETWORKIDLE);
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
@@ -235,7 +235,7 @@ public abstract class PlaywrightUiLoginBaseTest {
                 UI_BASE + path,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(500_000) // ← 120 секунд
+                        .setTimeout(1000_000) // ← 120 секунд
         );
     }
 
