@@ -182,7 +182,7 @@ public abstract class PlaywrightUiLoginBaseTest {
                 UI_BASE,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(10000_000) // ⏳ чекаємо до 2 хвилин
+                        .setTimeout(5000_000) // ⏳ чекаємо до 2 хвилин
         );
         new SignInPage(page).signIntoApplication(EMAIL, PASSWORD);
         // дочекатись, що ми НЕ на сторінці логіна, і UI стабільний
