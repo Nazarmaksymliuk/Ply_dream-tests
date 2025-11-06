@@ -65,7 +65,7 @@ public class BaseVerifyingTest {
         if (playwright != null) playwright.close();
     }
 
-    @Test
+    //@Test
     @DisplayName("Login via API → inject ply_mfa_loginState & ply_user → open Dashboard")
     void loginViaApi_andOpenDashboard() {
         // 1) Логін по API

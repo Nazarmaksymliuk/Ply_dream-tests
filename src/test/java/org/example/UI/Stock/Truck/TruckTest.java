@@ -28,13 +28,6 @@ public class TruckTest extends PlaywrightUiLoginBaseTest {
             faker.vehicle().model()
     );
 
-    Truck editedTruck = new Truck(
-            "Truck-" + new Random().nextInt(100000),
-            faker.bothify("???-####"),
-            faker.vehicle().make(),
-            faker.vehicle().model()
-    );
-
     @BeforeAll
     public void setUp() {
         openPath("/stock");
@@ -65,6 +58,13 @@ public class TruckTest extends PlaywrightUiLoginBaseTest {
         PlaywrightAssertions.assertThat(trucksListPage.root())
                 .containsText(truck.name + " - " + truck.make + " - " + truck.model);
     }
+
+    Truck editedTruck = new Truck(
+            "Truck-edited-" + new Random().nextInt(100000),
+            faker.bothify("???-####"),
+            faker.vehicle().make(),
+            faker.vehicle().model()
+    );
 
     @DisplayName("Update Truck Test")
     @Order(1)
