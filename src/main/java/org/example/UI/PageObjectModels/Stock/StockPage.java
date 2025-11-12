@@ -17,6 +17,8 @@ public class StockPage {
     private final Locator menuItemEdit;
     private final Locator templatesTab;
 
+    private final Locator inventoryCountTab;
+
 
     // === Конструктор ===
     public StockPage(Page page) {
@@ -42,6 +44,8 @@ public class StockPage {
 
         this.templatesTab = page.getByRole(AriaRole.TAB, new Page.GetByRoleOptions().setName("Templates"));
 
+        this.inventoryCountTab = page.getByRole(AriaRole.TAB, new Page.GetByRoleOptions().setName("Inventory Count"));
+
 
     }
 
@@ -54,6 +58,7 @@ public class StockPage {
         warehousesTabButton.click();
         return new WarehousesListPage(page);
     }
+
     public TrucksListPage clickOnTruckTabButton() {
         trucksTabButton.waitFor(
                 new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE)
@@ -78,6 +83,10 @@ public class StockPage {
 
     public void clickOnTemplatesTab() {
         templatesTab.click();
+    }
+
+    public void clickOnInventoryCountsTab() {
+        inventoryCountTab.click();
     }
 
     public Locator templatesTabButton() {

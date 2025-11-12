@@ -15,6 +15,11 @@ public class MaterialTransferTest extends PlaywrightUiLoginBaseTest {
     TransferModalPage modalPage;
     TransferPage transferPage;
 
+    Integer qtyForMaterial = 100;
+    Integer transferredToJobQty = 5;
+
+
+    String jobName = "MainJob";
 
     @BeforeEach
     public void setUp() {
@@ -27,10 +32,10 @@ public class MaterialTransferTest extends PlaywrightUiLoginBaseTest {
     @DisplayName("Transfer material from warehouse WarehouseMain to WarehouseToTransfer (set 100 → transfer 50)")
     @Order(0)
     @Test
-    public void transferMaterialTest() {
+    public void transferMaterialFromLocationToLocationTest() {
         // 1) виставити кількість першого матеріалу в гріді = 100
-        materialsListPage.setFirstRowGridQuantity(100);
-        Assertions.assertThat(materialsListPage.getFirstRowQuantity()).isEqualTo(100);
+        materialsListPage.setFirstRowGridQuantity(qtyForMaterial);
+        Assertions.assertThat(materialsListPage.getFirstRowQuantity()).isEqualTo(qtyForMaterial);
 
         // чекнемо перший матеріал
         transferPage.waitForReady();
@@ -42,18 +47,54 @@ public class MaterialTransferTest extends PlaywrightUiLoginBaseTest {
         // 4) у модалці: обрати локацію, вказати qty=50, натиснути Transfer → Confirm
         modalPage.selectLocation("WarehouseToTransfer");
 
-        modalPage.setTransferQuantity(50);
+        modalPage.setTransferQuantity(transferredToJobQty);
         modalPage.clickTransfer();
         modalPage.clickConfirm();
 
         // 5) алерт про успіх
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).contains("successfully transferred")
+                .contains("successfully transferred");
+        AlertUtils.waitForAlertHidden(page);
+
+
+
+    }
+
+    @DisplayName("Transfer material from warehouse WarehouseMain to JobMain (set 100 → transfer 50)")
+    @Order(0)
+    @Test
+    public void transferMaterialFromLocationToJobTest() {
+        Integer materialQty = materialsListPage.getQtyFromMaterialLocationStock();
+
+        // 1) виставити кількість першого матеріалу в гріді = 100
+        materialsListPage.setFirstRowGridQuantity(qtyForMaterial);
+        Assertions.assertThat(materialsListPage.getFirstRowQuantity()).isEqualTo(qtyForMaterial);
+
+        // чекнемо перший матеріал
+        transferPage.waitForReady();
+        transferPage.checkFirstRow();
+
+// відкриваємо модалку “Transfer”
+        modalPage = transferPage.clickTransferButton();
+
+        modalPage.clickJobModalButton();
+        modalPage.setJobToTransfer(jobName);
+        modalPage.setQtyForMaterialInJobTransfer(transferredToJobQty);
+
+        modalPage.clickTransfer();
+        modalPage.clickConfirm();
+
+// 5) алерт про успіх
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
         PlaywrightAssertions.assertThat(page.getByRole(com.microsoft.playwright.options.AriaRole.ALERT))
                 .containsText("successfully transferred");
         AlertUtils.waitForAlertHidden(page);
 
-        // 6) перевірка, що у гріді тепер показується 50 (100 - 50)
-        Assertions.assertThat(materialsListPage.getFirstRowQuantity()).isEqualTo(50);
+        Assertions.assertThat(materialsListPage.getQtyFromMaterialLocationStock()).isEqualTo(qtyForMaterial - transferredToJobQty);
     }
+
+
 }

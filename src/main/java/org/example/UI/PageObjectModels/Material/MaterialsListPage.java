@@ -41,6 +41,7 @@ public class MaterialsListPage {
 
     // === ДОПОВНЕНО ДЛЯ ТРАНСФЕРУ ===
     private final Locator firstRowQtyButton;      // кнопка “X Each” у першому рядку
+    private final Locator firstRowQty;      // кнопка “X Each” у першому рядку
     private final Locator firstRowCheckbox;       // чекбокс першого рядка
     private final Locator transferToolbarButton;  // глобальна кнопка Transfer
 
@@ -76,6 +77,9 @@ public class MaterialsListPage {
         // === нові локатори для трансферу ===
         // кнопка кількості у першому рядку — шукаємо кнопку, що містить "Each"
         firstRowQtyButton = page.locator("div[role='button']:has(span[aria-label='Each'])").first();
+
+        firstRowQty = page.locator(".inline-flex").first();
+
         firstRowCheckbox      = page.getByRole(AriaRole.CHECKBOX).nth(1);
         transferToolbarButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Transfer"));
 
@@ -112,6 +116,12 @@ public class MaterialsListPage {
 
         page.waitForTimeout(1500);
 
+    }
+
+    public int getQtyFromMaterialLocationStock() {
+        String text = firstRowQty.innerText().replaceAll("[^\\d.]+", ""); // залишає лише цифри та крапку
+        if (text.isEmpty()) return 0;
+        return Integer.parseInt(text);
     }
 
     // ===== чекбокс + Transfer

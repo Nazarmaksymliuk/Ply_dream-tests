@@ -27,6 +27,7 @@ public class ConsumableListPage {
     private final Locator consumableLocationInTheDropDown;
     private final Locator qtyInConsumableLocation;
     private final Locator consumablePriceDiv;
+    private final Locator qtyInConsumableLocationStock;
 
 
 
@@ -52,6 +53,7 @@ public class ConsumableListPage {
         firstLocationArrowDownButton  = page.getByTestId("KeyboardArrowDownIcon").first();
         consumableLocationInTheDropDown = page.locator("[href^='/stock/warehouse']");
         qtyInConsumableLocation       = page.locator("b.flex.items-center.gap-1");
+        qtyInConsumableLocationStock       = page.locator(".inline-flex").first();
 
         consumablePriceDiv = page.locator("[class^='_table_body_']").locator("[class*='font-semibold']").nth(3);
 
@@ -101,6 +103,11 @@ public class ConsumableListPage {
 
     public double getQtyFromConsumableLocation() {
         String text = qtyInConsumableLocation.innerText().replaceAll("[^\\d.]+", ""); // залишає лише цифри та крапку
+        if (text.isEmpty()) return 0.0;
+        return Double.parseDouble(text);
+    }
+    public double getQtyFromConsumableLocationStock() {
+        String text = qtyInConsumableLocationStock.innerText().replaceAll("[^\\d.]+", ""); // залишає лише цифри та крапку
         if (text.isEmpty()) return 0.0;
         return Double.parseDouble(text);
     }

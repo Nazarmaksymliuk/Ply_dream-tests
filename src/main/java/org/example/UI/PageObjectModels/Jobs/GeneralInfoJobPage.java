@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.UI.PageObjectModels.Utils.LocationSelect;
 
 public class GeneralInfoJobPage {
     private final Page page;
@@ -15,6 +16,7 @@ public class GeneralInfoJobPage {
     private final Locator selectDate;
     private final Locator todayButton;
     private final Locator contactsTabButton;
+    private final LocationSelect locationSelect;
 
     public GeneralInfoJobPage(Page page) {
         this.page = page;
@@ -28,6 +30,8 @@ public class GeneralInfoJobPage {
         this.selectDate = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Enter start date"));
         this.todayButton = page.locator(".react-datepicker__day--today");
         contactsTabButton = page.getByText("Contacts");
+
+        locationSelect = new LocationSelect(page);
 
     }
 
@@ -49,14 +53,21 @@ public class GeneralInfoJobPage {
         selectInputTruck.fill("");                 // на всяк випадок очистити
         selectInputTruck.type(truckToJobValue);    // type краще для react-select
 
-        // 3) дочекайся, що комбобокс відкрився і з’явились опції
-        Locator openCombo = page.locator("input[role='combobox'][aria-expanded='true']");
-        openCombo.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-        page.waitForSelector(".react_select__menu");       // меню
-        page.waitForSelector(".react_select__option");     // хоча б одна опція
+        page.waitForTimeout(2000);
+        page.keyboard().press("Enter");
+//
+//        // 3) дочекайся, що комбобокс відкрився і з’явились опції
+//        Locator openCombo = page.locator("input[role='combobox'][aria-expanded='true']");
+//        openCombo.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+//        page.waitForSelector(".react_select__menu");       // меню
+//        page.waitForSelector(".react_select__option");     // хоча б одна опція
+//
+//        // 4) тепер безпечно підтверджувати вибір — Enter САМЕ В ІНПУТІ
+//        openCombo.press("Enter");
+    }
 
-        // 4) тепер безпечно підтверджувати вибір — Enter САМЕ В ІНПУТІ
-        openCombo.press("Enter");
+    public void setTruckByEnter(String truckName){
+        locationSelect.setLocationByEnter(truckName);
     }
 
 

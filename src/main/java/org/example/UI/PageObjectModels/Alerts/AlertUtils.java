@@ -26,6 +26,7 @@ public class AlertUtils {
                 .setTimeout(20000));
     }
     public static void waitForAlertVisible(Page page) {
+        page.waitForTimeout(500);
         Locator alert = page.locator("[role='alert']");
         alert.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)

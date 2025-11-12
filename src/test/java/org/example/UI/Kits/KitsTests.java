@@ -1,6 +1,7 @@
 package org.example.UI.Kits;
 
 import org.assertj.core.api.Assertions;
+import org.example.BaseUITestExtension.BaseUiTest;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.Models.Kit;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
@@ -57,6 +58,7 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
 
         kitSettingsPage = kitStockSetupPage.clickNext();
         kitSettingsPage.addFirstMaterialByName("Test");
+        kitSettingsPage.setQtyForMaterialInKit(5);
         kitSettingsPage.addFirstToolByName("Test");
         Double kitPrice = kitSettingsPage.getTheKitPrice();
 

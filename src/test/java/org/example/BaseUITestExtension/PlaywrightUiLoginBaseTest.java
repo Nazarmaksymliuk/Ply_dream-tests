@@ -25,10 +25,10 @@ public abstract class PlaywrightUiLoginBaseTest {
     protected static final String PASSWORD = System.getenv().getOrDefault("PLY_PASSWORD", "Test+1234");
 
     // === Shared for suite ===
-    protected Playwright playwright;
-    protected Browser browser;
-    protected BrowserContext context;
-    protected Page page;
+    protected  Playwright playwright;
+    protected  Browser browser;
+    protected  BrowserContext context;
+    protected  Page page;
 
     // Збережений стейт (куки + LS) – щоб відкривати нові вкладки/контексти вже залогіненими
     private static final Path STORAGE_STATE_PATH = Paths.get("build/ui-auth-storage-state.json");
@@ -36,13 +36,13 @@ public abstract class PlaywrightUiLoginBaseTest {
     private static final Path STORAGE_STATE = Paths.get("build/ui-auth.json");
 
 
-    //@BeforeAll
+    @BeforeAll
     void beforeAll_loginOnceViaUI() {
         playwright = Playwright.create();
         browser = playwright.chromium().launch(
                 new BrowserType.LaunchOptions()
                         .setHeadless(Boolean.parseBoolean(System.getenv()
-                                .getOrDefault("HEADLESS","false")))
+                                .getOrDefault("HEADLESS","true")))
                         .setArgs(java.util.List.of("--disable-dev-shm-usage","--disk-cache-size=0","--disable-application-cache"))
         );
 
@@ -86,6 +86,19 @@ public abstract class PlaywrightUiLoginBaseTest {
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE_PATH));
     }
 
+    @AfterAll
+    void afterAll_close() {
+        if (context != null) context.close();
+        if (browser != null) browser.close();
+        if (playwright != null) playwright.close();
+    }
+    protected static boolean shouldDeleteStorage = true;
+
+    @AfterEach
+    void takeFinalScreenshot(){
+        ScreenshotManager.takeScreenshot(page, "Final screenshot");
+    }
+
     //@BeforeAll
     void loginOnceMain() {
         playwright = Playwright.create();
@@ -122,18 +135,18 @@ public abstract class PlaywrightUiLoginBaseTest {
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE));
     }
 
-    @BeforeAll
+    //@BeforeAll
     void loginOnce() throws IOException {
         playwright = Playwright.create();
 
         // === читаємо прапор з системних властивостей або змінних середовища ===
         boolean headless = Boolean.parseBoolean(
                 System.getProperty("headless",  // Maven: -Dheadless=true
-                        System.getenv().getOrDefault("PLAYWRIGHT_HEADLESS", "true"))
+                        System.getenv().getOrDefault("PLAYWRIGHT_HEADLESS", "false"))
         );
 
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(true));
+                .setHeadless(false));
 
         if (java.nio.file.Files.exists(STORAGE_STATE)) {
             context = browser.newContext(new Browser.NewContextOptions()
@@ -182,7 +195,7 @@ public abstract class PlaywrightUiLoginBaseTest {
                 UI_BASE,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(5000_000) // ⏳ чекаємо до 2 хвилин
+                        .setTimeout(5000_000)
         );
         new SignInPage(page).signIntoApplication(EMAIL, PASSWORD);
         // дочекатись, що ми НЕ на сторінці логіна, і UI стабільний
@@ -191,7 +204,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         page.waitForURL("**/dashboard", new Page.WaitForURLOptions().setTimeout(1000_000));
 
         //page.waitForLoadState(LoadState.NETWORKIDLE);
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        //page.waitForLoadState(LoadState.DOMCONTENTLOADED);
 
 
         // зберегти свіжий state (куки + LS з правильного origin)
@@ -199,15 +212,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     }
 
 
-    @AfterAll
-    void afterAll_close() {
-        if (context != null) context.close();
-        if (browser != null) browser.close();
-        if (playwright != null) playwright.close();
-    }
-    protected static boolean shouldDeleteStorage = true;
-
-    @AfterAll
+    //@AfterAll
     static void cleanupStorageState() {          //CLEARS FILE AFTER EVERYTHING IS DONE
         if (shouldDeleteStorage) {
             try {
@@ -219,10 +224,6 @@ public abstract class PlaywrightUiLoginBaseTest {
         }
     }
 
-    @AfterEach
-    void takeFinalScreenshot(){
-        ScreenshotManager.takeScreenshot(page, "Final screenshot");
-    }
 
     // ===== Helpers для тестів =====
 

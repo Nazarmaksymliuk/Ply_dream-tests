@@ -13,6 +13,7 @@ public class TransferPage {
     private final Locator firstRowCheckbox;        // чекбокс першого рядка
     private final Locator transferToolbarButton;   // кнопка "Transfer"
     private final Locator moveToLocationButton;    // кнопка "Move To Location"
+    private final Locator moveToJobButton;    // кнопка "Move To Location"
 
     public TransferPage(Page page) {
         this.page = page;
@@ -30,6 +31,11 @@ public class TransferPage {
         // Кнопка Move To Location у тулбарі
         moveToLocationButton = page.getByRole(AriaRole.BUTTON,
                 new Page.GetByRoleOptions().setName("Move To Location"));
+
+        moveToJobButton = page.getByRole(AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Move To Job"));
+
+
     }
 
     /** Очікує, що грід готовий і перший рядок видимий */
@@ -62,6 +68,13 @@ public class TransferPage {
                 .setState(WaitForSelectorState.VISIBLE)
                 .setTimeout(10_000));
         moveToLocationButton.click();
+        return new TransferModalPage(page);
+    }
+    public TransferModalPage clickMoveToJobButton() {
+        moveToJobButton.waitFor(new Locator.WaitForOptions()
+                .setState(WaitForSelectorState.VISIBLE)
+                .setTimeout(10_000));
+        moveToJobButton.click();
         return new TransferModalPage(page);
     }
 }
