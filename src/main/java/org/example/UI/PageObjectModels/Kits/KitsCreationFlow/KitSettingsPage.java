@@ -26,6 +26,8 @@ public class KitSettingsPage {
 
     private final Locator kitPriceDiv;
 
+    private final Locator ktiQtyForKit;
+
     public KitSettingsPage(Page page) {
         this.page = page;
 
@@ -45,6 +47,8 @@ public class KitSettingsPage {
 
         kitPriceDiv = page.locator("[class='fs_13 fw_600']").nth(2);
 
+        ktiQtyForKit = page.getByPlaceholder("0");
+
     }
 
     // ======== Materials flow ========
@@ -63,6 +67,12 @@ public class KitSettingsPage {
 
         // Save під "Kit Price" (перший "Save" у DOM)
         //clickSectionSave();
+    }
+
+    public void setQtyForMaterialInKit(Integer qtyForKit) {
+        ktiQtyForKit.click();
+        page.keyboard().press("Backspace");
+        ktiQtyForKit.fill(Integer.toString(qtyForKit));
     }
 
     // ======== Tools flow ========

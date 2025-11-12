@@ -25,6 +25,20 @@ public class TransferModalPage {
 
     private final Locator moveToolButton;  // “Move 1 Tool”
 
+    private final Locator locationModalButton;
+
+    private final Locator qtyForTransfer;
+
+    private final Locator chooseDestinationInput;
+
+    private final Locator jobModalButton;
+
+    private final Locator chooseJobInput;
+
+    private final LocationSelect jobSelect;
+
+    private final Locator qtyForTransferMaterialTojob;
+
 
     public TransferModalPage(Page page) {
         this.page = page;
@@ -45,6 +59,19 @@ public class TransferModalPage {
         confirmButton  = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Confirm"));
         moveToolButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Move 1 Tool"));
 
+        locationModalButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Location"));
+
+        jobModalButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Job"));
+
+        qtyForTransfer = page.locator("[class*='_input_btn_wrapper_']").last();
+
+        chooseDestinationInput = page.locator(".react_select__input").last();
+
+        chooseJobInput = page.locator(".react_select__input").last();
+
+        jobSelect = new LocationSelect(page);
+
+        qtyForTransferMaterialTojob = page.locator("input[type='number']").first();
 
     }
 
@@ -60,23 +87,62 @@ public class TransferModalPage {
         locationSelect.setLocationByEnter(locationName);
     }
 
+    public void selectDestinationForConsumable(String locationName) {
+        chooseDestinationInput.click();
+        page.waitForTimeout(1500);
+        chooseDestinationInput.fill(locationName);
+        page.keyboard().press("Enter");
+    }
+    public void setQtyForMaterialInKit(Integer qtyToTransfer) {
+        qtyForTransfer.click();
+        qtyForTransfer.fill(Integer.toString(qtyToTransfer));
+
+    }
+    public void setQtyForMaterialInJobTransfer(Integer qtyToTransfer) {
+        qtyForTransferMaterialTojob.click();
+        page.keyboard().press("Backspace");
+        qtyForTransferMaterialTojob.fill(Integer.toString(qtyToTransfer));
+
+    }
+    public void setQtyForConsumable(Integer qtyToTransfer) {
+        qtyForTransfer.click();
+        qtyForTransfer.fill(Integer.toString(qtyToTransfer));
+
+    }
+
     /** Встановлює кількість для трансферу */
     public void setTransferQuantity(int qty) {
         qtySpinButton.click();
         qtySpinButton.fill(Integer.toString(qty));
     }
 
+
     /** Натискає кнопку Transfer у модалці */
     public void clickTransfer() {
         transferButton.click();
+    }
+
+    public void clickLocationModalButton() {
+        locationModalButton.click();
+    }
+
+    public void clickJobModalButton() {
+        jobModalButton.click();
     }
 
     public void clickMoveTool() {
         moveToolButton.click();
     }
 
+    public void setJobToTransfer(String jobName) {
+        jobSelect.setJobByEnter(jobName);
+    }
+
     /** Натискає кнопку Confirm у підтвердженні */
     public void clickConfirm() {
         confirmButton.click();
     }
+
+
+
 }

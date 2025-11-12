@@ -3,6 +3,7 @@ package org.example.UI.Jobs;
 import com.microsoft.playwright.assertions.LocatorAssertions;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import org.assertj.core.api.Assertions;
+import org.example.BaseUITestExtension.BaseUiTest;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.Models.ClientContacts;
 import org.example.UI.Models.Job;
@@ -103,7 +104,7 @@ public class JobsTest extends PlaywrightUiLoginBaseTest {
         generalInfoJobPage = activeJobsPage.clickEditJobButton();
 
         generalInfoJobPage.setJobName(editedJob.jobName);
-        generalInfoJobPage.setTruckToJob(editedJob.truckName);
+        generalInfoJobPage.setTruckByEnter(editedJob.truckName);
 
         contactsJobPage = generalInfoJobPage.clickContactsTabButton();
 
@@ -160,10 +161,6 @@ public class JobsTest extends PlaywrightUiLoginBaseTest {
         Assertions.assertThat(finishedJobsPage.getJobList()).contains(jobForFinishName);
 
     }
-
-
-
-
 
 
 }

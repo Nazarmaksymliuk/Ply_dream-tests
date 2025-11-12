@@ -28,7 +28,7 @@ public class TruckTest extends PlaywrightUiLoginBaseTest {
             faker.vehicle().model()
     );
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() {
         openPath("/stock");
         stockPage = new StockPage(page);
@@ -100,7 +100,7 @@ public class TruckTest extends PlaywrightUiLoginBaseTest {
         String firstTruckName = trucksListPage.getTrucksNamesList().get(0);
 
         // Якщо це TruckMain — пропускаємо тест
-        if ("TruckMain".equalsIgnoreCase(firstTruckName.trim())) {
+        if (firstTruckName.contains("TruckMain")) {
             System.out.println("⚠️ TruckMain cannot be deleted, skipping test.");
             Assumptions.assumeTrue(false, "TruckMain — cannot be deleted");
         }

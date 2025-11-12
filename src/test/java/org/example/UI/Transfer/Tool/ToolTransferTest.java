@@ -17,6 +17,9 @@ public class ToolTransferTest extends PlaywrightUiLoginBaseTest {
     WarehousePage warehousePage;
     ToolsListPage toolsListPage;
 
+    String jobName = "MainJob";
+    String inUseStatus = "In Use";
+
     private final String warehouseToTransfer = "WarehouseToTransfer";
 
     @BeforeEach
@@ -55,4 +58,41 @@ public class ToolTransferTest extends PlaywrightUiLoginBaseTest {
 
         Assertions.assertThat(toolsListPage.getToolNamesList()).doesNotContain(toolName);
     }
+
+    @DisplayName("Transfer tool from warehouse WarehouseMain to JobMain")
+    @Order(1)
+    @Test
+    public void transferToolFromLocationToJobTest() {
+        // Відкрити вкладку інструментів
+        warehousePage.clickOnToolsTabButton();
+
+        // Запам’ятати назву першого інструменту (щоб перевірити, що він зникне зі складу)
+        String toolName = toolsListPage.getFirstToolNameInTheList();
+
+        // 1) Вибрати перший рядок (інструмент)
+        transferPage.checkFirstRow();
+
+        // 2) Відкрити модалку "Transfer"
+        modalPage = transferPage.clickMoveToJobButton();
+        modalPage.waitForLoaded();
+
+        // 4) Обрати Job, куди переносимо
+        modalPage.setJobToTransfer(jobName);
+
+        // 5) Натиснути "Transfer" і підтвердити
+        modalPage.clickMoveTool();
+
+        // 6) Перевірка: алерт успіху
+        AlertUtils.waitForAlertVisible(page);
+        String alertText = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alertText)
+                .isEqualTo("Tools have been successfully moved");
+        AlertUtils.waitForAlertHidden(page);
+
+        // 7) Перевірка: інструмент більше не відображається в списку інструментів складу
+        Assertions.assertThat(toolsListPage.getFirstToolJobName()).contains(jobName);
+        Assertions.assertThat(toolsListPage.getFirstToolInUseStatusName()).contains(inUseStatus);
+
+    }
+
 }

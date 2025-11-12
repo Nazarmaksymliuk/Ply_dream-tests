@@ -38,7 +38,17 @@ public class LocationSelect {
 
     public void setLocationByEnter(String location) {
         locationSelect.type(location);
-        page.waitForTimeout(1000);
+        page.waitForTimeout(2000);
+        page.keyboard().press("Enter");
+    }
+
+    public static void selectLocationStatic(Page page, String locationName) {
+        new LocationSelect(page).setLocationByEnter(locationName);
+    }
+
+    public void setJobByEnter(String location) {
+        locationSelect.type(location);
+        page.waitForTimeout(2500);
         page.keyboard().press("Enter");
     }
 

@@ -20,7 +20,8 @@ public class WarehouseTest extends PlaywrightUiLoginBaseTest {
     WarehousesListPage warehousesListPage;
     CreateWarehousePopUpPage createNewLocationPopUpPage;
     EditWarehousePopUpPage editWarehousePopUpPage;
-    @BeforeAll
+
+    @BeforeEach
     public void setUp() {
         openPath("/stock");
         stockPage = new StockPage(page);

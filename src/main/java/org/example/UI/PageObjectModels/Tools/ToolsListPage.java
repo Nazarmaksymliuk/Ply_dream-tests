@@ -16,6 +16,8 @@ public class ToolsListPage {
     private final Locator firstToolStatusLocationInTheList;
     private final Locator firstToolDateInTheList;
     private final Locator toolNamesList;
+    private final Locator firstToolJobName;
+    private final Locator firstToolInUseStatus;
 
     public ToolsListPage(Page page) {
         this.page = page;
@@ -26,6 +28,8 @@ public class ToolsListPage {
         firstToolWarehouseLocationInTheList = page.locator(".fw_500").first();
         firstToolStatusLocationInTheList = page.locator("[class*='status_']").first();
         firstToolDateInTheList = page.locator("[class^='_date_wrapper_']").first();
+        firstToolJobName = page.locator("span.fw_500").first();
+        firstToolInUseStatus = page.locator(".status_IN_USE").first();
     }
 
     public String getFirstToolNameInTheList() {
@@ -54,6 +58,14 @@ public class ToolsListPage {
 
     public Locator getFirstToolNameLocator(){
         return firstToolNameInTheList;
+    }
+
+    public String getFirstToolJobName(){
+        return firstToolJobName.innerText();
+    }
+
+    public String getFirstToolInUseStatusName(){
+        return firstToolInUseStatus.innerText();
     }
 
 
