@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y openvpn curl
 
-      - name: Start VPN (OpenVPN)
+            - name: Start VPN (OpenVPN)
         env:
           OVPN_CA:       ${{ secrets.OVPN_CA }}
           OVPN_CERT:     ${{ secrets.OVPN_CERT }}
@@ -37,6 +37,8 @@ jobs:
           printf '%s\n' "$OVPN_CA"   > ca.pem
           printf '%s\n' "$OVPN_CERT" > client.crt
           printf '%s\n' "$OVPN_KEY"  > client.key
+
+          chmod 600 ca.pem client.crt client.key || true
 
           # Create config
           cat > config.ovpn << 'EOF'
@@ -50,26 +52,30 @@ jobs:
           persist-tun
           remote-cert-tls server
 
+          # шифри — попередження про deprecated, але не критично
           cipher AES-256-CBC
           auth SHA256
+          data-ciphers AES-256-GCM:AES-128-GCM:AES-256-CBC
+          data-ciphers-fallback AES-256-CBC
 
-          verb 3
+          verb 4
 
           ca ca.pem
           cert client.crt
           key client.key
           EOF
 
-          # Start OpenVPN WITH LOGGING (correct way)
+          # Start OpenVPN WITH LOGGING
           if [ -n "$OVPN_USERNAME" ] && [ -n "$OVPN_PASSWORD" ]; then
             printf '%s\n%s\n' "$OVPN_USERNAME" "$OVPN_PASSWORD" > auth.txt
+            chmod 600 auth.txt || true
             sudo openvpn --config config.ovpn --auth-user-pass auth.txt > openvpn.log 2>&1 &
           else
             sudo openvpn --config config.ovpn > openvpn.log 2>&1 &
           fi
 
-          # Wait for tunnel to come up
-          for i in {1..40}; do
+          # Wait up to ~90s
+          for i in {1..90}; do
             if grep -q "Initialization Sequence Completed" openvpn.log; then
               echo "VPN UP"
               break
@@ -77,12 +83,12 @@ jobs:
             sleep 1
           done
 
-          echo "===== OpenVPN LOG (last 50 lines) ====="
-          tail -n 50 openvpn.log || true
-          echo "======================================="
+          echo "===== OpenVPN LOG (FULL) ====="
+          cat openvpn.log || true
+          echo "================================"
 
           if ! grep -q "Initialization Sequence Completed" openvpn.log; then
-            echo "❌ VPN FAILED — SEE LOG ABOVE"
+            echo "❌ VPN FAILED — дивись лог вище, шукай TLS Error/AUTH_FAILED і т.п."
             exit 1
           fi
 
