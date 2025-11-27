@@ -33,12 +33,10 @@ jobs:
           OVPN_USERNAME: ${{ secrets.OVPN_USERNAME }}
           OVPN_PASSWORD: ${{ secrets.OVPN_PASSWORD }}
         run: |
-          # Відновлюємо PEM-файли з secrets
           printf '%s\n' "$OVPN_CA"   > ca.pem
           printf '%s\n' "$OVPN_CERT" > client.crt
           printf '%s\n' "$OVPN_KEY"  > client.key
 
-          # Створюємо OpenVPN-конфіг
           cat > config.ovpn << 'EOF'
           client
           dev tun
@@ -60,7 +58,6 @@ jobs:
           key client.key
           EOF
 
-          # Якщо потрібен логін/пароль – додаємо auth-user-pass
           if [ -n "$OVPN_USERNAME" ] && [ -n "$OVPN_PASSWORD" ]; then
             printf '%s\n%s\n' "$OVPN_USERNAME" "$OVPN_PASSWORD" > auth.txt
             sudo openvpn --config config.ovpn --auth-user-pass auth.txt --daemon
@@ -68,27 +65,39 @@ jobs:
             sudo openvpn --config config.ovpn --daemon
           fi
 
-          # Даємо тунелю піднятись
           sleep 20
 
           echo "Public IP after VPN:"
           curl -s https://ifconfig.me || true
           echo
+
+      - name: Add stage host to /etc/hosts
+        run: |
+          cat << 'EOF' | sudo tee -a /etc/hosts
+          172.31.85.10   stage.getply.com
+          172.31.64.242  stage.getply.com
+          172.31.53.203  stage.getply.com
+          172.31.19.237  stage.getply.com
+          EOF
+
+          echo "Hosts entry:"
+          getent hosts stage.getply.com
+
       # ------- кінець VPN блоку -------
 
       - name: Debug network to stage
         run: |
-          echo "=== DNS resolve ==="
-          getent hosts stage.get***.com || nslookup stage.get***.com || echo "DNS failed"
+          echo "=== DNS/hosts resolve ==="
+          getent hosts stage.getply.com || echo "DNS/hosts failed"
 
           echo
           echo "=== Ping (якщо дозволено) ==="
-          ping -c 4 stage.get***.com || echo "Ping failed"
+          ping -c 4 stage.getply.com || echo "Ping failed"
 
           echo
           echo "=== Curl ==="
-          curl -vkL --max-time 30 https://stage.get***.com/ || echo "Curl failed"
-      
+          curl -vkL --max-time 30 https://stage.getply.com/ || echo "Curl failed"
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
