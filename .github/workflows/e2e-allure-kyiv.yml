@@ -76,6 +76,19 @@ jobs:
           echo
       # ------- кінець VPN блоку -------
 
+      - name: Debug network to stage
+        run: |
+          echo "=== DNS resolve ==="
+          getent hosts stage.get***.com || nslookup stage.get***.com || echo "DNS failed"
+
+          echo
+          echo "=== Ping (якщо дозволено) ==="
+          ping -c 4 stage.get***.com || echo "Ping failed"
+
+          echo
+          echo "=== Curl ==="
+          curl -vkL --max-time 30 https://stage.get***.com/ || echo "Curl failed"
+      
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
