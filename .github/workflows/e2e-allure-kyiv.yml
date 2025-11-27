@@ -85,6 +85,14 @@ jobs:
 
       # ------- кінець VPN блоку -------
 
+      - name: Debug routes
+        run: |
+          echo "=== ip addr ==="
+          ip addr
+          echo
+          echo "=== ip route ==="
+          ip route
+
       - name: Debug network to stage
         run: |
           echo "=== DNS/hosts resolve ==="
