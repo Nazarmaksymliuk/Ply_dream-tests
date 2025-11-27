@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-and-report:
-    runs-on: ubuntu-22.04   # <<< не ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       MAVEN_OPTS: -Xmx2g
       PLAYWRIGHT_HEADLESS: "true"
@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---------- VPN блок ----------
+      # ---------- VPN BLOCK ----------
 
       - name: Install OpenVPN
         run: |
@@ -33,10 +33,12 @@ jobs:
           OVPN_USERNAME: ${{ secrets.OVPN_USERNAME }}
           OVPN_PASSWORD: ${{ secrets.OVPN_PASSWORD }}
         run: |
+          # Restore certs
           printf '%s\n' "$OVPN_CA"   > ca.pem
           printf '%s\n' "$OVPN_CERT" > client.crt
           printf '%s\n' "$OVPN_KEY"  > client.key
 
+          # Create config
           cat > config.ovpn << 'EOF'
           client
           dev tun
@@ -58,14 +60,31 @@ jobs:
           key client.key
           EOF
 
+          # Start OpenVPN WITH LOGGING (correct way)
           if [ -n "$OVPN_USERNAME" ] && [ -n "$OVPN_PASSWORD" ]; then
             printf '%s\n%s\n' "$OVPN_USERNAME" "$OVPN_PASSWORD" > auth.txt
-            sudo openvpn --config config.ovpn --auth-user-pass auth.txt --daemon
+            sudo openvpn --config config.ovpn --auth-user-pass auth.txt > openvpn.log 2>&1 &
           else
-            sudo openvpn --config config.ovpn --daemon
+            sudo openvpn --config config.ovpn > openvpn.log 2>&1 &
           fi
 
-          sleep 20
+          # Wait for tunnel to come up
+          for i in {1..40}; do
+            if grep -q "Initialization Sequence Completed" openvpn.log; then
+              echo "VPN UP"
+              break
+            fi
+            sleep 1
+          done
+
+          echo "===== OpenVPN LOG (last 50 lines) ====="
+          tail -n 50 openvpn.log || true
+          echo "======================================="
+
+          if ! grep -q "Initialization Sequence Completed" openvpn.log; then
+            echo "❌ VPN FAILED — SEE LOG ABOVE"
+            exit 1
+          fi
 
           echo "Public IP after VPN:"
           curl -s https://ifconfig.me || true
@@ -83,7 +102,7 @@ jobs:
           echo "Hosts entry:"
           getent hosts stage.getply.com
 
-      # ------- кінець VPN блоку -------
+      # ---------- DEBUG NETWORK ----------
 
       - name: Debug routes
         run: |
@@ -99,12 +118,14 @@ jobs:
           getent hosts stage.getply.com || echo "DNS/hosts failed"
 
           echo
-          echo "=== Ping (якщо дозволено) ==="
+          echo "=== Ping ==="
           ping -c 4 stage.getply.com || echo "Ping failed"
 
           echo
           echo "=== Curl ==="
           curl -vkL --max-time 30 https://stage.getply.com/ || echo "Curl failed"
+
+      # ---------- JAVA + TESTS ----------
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
@@ -113,14 +134,13 @@ jobs:
           java-version: "21"
           cache: maven
 
-      # Встановлюємо системні залежності + браузери через Java CLI
-      - name: Install Playwright system deps & browsers (Java CLI)
+      - name: Install Playwright system deps & browsers
         run: |
           mvn -B org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
             -Dexec.mainClass=com.microsoft.playwright.CLI \
             -Dexec.args="install --with-deps"
 
-      - name: Run tests (Failsafe:clean verify)
+      - name: Run tests
         env:
           PLAYWRIGHT_HEADLESS: "true"
           PLAYWRIGHT_BROWSERS_PATH: "0"
@@ -130,18 +150,18 @@ jobs:
         if: always()
         run: mvn -B allure:report
 
-      - name: Upload Allure report (artifact)
+      - name: Upload Allure report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: target/allure-report
 
-      - name: Upload Allure site (artifact)
+      - name: Upload Allure site
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artartifact@v4
         with:
           name: allure-site
-          path: target/allure-report/**      # статичний сайт (index.html, assets)
+          path: target/allure-report/**
           if-no-files-found: error
           retention-days: 14
