@@ -6,6 +6,17 @@ on:
     - cron: "0 5 * 11,12,1,2,3 *" # 07:00 Kyiv (standard)
   workflow_dispatch:
 
+# Потрібні права для GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Щоб не деплоїти кілька версій одночасно
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   test-and-report:
     runs-on: ubuntu-22.04
@@ -138,3 +149,29 @@ jobs:
           path: target/allure-report/**
           if-no-files-found: error
           retention-days: 14
+
+  # ---------- DEPLOY ALLURE TO GITHUB PAGES ----------
+
+  deploy-allure:
+    needs: test-and-report
+    if: always()          # можна добавити && github.ref == 'refs/heads/main' якщо хочеш тільки з main
+    runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download Allure site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-site
+          path: ./allure-site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./allure-site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
