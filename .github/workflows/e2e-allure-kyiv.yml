@@ -25,55 +25,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y openvpn curl
 
-      - name: Start VPN (OpenVPN)
+      - name: Start VPN (OpenVPN via .ovpn profile)
         env:
-          OVPN_CA:       ${{ secrets.OVPN_CA }}
-          OVPN_CERT:     ${{ secrets.OVPN_CERT }}
-          OVPN_KEY:      ${{ secrets.OVPN_KEY }}
+          OVPN_PROFILE:  ${{ secrets.OVPN_PROFILE }}
           OVPN_USERNAME: ${{ secrets.OVPN_USERNAME }}
           OVPN_PASSWORD: ${{ secrets.OVPN_PASSWORD }}
         run: |
-          # Restore certs
-          printf '%s\n' "$OVPN_CA"   > ca.pem
-          printf '%s\n' "$OVPN_CERT" > client.crt
-          printf '%s\n' "$OVPN_KEY"  > client.key
+          # Пишемо повний .ovpn в файл
+          printf '%s\n' "$OVPN_PROFILE" > config.ovpn
 
-          chmod 600 ca.pem client.crt client.key || true
+          # Файл з логіном/паролем
+          printf '%s\n%s\n' "$OVPN_USERNAME" "$OVPN_PASSWORD" > auth.txt
+          chmod 600 auth.txt || true
 
-          # Create config
-          cat > config.ovpn << 'EOF'
-          client
-          dev tun
-          proto udp
-          remote 52.54.118.209 1194
-          resolv-retry infinite
-          nobind
-          persist-key
-          persist-tun
-          remote-cert-tls server
+          # Стартуємо OpenVPN з логуванням
+          sudo openvpn --config config.ovpn --auth-user-pass auth.txt > openvpn.log 2>&1 &
 
-          cipher AES-256-CBC
-          auth SHA256
-          data-ciphers AES-256-GCM:AES-128-GCM:AES-256-CBC
-          data-ciphers-fallback AES-256-CBC
-
-          verb 4
-
-          ca ca.pem
-          cert client.crt
-          key client.key
-          EOF
-
-          # Start OpenVPN WITH LOGGING
-          if [ -n "$OVPN_USERNAME" ] && [ -n "$OVPN_PASSWORD" ]; then
-            printf '%s\n%s\n' "$OVPN_USERNAME" "$OVPN_PASSWORD" > auth.txt
-            chmod 600 auth.txt || true
-            sudo openvpn --config config.ovpn --auth-user-pass auth.txt > openvpn.log 2>&1 &
-          else
-            sudo openvpn --config config.ovpn > openvpn.log 2>&1 &
-          fi
-
-          # Wait up to ~90s
+          # Чекаємо до ~90 секунд, поки підніметься тунель
           for i in {1..90}; do
             if grep -q "Initialization Sequence Completed" openvpn.log; then
               echo "VPN UP"
