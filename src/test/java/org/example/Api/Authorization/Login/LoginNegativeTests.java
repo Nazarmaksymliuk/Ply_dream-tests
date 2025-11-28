@@ -1,7 +1,7 @@
 package org.example.Api.Authorization.Login;
 
 import com.microsoft.playwright.APIResponse;
-import org.example.Api.helpers.LoginClient;
+import org.example.Api.helpers.LoginHelper.LoginClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 
 public class LoginNegativeTests extends BaseApiTest {
 
-    private static LoginClient loginClient;
+    private LoginClient loginClient;
 
     @BeforeAll
-    static void initClient() {
+    void initClient() {
         loginClient = new LoginClient(apiRequest);
     }
 

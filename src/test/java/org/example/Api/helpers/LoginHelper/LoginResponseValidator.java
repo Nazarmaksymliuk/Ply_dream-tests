@@ -1,4 +1,4 @@
-package org.example.Api.helpers;
+package org.example.Api.helpers.LoginHelper;
 
 import com.microsoft.playwright.APIResponse;
 import org.junit.jupiter.api.Assertions;
