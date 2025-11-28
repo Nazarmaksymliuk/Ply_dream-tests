@@ -7,6 +7,8 @@ import com.microsoft.playwright.options.WaitForSelectorState;
 
 import java.util.List;
 
+import static org.example.UI.PageObjectModels.Utils.Waits.WaitUtils.waitForVisible;
+
 public class TrucksListPage {
     private final Page page;
 
@@ -65,6 +67,7 @@ public class TrucksListPage {
     public Locator root() { return trucksListRoot; }
 
     public List<String> getTrucksNamesList() {
-        return page.locator("[class*='name']").allInnerTexts(); // заміни на правильний клас
+        waitForVisible(firstTruckLink);
+        return page.locator("[class*='_name_']").allInnerTexts(); // заміни на правильний клас
     }
 }

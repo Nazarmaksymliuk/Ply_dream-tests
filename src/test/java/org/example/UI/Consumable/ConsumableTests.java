@@ -8,13 +8,11 @@ import org.example.UI.PageObjectModels.Catalog.CatalogPage;
 import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
 import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableStockSetupPage;
 import org.example.UI.PageObjectModels.Consumable.ConsumableListPage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Random;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ConsumableTests extends PlaywrightUiLoginBaseTest {
     CatalogPage catalogPage;
     ConsumableGeneralInfoPage consumableGeneralInfoPage;

@@ -42,7 +42,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         browser = playwright.chromium().launch(
                 new BrowserType.LaunchOptions()
                         .setHeadless(Boolean.parseBoolean(System.getenv()
-                                .getOrDefault("HEADLESS","true")))
+                                .getOrDefault("HEADLESS","false")))
                         .setArgs(java.util.List.of("--disable-dev-shm-usage","--disk-cache-size=0","--disable-application-cache"))
         );
 
@@ -279,6 +279,16 @@ public abstract class PlaywrightUiLoginBaseTest {
                         .setTimeout(15000)
         );
     }
+
+    public void waitForDomLoaded() {
+        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+    }
+
+    public void waitForPageStable() {
+        page.waitForLoadState(LoadState.NETWORKIDLE);
+    }
+
+
 
     /** Повертає true, якщо протягом timeout ми опинились на /dashboard. */
     private static boolean waitUntilDashboard(Page page, int timeoutMs) {

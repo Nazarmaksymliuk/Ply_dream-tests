@@ -32,7 +32,7 @@ public class CreateInventoryCountPage {
         this.chooseUserInput = page.locator(".react_select__input").last();
 
         // Обидві кнопки мають однакові класи; беремо колекцію й звертаємось по індексу
-        this.dateButtons = page.locator("button._custom_input_1yyqt_1371");
+        this.dateButtons = page.locator("[class*='_custom_input_']");
 
         this.todayInDatepicker = page.locator(".react-datepicker__day--today").first();
 
