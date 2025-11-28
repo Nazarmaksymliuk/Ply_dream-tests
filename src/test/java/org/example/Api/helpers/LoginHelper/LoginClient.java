@@ -1,4 +1,4 @@
-package org.example.Api.helpers;
+package org.example.Api.helpers.LoginHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.APIRequestContext;
