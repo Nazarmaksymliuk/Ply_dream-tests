@@ -97,6 +97,7 @@ public class TruckTest extends PlaywrightUiLoginBaseTest {
         stockPage.clickOnTruckTabButton();
 
         // Отримуємо ім'я першої вантажівки зі списку
+        waitForDomLoaded();
         String firstTruckName = trucksListPage.getTrucksNamesList().get(0);
 
         // Якщо це TruckMain — пропускаємо тест

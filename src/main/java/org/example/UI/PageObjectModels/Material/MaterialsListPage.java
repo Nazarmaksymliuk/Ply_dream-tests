@@ -72,7 +72,7 @@ public class MaterialsListPage {
 
 
         searchByItemInput = page.getByPlaceholder("Search by item")
-                .or(page.getByPlaceholder("Search material"));
+                .or(page.getByPlaceholder("Search material")).or(page.getByPlaceholder("Search..."));
 
         // === нові локатори для трансферу ===
         // кнопка кількості у першому рядку — шукаємо кнопку, що містить "Each"

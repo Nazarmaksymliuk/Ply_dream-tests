@@ -95,6 +95,7 @@ public class TransferModalPage {
     }
     public void setQtyForMaterialInKit(Integer qtyToTransfer) {
         qtyForTransfer.click();
+        page.keyboard().press("Backspace");
         qtyForTransfer.fill(Integer.toString(qtyToTransfer));
 
     }

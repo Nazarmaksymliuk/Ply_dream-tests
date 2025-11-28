@@ -59,13 +59,13 @@ public class InventoryCountInTheWarehouseTest extends PlaywrightUiLoginBaseTest 
         createInventoryCountPage.clickConfirm();
 
         // 7) Перевірка: алерт про успіх (текст може різнитись — перевіряємо, що містить "successfully")
-        AlertUtils.waitForAlertVisible(page);
-        String alertText = AlertUtils.getAlertText(page);
+        AlertUtils.waitForAlertVisibleWithToast(page);
+        String alertText = AlertUtils.getAlertTextWithToast(page);
         Assertions.assertThat(alertText.toLowerCase()).isEqualTo("All inventory counts were created successfully");
         PlaywrightAssertions.assertThat(
                 page.getByRole(com.microsoft.playwright.options.AriaRole.ALERT)
         ).containsText("success");
-        AlertUtils.waitForAlertHidden(page);
+        AlertUtils.waitForAlertHiddenWithToast(page);
 
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
 
