@@ -8,13 +8,15 @@ import org.example.UI.PageObjectModels.Stock.InventoryCount.CreateInventoryCount
 import org.example.UI.PageObjectModels.Stock.InventoryCount.InventoryCountListPage;
 import org.example.UI.PageObjectModels.Stock.StockPage;
 import org.example.UI.PageObjectModels.Stock.Warehouse.WarehousePage;
+import org.example.UI.PageObjectModels.Utils.LocationSelect;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class InventoryCountTest extends PlaywrightUiLoginBaseTest {
+public class InventoryCountInStockTest extends PlaywrightUiLoginBaseTest {
+
 
     WarehousePage warehousePage;
     InventoryCountListPage inventoryCountListPage;
@@ -24,22 +26,23 @@ public class InventoryCountTest extends PlaywrightUiLoginBaseTest {
     @BeforeEach
     public void setUp() {
         // відкриваємо конкретний склад напряму
-        openPath("/stock/warehouse/warehousemain/ac1f56fd-9919-137e-8199-1f504b6607e8");
+        openPath("/stock");
         warehousePage = new WarehousePage(page);
         stockPage = new StockPage(page);
+        inventoryCountListPage = new InventoryCountListPage(page);
     }
 
-    @DisplayName("Create Cycle (Inventory) Count In Location")
+
+    @DisplayName("Create Cycle (Inventory) Count In Stock")
     @Order(0)
     @Test
-    public void createInventoryCountInWarehouseTest() {
-        // 1) перейти на табу Inventory Count
-        inventoryCountListPage = warehousePage.clickOnInventoryCountTabButton();
+    public void createInventoryCountTest() {
+        stockPage.clickOnInventoryCountsTab();
 
         // 2) відкрити форму створення
         createInventoryCountPage = inventoryCountListPage.clickCreateInventoryCountButton();
 
-        PlaywrightAssertions.assertThat(createInventoryCountPage.getTheWarehouseMainLocator()).isVisible();
+        LocationSelect.selectLocationStatic(page, "WarehouseMain");
 
         // 3) вибрати користувача (react-select)
         String userToAssign = "NAZARII"; // підстав свого користувача
@@ -73,26 +76,12 @@ public class InventoryCountTest extends PlaywrightUiLoginBaseTest {
     }
 
 
-    @DisplayName("Edit Cycle (Inventory) Count")
-    @Order(1)
-    //@Test
-    public void editInventoryCountTest() {
-        // 1) перейти на табу Inventory Count
-        inventoryCountListPage = warehousePage.clickOnInventoryCountTabButton();
-
-        inventoryCountListPage.clickFirstThreeDotsButton();
-        inventoryCountListPage.clickOnEditButton();
-
-    }
-
-
-
-    @DisplayName("Delete Cycle (Inventory) Count in the Warehouse")
+    @DisplayName("Delete Cycle (Inventory) Count in the Cycle Counts Tab")
     @Order(1)
     @Test
-    public void deleteInventoryCountInTheWarehouseTest() {
+    public void deleteInventoryCountTest() {
         // 1) перейти на табу Inventory Count
-        inventoryCountListPage = warehousePage.clickOnInventoryCountTabButton();
+        stockPage.clickOnInventoryCountsTab();
 
         inventoryCountListPage.clickFirstThreeDotsButton();
         inventoryCountListPage.clickOnDeleteButton();
@@ -107,6 +96,4 @@ public class InventoryCountTest extends PlaywrightUiLoginBaseTest {
         AlertUtils.waitForAlertHidden(page);
 
     }
-
-
 }
