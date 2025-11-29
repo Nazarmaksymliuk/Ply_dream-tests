@@ -1,4 +1,4 @@
-package org.example.Api.helpers.MaterialsHelper;
+package org.example.Api.helpers.FoldersHelper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

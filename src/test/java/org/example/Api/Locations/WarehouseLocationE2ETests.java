@@ -18,7 +18,7 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
 
     @BeforeAll
     void initClient() {
-        locationsClient = new LocationsClient(apiRequest);
+        locationsClient = new LocationsClient(userApi);
     }
 
     // 1️⃣ CREATE WAREHOUSE

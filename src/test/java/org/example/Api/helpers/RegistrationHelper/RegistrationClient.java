@@ -24,6 +24,13 @@ public class RegistrationClient {
         return request.post(url, RequestOptions.create().setData(body));
     }
 
+    // DELETE /businesses/admin/{businessId}
+    // ⚠️ важливо: сюди передаємо context з adminApi, де вже є Authorization: Bearer <adminToken>
+    public APIResponse deleteBusinessAsAdmin(String businessId) {
+        String url = "/businesses/admin/" + businessId;
+        return request.delete(url);
+    }
+
     public JsonNode parseRegistrationResponse(APIResponse response) throws IOException {
         return objectMapper.readTree(response.text());
     }

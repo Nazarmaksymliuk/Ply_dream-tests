@@ -15,7 +15,7 @@ public class LoginPositiveTests extends BaseApiTest {
 
     @BeforeAll
     void initClient() {
-        loginClient = new LoginClient(apiRequest);
+        loginClient = new LoginClient(userApi);
     }
 
     @Test
