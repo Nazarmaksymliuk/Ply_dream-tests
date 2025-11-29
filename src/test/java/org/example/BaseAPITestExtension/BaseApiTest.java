@@ -24,6 +24,9 @@ public abstract class BaseApiTest {
     protected Playwright playwright;
     protected APIRequestContext apiRequest;
 
+    private static final String USER_EMAIL = "maksimlukoleg56@gmail.com";
+    private static final String USER_PASSWORD = "Test+1234";
+
     // 🔒 спільний токен для ВСІХ тест-класів
     private static volatile String cachedToken;
 
@@ -82,8 +85,8 @@ public abstract class BaseApiTest {
                 LoginClient loginClient = new LoginClient(loginContext);
 
                 APIResponse loginResponse = loginClient.login(
-                        "maksimlukoleg56@gmail.com",
-                        "Test+1234"
+                        USER_EMAIL,
+                        USER_PASSWORD
                 );
 
                 int status = loginResponse.status();
