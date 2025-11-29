@@ -1,14 +1,10 @@
 package org.example.BaseAPITestExtension;
 
-import com.microsoft.playwright.APIRequest;
-import com.microsoft.playwright.APIRequestContext;
-import com.microsoft.playwright.APIResponse;
-import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.RequestOptions;
 import org.example.Api.helpers.LoginHelper.LoginClient;
 import org.example.Api.helpers.LoginHelper.LoginResponse;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,114 +18,147 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 public abstract class BaseApiTest {
 
     protected Playwright playwright;
-    protected APIRequestContext apiRequest;
 
+    // 🔹 Контексти для запитів
+    protected APIRequestContext userApi;
+    protected APIRequestContext adminApi;
+
+    // 🔹 Статичні кешовані токени (спільні для всіх класів)
+    private static volatile String cachedUserToken;
+    private static volatile String cachedAdminToken;
+
+    // 🔹 Тести-юзери
     private static final String USER_EMAIL = "maksimlukoleg56@gmail.com";
     private static final String USER_PASSWORD = "Test+1234";
 
-    // 🔒 спільний токен для ВСІХ тест-класів
-    private static volatile String cachedToken;
+    // 🔹 Адмінські креденшали
+    private static final String ADMIN_EMAIL = "admin@getply.com";  // <- впиши свого
+    private static final String ADMIN_PASSWORD = "WJoXYjE1n8m8!J";     // <- впиши свого
 
     @BeforeAll
-    void setUpApiClient() throws IOException {
+    void setUp() throws IOException {
         playwright = Playwright.create();
 
-        Map<String, String> baseHeaders = new HashMap<>();
-        baseHeaders.put("Content-Type", "application/json");
-        baseHeaders.put("Accept", "*/*");
-
-        // 1️⃣ беремо токен (або логінимось один раз)
-        String token = getOrCreateToken(baseHeaders);
-
-        // 2️⃣ створюємо контекст з Bearer токеном ДЛЯ ЦЬОГО класу
-        Map<String, String> authHeaders = new HashMap<>(baseHeaders);
-        authHeaders.put("Authorization", "Bearer " + token);
-
-        apiRequest = playwright.request().newContext(
-                new APIRequest.NewContextOptions()
-                        .setBaseURL("https://stage-api.getply.com")
-                        .setExtraHTTPHeaders(authHeaders)
+        Map<String, String> defaultHeaders = Map.of(
+                "Content-Type", "application/json",
+                "Accept", "*/*"
         );
+
+        // 1️⃣ Логін юзера
+        String userToken = getOrCreateToken(
+                USER_EMAIL,
+                USER_PASSWORD,
+                "user",
+                defaultHeaders
+        );
+        cachedUserToken = userToken;
+
+        // 2️⃣ Логін адміна
+        String adminToken = getOrCreateToken(
+                ADMIN_EMAIL,
+                ADMIN_PASSWORD,
+                "admin",
+                defaultHeaders
+        );
+        cachedAdminToken = adminToken;
+
+        // 3️⃣ Створюємо окремі API контексти
+        userApi = createApiContext(userToken);
+        adminApi = createApiContext(adminToken);
+
+        System.out.println("=== USER CONTEXT READY ===");
+        System.out.println("=== ADMIN CONTEXT READY ===");
     }
 
     @AfterAll
-    void tearDownApiClient() {
-        if (apiRequest != null) {
-            apiRequest.dispose();
-        }
-        if (playwright != null) {
-            playwright.close();
-        }
+    void tearDown() {
+        if (userApi != null) userApi.dispose();
+        if (adminApi != null) adminApi.dispose();
+        if (playwright != null) playwright.close();
     }
 
-    // ---------- helpers ----------
+    // -----------------------------------------------------------
+    //                 INTERNAL HELPERS
+    // -----------------------------------------------------------
 
-    private static String getOrCreateToken(Map<String, String> baseHeaders) throws IOException {
-        if (cachedToken != null) {
-            return cachedToken;
-        }
+    private APIRequestContext createApiContext(String token) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        headers.put("Accept", "*/*");
+        headers.put("Authorization", "Bearer " + token);
+
+        return playwright.request().newContext(
+                new APIRequest.NewContextOptions()
+                        .setBaseURL("https://stage-api.getply.com")
+                        .setExtraHTTPHeaders(headers)
+        );
+    }
+
+    /**
+     * Generic login method for both user and admin tokens.
+     */
+    private static String getOrCreateToken(
+            String email,
+            String password,
+            String label,
+            Map<String, String> headers
+    ) throws IOException {
+
+        String cached = label.equals("admin") ? cachedAdminToken : cachedUserToken;
+        if (cached != null) return cached;
 
         synchronized (BaseApiTest.class) {
-            if (cachedToken != null) {
-                return cachedToken;
-            }
 
-            // окремий Playwright тільки для логіну
+            cached = label.equals("admin") ? cachedAdminToken : cachedUserToken;
+            if (cached != null) return cached;
+
+            System.out.println("=== LOGIN (" + label.toUpperCase() + ") START ===");
+
             try (Playwright pw = Playwright.create()) {
+
                 APIRequestContext loginContext = pw.request().newContext(
                         new APIRequest.NewContextOptions()
                                 .setBaseURL("https://stage-api.getply.com")
-                                .setExtraHTTPHeaders(baseHeaders)
+                                .setExtraHTTPHeaders(headers)
                 );
 
                 LoginClient loginClient = new LoginClient(loginContext);
-
-                APIResponse loginResponse = loginClient.login(
-                        USER_EMAIL,
-                        USER_PASSWORD
-                );
+                APIResponse loginResponse = loginClient.login(email, password);
 
                 int status = loginResponse.status();
-                String bodyText = loginResponse.text();
-                System.out.println("LOGIN status: " + status);
-                System.out.println("LOGIN body: " + bodyText);
+                String text = loginResponse.text();
+
+                System.out.println("LOGIN (" + label + ") STATUS: " + status);
+                System.out.println("LOGIN (" + label + ") BODY: " + text);
 
                 String token;
+
                 if (status == 200 || status == 201) {
-                    LoginResponse loginBody = loginClient.parseLoginResponse(loginResponse);
-                    token = loginBody.getToken();
-                    if (token == null || token.isEmpty()) {
-                        throw new IllegalStateException("Login succeeded but token is null or empty");
-                    }
-                } else if (status == 409 && bodyText.contains("uq_refresh_token")) {
-                    // ⚠️ костиль на бекенд: токен вже є в БД – дістаємо його з повідомлення
-                    token = extractTokenFromConflict(bodyText);
-                    if (token == null || token.isEmpty()) {
-                        throw new IllegalStateException(
-                                "Login returned 409 with refresh token conflict, but token could not be extracted"
-                        );
-                    }
+                    LoginResponse parsed = loginClient.parseLoginResponse(loginResponse);
+                    token = parsed.getToken();
+                } else if (status == 409 && text.contains("uq_refresh_token")) {
+                    token = extractTokenFromConflict(text);
                 } else {
                     throw new IllegalStateException(
-                            "Login failed. Expected 200/201 but got: " + status +
-                                    ". Body: " + bodyText
+                            "Login as " + label + " failed: status=" + status + ", body=" + text
                     );
                 }
 
-                loginContext.dispose();
-                cachedToken = token; // зберігаємо для всіх наступних тестів
-                return cachedToken;
+                if (token == null || token.isEmpty()) {
+                    throw new IllegalStateException("Token (" + label + ") is null or empty");
+                }
+
+                if (label.equals("admin")) cachedAdminToken = token;
+                else cachedUserToken = token;
+
+                return token;
             }
         }
     }
 
     private static String extractTokenFromConflict(String body) {
-        // шукаємо шматок (token)=(JWT...)
         Pattern p = Pattern.compile("Key \\(token\\)=\\(([^)]+)\\)");
         Matcher m = p.matcher(body);
-        if (m.find()) {
-            return m.group(1);
-        }
-        return null;
+        return m.find() ? m.group(1) : null;
     }
 }

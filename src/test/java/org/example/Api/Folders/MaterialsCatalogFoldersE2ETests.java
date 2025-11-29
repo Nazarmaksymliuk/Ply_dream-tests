@@ -2,7 +2,7 @@ package org.example.Api.Folders;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
-import org.example.Api.helpers.MaterialsHelper.FoldersClient;
+import org.example.Api.helpers.FoldersHelper.FoldersClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.junit.jupiter.api.*;
 
@@ -18,7 +18,7 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
 
     @BeforeAll
     void initClient() {
-        foldersClient = new FoldersClient(apiRequest);
+        foldersClient = new FoldersClient(userApi);
     }
 
     // 1️⃣ CREATE FOLDER

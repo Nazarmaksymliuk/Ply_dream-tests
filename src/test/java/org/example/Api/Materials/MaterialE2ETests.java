@@ -18,7 +18,7 @@ public class MaterialE2ETests extends BaseApiTest {
 
     @BeforeAll
     void initClient() {
-        materialsClient = new MaterialsClient(apiRequest);
+        materialsClient = new MaterialsClient(userApi);
     }
 
     @Test

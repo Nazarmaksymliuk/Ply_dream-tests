@@ -24,7 +24,7 @@ public class CreateMaterialPositiveTests extends BaseApiTest {
         // Якщо ні — треба буде або:
         // 1) залогінитись тут і створити новий APIRequestContext з Authorization,
         // 2) або додати токен в headers у BaseApiTest.
-        materialsClient = new MaterialsClient(apiRequest);
+        materialsClient = new MaterialsClient(userApi);
     }
 
     @Test

@@ -16,7 +16,7 @@ public class CreateMaterialNegativeTests extends BaseApiTest {
 
     @BeforeAll
     void initClient() {
-        materialsClient = new MaterialsClient(apiRequest);
+        materialsClient = new MaterialsClient(userApi);
     }
 
     @Test

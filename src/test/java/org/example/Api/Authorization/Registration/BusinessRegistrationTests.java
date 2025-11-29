@@ -13,14 +13,18 @@ import java.util.Map;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BusinessRegistrationTests extends BaseApiTest {
 
-    private RegistrationClient registrationClient;
+    private RegistrationClient userRegistrationClient;
+    private RegistrationClient adminRegistrationClient;
 
     private String businessId;
     private Map<String, Object> lastRequestBody;
 
     @BeforeAll
-    void initClient() {
-        registrationClient = new RegistrationClient(apiRequest);
+    void initClients() {
+        // контекст з userApi (можна взагалі без токена, але так теж ок)
+        userRegistrationClient = new RegistrationClient(userApi);
+        // контекст з adminApi – тут уже є Authorization: Bearer <adminToken>
+        adminRegistrationClient = new RegistrationClient(adminApi);
     }
 
     // 1️⃣ POST /register – реєстрація бізнесу
@@ -30,7 +34,7 @@ public class BusinessRegistrationTests extends BaseApiTest {
         Map<String, Object> body = buildRegisterBody();
         lastRequestBody = body;
 
-        APIResponse response = registrationClient.registerBusiness(body);
+        APIResponse response = userRegistrationClient.registerBusiness(body);
         int status = response.status();
 
         System.out.println("REGISTER status: " + status);
@@ -42,7 +46,7 @@ public class BusinessRegistrationTests extends BaseApiTest {
                 "Expected 201 or 200 on register, but got: " + status
         );
 
-        JsonNode json = registrationClient.parseRegistrationResponse(response);
+        JsonNode json = userRegistrationClient.parseRegistrationResponse(response);
 
         // businessId
         JsonNode businessIdNode = json.get("businessId");
@@ -74,6 +78,32 @@ public class BusinessRegistrationTests extends BaseApiTest {
         );
     }
 
+    // 2️⃣ DELETE /businesses/admin/{businessId} – видалення бізнесу як адмін
+    //@Test
+    @Order(2)
+    void deleteBusiness_asAdmin_deletesPreviouslyRegisteredBusiness() {
+        Assertions.assertNotNull(businessId, "businessId is null – registration test probably failed");
+
+        APIResponse response = adminRegistrationClient.deleteBusinessAsAdmin(businessId);
+        int status = response.status();
+
+        System.out.println("DELETE BUSINESS status: " + status);
+        System.out.println("DELETE BUSINESS body: '" + response.text() + "'");
+
+        // swagger: 204 No Content, але допускаємо й 200
+        Assertions.assertTrue(
+                status == 204 || status == 200,
+                "Expected 204 or 200 on deleteBusiness, but got: " + status
+        );
+
+        String body = response.text().trim();
+        // часто бекенд повертає пусте тіло на 204
+        Assertions.assertTrue(
+                body.isEmpty() || "{}".equals(body),
+                "Expected empty body or {}, but got: '" + body + "'"
+        );
+    }
+
     // ---------- helpers ----------
 
     private Map<String, Object> buildRegisterBody() {
@@ -82,15 +112,10 @@ public class BusinessRegistrationTests extends BaseApiTest {
         long ts = System.currentTimeMillis();
 
         body.put("businessLegalName", "API Test Business " + ts);
-
-        // ⚠️ за потреби заміни домен на той, який бекенд дозволяє для тестів
         body.put("email", "aqa.api+" + ts + "@example.com");
-
         body.put("firstName", "API");
         body.put("lastName", "Tester");
-
-        // якщо валидація пароля жорстка – підлаштуй під правила бекенда
-        body.put("password", "Qwerty123!");
+        body.put("password", "Qwerty123!"); // якщо будуть правила по паролю – підлаштуємо
 
         return body;
     }
