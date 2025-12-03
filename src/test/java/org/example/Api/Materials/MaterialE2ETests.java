@@ -94,7 +94,7 @@ public class MaterialE2ETests extends BaseApiTest {
         body.put("brand", "API-CRUD-Brand");
         body.put("manufacturer", "API-CRUD-Manufacturer");
 
-        body.put("materialType", "TEMPORARY_LINE_ITEM");
+        //body.put("materialType", "TEMPORARY_LINE_ITEM");
         body.put("leadTime", "EIGHTEEN_WEEKS");
         body.put("serialized", false);
 
@@ -118,7 +118,7 @@ public class MaterialE2ETests extends BaseApiTest {
         body.put("brand", "API-CRUD-Brand-Updated");
         body.put("manufacturer", "API-CRUD-Manufacturer-Updated");
 
-        body.put("materialType", "TEMPORARY_LINE_ITEM");
+        //body.put("materialType", "TEMPORARY_LINE_ITEM");
         body.put("leadTime", "EIGHTEEN_WEEKS");
         body.put("serialized", false);
 

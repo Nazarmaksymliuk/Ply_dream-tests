@@ -52,8 +52,8 @@ public abstract class PlaywrightUiLoginBaseTest {
                         .setIgnoreHTTPSErrors(true)
                         .setBypassCSP(true)
         );
-        context.setDefaultTimeout(350_000);
-        context.setDefaultNavigationTimeout(350_000);
+        context.setDefaultTimeout(150_000);
+        context.setDefaultNavigationTimeout(150_000);
 
         page = context.newPage();
         // діагностика на випадок помилок
@@ -121,8 +121,8 @@ public abstract class PlaywrightUiLoginBaseTest {
                 .setBypassCSP(true));
         page = context.newPage();
 
-        context.setDefaultTimeout(350_000);
-        context.setDefaultNavigationTimeout(350_000);
+        context.setDefaultTimeout(150_000);
+        context.setDefaultNavigationTimeout(150_000);
 
         page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
         new SignInPage(page).signIntoApplication(EMAIL, PASSWORD);

@@ -24,7 +24,7 @@ public class ToolsE2ETests extends BaseApiTest {
     private String supplierId;
     private String materialTagId;
     private String materialTagName;
-    private String toolUnitId;   // 🔹 id створеного toolUnit для апдейта
+    private String toolUnitId;   // id створеного toolUnit для апдейта
 
     private static final String LOCATION_ID_WAREHOUSE_MAIN =
             "ac1f56fd-9919-137e-8199-1f504b6607e8";
@@ -35,7 +35,7 @@ public class ToolsE2ETests extends BaseApiTest {
         supplierContactsClient = new SupplierContactsClient(userApi);
         materialTagsClient = new MaterialTagsClient(userApi);
 
-        // 1️⃣ Суплаєри
+        // Суплаєри
         APIResponse suppliersResp = supplierContactsClient.getAllSupplierContacts();
         int supStatus = suppliersResp.status();
 
@@ -58,7 +58,7 @@ public class ToolsE2ETests extends BaseApiTest {
 
         System.out.println("Resolved supplierId from /supplier-contacts: " + supplierId);
 
-        // 2️⃣ Material tags
+        //  Material tags
         APIResponse tagsResp = materialTagsClient.getMaterialTags(0, 20);
         int tagsStatus = tagsResp.status();
 
