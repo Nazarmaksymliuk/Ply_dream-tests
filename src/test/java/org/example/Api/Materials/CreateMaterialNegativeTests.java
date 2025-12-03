@@ -26,7 +26,7 @@ public class CreateMaterialNegativeTests extends BaseApiTest {
         body.put("active", true);
         body.put("description", "No name field");
         body.put("itemNumber", "NO-NAME-" + System.currentTimeMillis());
-        body.put("materialType", "TEMPORARY_LINE_ITEM");
+        //body.put("materialType", "TEMPORARY_LINE_ITEM");
         body.put("serialized", false);
 
         Map<String, Object> measurementUnit = new HashMap<>();
@@ -52,7 +52,7 @@ public class CreateMaterialNegativeTests extends BaseApiTest {
         body.put("name", "API Material invalid leadTime " + System.currentTimeMillis());
         body.put("description", "Invalid leadTime value");
         body.put("itemNumber", "BAD-LT-" + System.currentTimeMillis());
-        body.put("materialType", "TEMPORARY_LINE_ITEM");
+        //body.put("materialType", "TEMPORARY_LINE_ITEM");
         body.put("leadTime", "INVALID_LEAD_TIME"); // ❌ невалідне enum-значення
         body.put("serialized", false);
 

@@ -65,7 +65,7 @@ public class CreateMaterialPositiveTests extends BaseApiTest {
         body.put("manufacturer", "API-Test-Manufacturer");
 
         // enum-like fields із swagger
-        body.put("materialType", "TEMPORARY_LINE_ITEM");
+        //body.put("materialType", "TEMPORARY_LINE_ITEM");
         body.put("leadTime", "EIGHTEEN_WEEKS");
         body.put("serialized", false);
 
