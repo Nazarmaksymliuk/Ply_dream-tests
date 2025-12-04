@@ -85,6 +85,7 @@ public class WarehouseTest extends PlaywrightUiLoginBaseTest {
     @Order(1)
     @Test
     public void updateWarehouseTest() {
+        waitForDomLoaded();
         PlaywrightAssertions.assertThat(stockPage.warehousesTabButton()).isVisible();
 
         warehousesListPage.clickOnWarehouseThreeDotsButton();
