@@ -47,4 +47,5 @@ public class SignIntoApplicationTest extends PlaywrightUiLoginBaseTest {
                 .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(10000));
     }
 
+
 }
