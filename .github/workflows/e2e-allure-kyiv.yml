@@ -30,10 +30,10 @@ jobs:
 
       # ---------- VPN BLOCK ----------
 
-      - name: Install OpenVPN
+      - name: Install OpenVPN + tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y openvpn curl
+          sudo apt-get install -y openvpn curl dnsutils netcat-openbsd
 
       - name: Start VPN (OpenVPN via .ovpn profile)
         env:
@@ -68,7 +68,7 @@ jobs:
           curl -s https://ifconfig.me || true
           echo
 
-      # ✅ FIX ROUTES: add route to VPC via tun0
+      # ✅ ROUTES: ensure VPC reachable via tun0
       - name: Add route to VPC (172.31.0.0/16) via tun0
         run: |
           echo "=== ip addr (after VPN) ==="
@@ -82,48 +82,61 @@ jobs:
           echo
           echo "=== ip route (after) ==="
           ip route
-          echo
-          echo "=== route get checks ==="
-          ip route get 172.31.85.10 || true
-          ip route get 172.31.64.242 || true
-          ip route get 172.31.53.203 || true
-          ip route get 172.31.19.237 || true
 
-      # ✅ Pick reachable IP on 443 + write /etc/hosts + curl sanity
-      - name: Select reachable stage IP and validate connectivity
+      # ✅ DNS + Connectivity debug (NO /etc/hosts)
+      - name: Debug DNS + connectivity to stage (no hosts hacks)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y netcat-openbsd
+          echo "=== /etc/resolv.conf ==="
+          cat /etc/resolv.conf || true
+          echo
 
-          # очистити старі entries
-          sudo sed -i '/stage.getply.com/d' /etc/hosts
+          echo "=== getent hosts ==="
+          getent hosts stage.getply.com || true
+          echo
 
-          IPS="172.31.85.10 172.31.64.242 172.31.53.203 172.31.19.237"
-          FOUND=""
+          echo "=== dig stage.getply.com ==="
+          dig stage.getply.com || true
+          echo
 
-          echo "=== Trying to find reachable stage IP on port 443 ==="
-          for ip in $IPS; do
-            echo "Testing $ip:443..."
-            if nc -vz -w 5 $ip 443; then
-              FOUND="$ip"
-              break
-            fi
-          done
+          echo "=== dig CNAME (trace) ==="
+          dig +trace stage.getply.com || true
+          echo
 
-          if [ -z "$FOUND" ]; then
-            echo "❌ No reachable stage IP on port 443. This is infra/VPN/SG/NACL issue."
-            exit 1
+          echo "=== TCP 443 to stage.getply.com ==="
+          nc -vz -w 8 stage.getply.com 443 || true
+          echo
+
+          echo "=== Curl (30s max) ==="
+          curl -vkL --max-time 30 https://stage.getply.com/ || true
+
+      # (Optional) Try to apply DNS pushed by OpenVPN if present in log
+      - name: Try apply VPN DNS from OpenVPN log (best-effort)
+        run: |
+          # Якщо у вашому openvpn.log є push "dhcp-option DNS X.X.X.X" — спробуємо витягнути і прописати.
+          DNS_IP=$(grep -Eo 'dhcp-option DNS [0-9.]+|DHCP-option DNS [0-9.]+' openvpn.log | head -n 1 | awk '{print $3}')
+          if [ -z "$DNS_IP" ]; then
+            echo "No pushed DNS found in openvpn.log (this is likely the problem)."
+            exit 0
           fi
 
-          echo "$FOUND stage.getply.com" | sudo tee -a /etc/hosts
+          echo "Found pushed DNS: $DNS_IP"
+          echo "Setting /etc/resolv.conf to use VPN DNS (best-effort)"
+          sudo bash -c "printf 'nameserver %s\noptions timeout:1 attempts:2\n' '$DNS_IP' > /etc/resolv.conf"
 
+          echo "=== /etc/resolv.conf (after) ==="
+          cat /etc/resolv.conf
           echo
-          echo "=== Hosts entry ==="
-          getent hosts stage.getply.com
 
+          echo "=== dig stage.getply.com (after) ==="
+          dig stage.getply.com || true
           echo
-          echo "=== Curl sanity (30s max) ==="
-          curl -vkL --max-time 30 https://stage.getply.com/ || echo "Curl failed"
+
+          echo "=== TCP 443 (after) ==="
+          nc -vz -w 8 stage.getply.com 443 || true
+          echo
+
+          echo "=== Curl (after) ==="
+          curl -vkL --max-time 30 https://stage.getply.com/ || true
 
       # ---------- JAVA + TESTS ----------
 
