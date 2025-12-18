@@ -6,13 +6,11 @@ on:
     - cron: "0 5 * 11,12,1,2,3 *" # 07:00 Kyiv (standard)
   workflow_dispatch:
 
-# Потрібні права для GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Щоб не деплоїти кілька версій одночасно
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -24,7 +22,7 @@ jobs:
       MAVEN_OPTS: -Xmx2g
       PLAYWRIGHT_HEADLESS: "true"
       PLAYWRIGHT_BROWSERS_PATH: "0"
-      HEADLESS: "true"  # <-- ВАЖЛИВО: твій Java код читає HEADLESS
+      HEADLESS: "true" # твій Java код читає HEADLESS
 
     steps:
       - name: Checkout
@@ -43,17 +41,12 @@ jobs:
           OVPN_USERNAME: ${{ secrets.OVPN_USERNAME }}
           OVPN_PASSWORD: ${{ secrets.OVPN_PASSWORD }}
         run: |
-          # Пишемо повний .ovpn в файл
           printf '%s\n' "$OVPN_PROFILE" > config.ovpn
-
-          # Файл з логіном/паролем
           printf '%s\n%s\n' "$OVPN_USERNAME" "$OVPN_PASSWORD" > auth.txt
           chmod 600 auth.txt || true
 
-          # Стартуємо OpenVPN з логуванням
           sudo openvpn --config config.ovpn --auth-user-pass auth.txt > openvpn.log 2>&1 &
 
-          # Чекаємо до ~90 секунд, поки підніметься тунель
           for i in {1..90}; do
             if grep -q "Initialization Sequence Completed" openvpn.log; then
               echo "VPN UP"
@@ -67,7 +60,7 @@ jobs:
           echo "================================"
 
           if ! grep -q "Initialization Sequence Completed" openvpn.log; then
-            echo "❌ VPN FAILED — дивись лог вище, шукай TLS Error/AUTH_FAILED і т.п."
+            echo "❌ VPN FAILED — дивись лог вище"
             exit 1
           fi
 
@@ -75,36 +68,42 @@ jobs:
           curl -s https://ifconfig.me || true
           echo
 
-      - name: Add stage host to /etc/hosts
+      # ✅ FIX ROUTES: add route to VPC via tun0
+      - name: Add route to VPC (172.31.0.0/16) via tun0
         run: |
-          cat << 'EOF' | sudo tee -a /etc/hosts
-          172.31.85.10   stage.getply.com
-          172.31.64.242  stage.getply.com
-          172.31.53.203  stage.getply.com
-          172.31.19.237  stage.getply.com
-          EOF
+          echo "=== ip addr (after VPN) ==="
+          ip addr
+          echo
+          echo "=== ip route (before) ==="
+          ip route
+          echo
+          echo "Adding route 172.31.0.0/16 dev tun0"
+          sudo ip route add 172.31.0.0/16 dev tun0 || true
+          echo
+          echo "=== ip route (after) ==="
+          ip route
 
+      # ✅ /etc/hosts: ONLY ONE IP (avoid 4-IP happy-eyeballs timeouts)
+      - name: Add stage host to /etc/hosts (single IP)
+        run: |
+          sudo sed -i '/stage.getply.com/d' /etc/hosts
+          echo "172.31.85.10 stage.getply.com" | sudo tee -a /etc/hosts
           echo "Hosts entry:"
           getent hosts stage.getply.com
 
       # ---------- DEBUG NETWORK ----------
 
-      - name: Debug routes
+      - name: Debug network to stage (TCP 443 + curl)
         run: |
-          echo "=== ip addr ==="
-          ip addr
-          echo
-          echo "=== ip route ==="
-          ip route
+          sudo apt-get update
+          sudo apt-get install -y netcat-openbsd
 
-      - name: Debug network to stage
-        run: |
-          echo "=== DNS/hosts resolve ==="
-          getent hosts stage.getply.com || echo "DNS/hosts failed"
+          echo "=== Resolve ==="
+          getent hosts stage.getply.com || echo "Resolve failed"
 
           echo
-          echo "=== Ping ==="
-          ping -c 4 stage.getply.com || echo "Ping failed"
+          echo "=== TCP 443 ==="
+          nc -vz -w 5 stage.getply.com 443
 
           echo
           echo "=== Curl ==="
@@ -169,8 +168,6 @@ jobs:
           path: target/allure-report/**
           if-no-files-found: error
           retention-days: 14
-
-  # ---------- DEPLOY ALLURE TO GITHUB PAGES ----------
 
   deploy-allure:
     needs: test-and-report
