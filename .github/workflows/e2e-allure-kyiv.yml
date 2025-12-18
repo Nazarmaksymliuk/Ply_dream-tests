@@ -82,31 +82,47 @@ jobs:
           echo
           echo "=== ip route (after) ==="
           ip route
+          echo
+          echo "=== route get checks ==="
+          ip route get 172.31.85.10 || true
+          ip route get 172.31.64.242 || true
+          ip route get 172.31.53.203 || true
+          ip route get 172.31.19.237 || true
 
-      # ✅ /etc/hosts: ONLY ONE IP (avoid 4-IP happy-eyeballs timeouts)
-      - name: Add stage host to /etc/hosts (single IP)
-        run: |
-          sudo sed -i '/stage.getply.com/d' /etc/hosts
-          echo "172.31.85.10 stage.getply.com" | sudo tee -a /etc/hosts
-          echo "Hosts entry:"
-          getent hosts stage.getply.com
-
-      # ---------- DEBUG NETWORK ----------
-
-      - name: Debug network to stage (TCP 443 + curl)
+      # ✅ Pick reachable IP on 443 + write /etc/hosts + curl sanity
+      - name: Select reachable stage IP and validate connectivity
         run: |
           sudo apt-get update
           sudo apt-get install -y netcat-openbsd
 
-          echo "=== Resolve ==="
-          getent hosts stage.getply.com || echo "Resolve failed"
+          # очистити старі entries
+          sudo sed -i '/stage.getply.com/d' /etc/hosts
+
+          IPS="172.31.85.10 172.31.64.242 172.31.53.203 172.31.19.237"
+          FOUND=""
+
+          echo "=== Trying to find reachable stage IP on port 443 ==="
+          for ip in $IPS; do
+            echo "Testing $ip:443..."
+            if nc -vz -w 5 $ip 443; then
+              FOUND="$ip"
+              break
+            fi
+          done
+
+          if [ -z "$FOUND" ]; then
+            echo "❌ No reachable stage IP on port 443. This is infra/VPN/SG/NACL issue."
+            exit 1
+          fi
+
+          echo "$FOUND stage.getply.com" | sudo tee -a /etc/hosts
 
           echo
-          echo "=== TCP 443 ==="
-          nc -vz -w 5 stage.getply.com 443
+          echo "=== Hosts entry ==="
+          getent hosts stage.getply.com
 
           echo
-          echo "=== Curl ==="
+          echo "=== Curl sanity (30s max) ==="
           curl -vkL --max-time 30 https://stage.getply.com/ || echo "Curl failed"
 
       # ---------- JAVA + TESTS ----------
