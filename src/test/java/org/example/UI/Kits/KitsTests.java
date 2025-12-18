@@ -13,6 +13,9 @@ import org.example.UI.PageObjectModels.Kits.KitsListPage;
 import org.junit.jupiter.api.*;
 
 import java.util.Random;
+
+import static org.example.domain.LocationName.WAREHOUSE_MAIN;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class KitsTests extends PlaywrightUiLoginBaseTest {
     KitGeneralInformationPage generalInformationPage;
@@ -32,7 +35,7 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
             "Kit-" + new Random().nextInt(100000),
             "High-performance kit for any type of work.",
             "test tag",
-            "WarehouseMain"
+            WAREHOUSE_MAIN.value()
     );
 
     @DisplayName("Create Kit Test")
@@ -80,7 +83,7 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
             "Kit-edited" + new Random().nextInt(100000),
             "High-performance kit for any type of work-edited",
             "test tag-edited",
-            "WarehouseMain"
+            WAREHOUSE_MAIN.value()
     );
 
     @DisplayName("Update Kit Test")

@@ -104,7 +104,7 @@ public class JobsTest extends PlaywrightUiLoginBaseTest {
         generalInfoJobPage = activeJobsPage.clickEditJobButton();
 
         generalInfoJobPage.setJobName(editedJob.jobName);
-        generalInfoJobPage.setTruckByEnter(editedJob.truckName);
+        generalInfoJobPage.setTruckToJob(editedJob.truckName);
 
         contactsJobPage = generalInfoJobPage.clickContactsTabButton();
 

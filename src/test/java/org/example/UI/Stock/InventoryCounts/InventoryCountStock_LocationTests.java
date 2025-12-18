@@ -14,6 +14,8 @@ import org.junit.jupiter.api.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import static org.example.domain.LocationName.WAREHOUSE_MAIN;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class InventoryCountStock_LocationTests extends PlaywrightUiLoginBaseTest {
 
@@ -43,7 +45,7 @@ public class InventoryCountStock_LocationTests extends PlaywrightUiLoginBaseTest
         // 2) відкрити форму створення
         createInventoryCountPage = inventoryCountListPage.clickCreateInventoryCountButton();
 
-        LocationSelect.selectLocationStatic(page, "WarehouseMain");
+        LocationSelect.selectLocationStatic(page, WAREHOUSE_MAIN.value());
 
         // 3) вибрати користувача (react-select)
         String userToAssign = "NAZARII"; // підстав свого користувача

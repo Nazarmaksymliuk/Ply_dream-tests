@@ -14,6 +14,9 @@ import org.junit.jupiter.api.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
+
+import static org.example.domain.LocationName.WAREHOUSE_MAIN;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ToolsTests extends PlaywrightUiLoginBaseTest {
     CatalogPage catalogPage;
@@ -38,7 +41,7 @@ public class ToolsTests extends PlaywrightUiLoginBaseTest {
     ToolUnit toolUnit = new ToolUnit(
             "Impact Driver Unit-" + new Random().nextInt(100000) ,
             "SerialNumber-" + new Random().nextInt(100000),
-            "WarehouseMain",
+            WAREHOUSE_MAIN.value(),
             250.00,
             400.00
     );
@@ -95,7 +98,7 @@ public class ToolsTests extends PlaywrightUiLoginBaseTest {
     ToolUnit editedToolUnit = new ToolUnit(
             "Impact Driver Unit A",  // unitName
             "SN-DRILL-12345",       // serialNumber
-            "WarehouseMain",        // location
+            WAREHOUSE_MAIN.value(),        // location
             250.00,                 // purchaseCost
             400.00                  // unitValue
     );

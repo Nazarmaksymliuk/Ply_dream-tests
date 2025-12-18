@@ -2,6 +2,7 @@ package org.example.BaseUITestExtension;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
+import com.microsoft.playwright.options.RequestOptions;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.microsoft.playwright.options.WaitUntilState;
 import org.example.BaseUITestExtension.ScreenShoot.ScreenshotManager;
@@ -38,6 +39,24 @@ public abstract class PlaywrightUiLoginBaseTest {
 
     @BeforeAll
     void beforeAll_loginOnceViaUI() {
+        context.tracing().start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
+
+        APIRequestContext api = playwright.request().newContext(
+                new APIRequest.NewContextOptions()
+                        .setIgnoreHTTPSErrors(true)
+        );
+
+        APIResponse resp = api.get(
+                UI_BASE,
+                RequestOptions.create().setTimeout(20_000)
+        );
+
+        System.out.println("Healthcheck status = " + resp.status());
+        assertTrue(resp.status() < 500, "Stage looks down or unreachable: " + resp.status());
+
+        api.dispose();
+
+
         playwright = Playwright.create();
         browser = playwright.chromium().launch(
                 new BrowserType.LaunchOptions()
@@ -52,8 +71,8 @@ public abstract class PlaywrightUiLoginBaseTest {
                         .setIgnoreHTTPSErrors(true)
                         .setBypassCSP(true)
         );
-        context.setDefaultTimeout(150_000);
-        context.setDefaultNavigationTimeout(150_000);
+        context.setDefaultTimeout(100_000);
+        context.setDefaultNavigationTimeout(100_000);
 
         page = context.newPage();
         // діагностика на випадок помилок
@@ -62,7 +81,7 @@ public abstract class PlaywrightUiLoginBaseTest {
 
         // 2) Перейти на логін і залогінитись через UI
         //page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.LOAD));  //MAINNNNNNNN
-        page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+        page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.COMMIT));
 
         SignInPage signIn = new SignInPage(page);
         //signIn.signIntoApplication(EMAIL, PASSWORD);         //ПРОТЕ МОЖЕ БУТИ ТУТ , тоді наступна перевірка лишня
@@ -84,6 +103,8 @@ public abstract class PlaywrightUiLoginBaseTest {
 
         // 5) Зберегти стейт (куки + LS) для повторного використання
         context.storageState(new BrowserContext.StorageStateOptions().setPath(STORAGE_STATE_PATH));
+        context.tracing().stop(new Tracing.StopOptions().setPath(Paths.get("build/trace.zip")));
+
     }
 
     @AfterAll
@@ -236,7 +257,7 @@ public abstract class PlaywrightUiLoginBaseTest {
                 UI_BASE + path,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(1000_000) // ← 120 секунд
+                        .setTimeout(100_000) // ← 120 секунд
         );
     }
 

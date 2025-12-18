@@ -75,7 +75,7 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
                 "Updated name must match request"
         );
 
-        // ✅ перевіряємо структуровану адресу
+        // перевіряємо структуровану адресу
         JsonNode addr = updated.get("locationAddress");
         Assertions.assertNotNull(addr, "locationAddress should be present in response");
 
@@ -102,7 +102,7 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
     }
 
 
-    // 3️⃣ DELETE WAREHOUSE
+    //  DELETE WAREHOUSE
     @Test
     @Order(3)
     void deleteWarehouse_deletesPreviouslyCreated() {

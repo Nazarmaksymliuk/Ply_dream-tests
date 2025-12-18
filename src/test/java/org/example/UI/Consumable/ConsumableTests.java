@@ -12,6 +12,8 @@ import org.junit.jupiter.api.*;
 
 import java.util.Random;
 
+import static org.example.domain.LocationName.WAREHOUSE_MAIN;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ConsumableTests extends PlaywrightUiLoginBaseTest {
     CatalogPage catalogPage;
@@ -31,7 +33,7 @@ public class ConsumableTests extends PlaywrightUiLoginBaseTest {
             "pack",                   // unitOfMeasurement
             5.75,                    // costForBusiness
             10.1,
-            "WarehouseMain",
+            WAREHOUSE_MAIN.value(),
             "test-tag"
     );
 
@@ -81,7 +83,7 @@ public class ConsumableTests extends PlaywrightUiLoginBaseTest {
             "pack",                   // unitOfMeasurement
             10.75,                    // costForBusiness
             10.1,
-            "WarehouseMain",
+            WAREHOUSE_MAIN.value(),
             "test-tag-edited"
     );
     @DisplayName("Update Consumable Test")
