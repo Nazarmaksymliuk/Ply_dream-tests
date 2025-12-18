@@ -39,7 +39,14 @@ public abstract class PlaywrightUiLoginBaseTest {
 
     @BeforeAll
     void beforeAll_loginOnceViaUI() {
-        context.tracing().start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
+
+        playwright = Playwright.create();
+        browser = playwright.chromium().launch(
+                new BrowserType.LaunchOptions()
+                        .setHeadless(Boolean.parseBoolean(System.getenv()
+                                .getOrDefault("HEADLESS","true")))
+                        .setArgs(java.util.List.of("--disable-dev-shm-usage","--disk-cache-size=0","--disable-application-cache"))
+        );
 
         APIRequestContext api = playwright.request().newContext(
                 new APIRequest.NewContextOptions()
@@ -56,23 +63,17 @@ public abstract class PlaywrightUiLoginBaseTest {
 
         api.dispose();
 
-
-        playwright = Playwright.create();
-        browser = playwright.chromium().launch(
-                new BrowserType.LaunchOptions()
-                        .setHeadless(Boolean.parseBoolean(System.getenv()
-                                .getOrDefault("HEADLESS","true")))
-                        .setArgs(java.util.List.of("--disable-dev-shm-usage","--disk-cache-size=0","--disable-application-cache"))
-        );
-
         // 1) Чистий контекст
         context = browser.newContext(
                 new Browser.NewContextOptions()
                         .setIgnoreHTTPSErrors(true)
                         .setBypassCSP(true)
         );
-        context.setDefaultTimeout(100_000);
-        context.setDefaultNavigationTimeout(100_000);
+
+        context.tracing().start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
+
+        context.setDefaultTimeout(50_000);
+        context.setDefaultNavigationTimeout(50_000);
 
         page = context.newPage();
         // діагностика на випадок помилок
@@ -118,6 +119,28 @@ public abstract class PlaywrightUiLoginBaseTest {
     @AfterEach
     void takeFinalScreenshot(){
         ScreenshotManager.takeScreenshot(page, "Final screenshot");
+    }
+
+    @AfterEach
+    void stopTrace(TestInfo info) {
+        if (context != null) {
+            String safeName = info.getDisplayName()
+                    .replaceAll("[^a-zA-Z0-9._-]", "_");
+            context.tracing().stop(new Tracing.StopOptions()
+                    .setPath(Paths.get("build/traces/" + safeName + ".zip"))
+            );
+        }
+    }
+
+    @BeforeEach
+    void startTrace(TestInfo info) {
+        if (context != null) {
+            context.tracing().start(new Tracing.StartOptions()
+                    .setScreenshots(true)
+                    .setSnapshots(true)
+                    .setSources(true)
+            );
+        }
     }
 
     //@BeforeAll
