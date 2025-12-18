@@ -123,7 +123,7 @@ public class CatalogPage {
                 .first();
 
         pageHeader = page
-                .getByText("Catalog")
+                .locator("[class='header_dashboard_title']")
                 .or(page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Catalog")));
         materialNamesInTheList      = page.locator("a.link_black[href^='/material/']");
         deleteMaterialInConfirmationModalButton =
@@ -131,7 +131,6 @@ public class CatalogPage {
 
         deleteItemInConfirmationModalButton =
                 page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete"));
-
 
 
     }

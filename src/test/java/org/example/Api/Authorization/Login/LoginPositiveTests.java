@@ -5,6 +5,7 @@ import org.example.Api.helpers.LoginHelper.LoginClient;
 import org.example.Api.helpers.LoginHelper.LoginResponseValidator;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ public class LoginPositiveTests extends BaseApiTest {
         loginClient = new LoginClient(userApi);
     }
 
+    @DisplayName("Logic for Admin User")
     @Test
     void successfulLogin_returns200AndValidBody() throws IOException {
         // TODO: реальні креденшіали тестового юзера
@@ -29,8 +31,9 @@ public class LoginPositiveTests extends BaseApiTest {
         LoginResponseValidator.expectValid200(response, loginClient);
     }
 
+    @DisplayName("Logic for Tech Role")
     @Test
-    void successfulLogin_mayReturn201IfBackendSoConfigured() {
+    void successfulLogin_techRole() {
         APIResponse response = loginClient.login(
                 "kityby@forexzig.com",
                 "Test+1234"

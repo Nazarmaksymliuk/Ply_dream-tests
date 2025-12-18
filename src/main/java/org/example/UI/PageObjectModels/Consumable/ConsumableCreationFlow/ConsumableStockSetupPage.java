@@ -35,7 +35,7 @@ public class ConsumableStockSetupPage {
         warehouseDropdown = page.locator("div.react_select__control");
         warehouseInput = page.locator("div.react_select__input-container input");
         warehouseOptions = page.locator("div.react_select__menu-list div.react_select__option");
-        quantityInput = page.locator("input[placeholder='Enter quantity (can be float)']");
+        quantityInput = page.locator("input[placeholder='Enter quantity (can be decimals)']");
         saveWarehouseButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Save Warehouse"));
         saveButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Save").setExact(true));
         errorMessageToast = page.locator("div.Toastify__toast-body div:nth-child(2)");

@@ -15,6 +15,8 @@ import org.example.UI.Models.Material;
 
 import java.util.Random;
 
+import static org.example.domain.LocationName.WAREHOUSE_MAIN;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
     MaterialPage materialPage;
@@ -26,7 +28,7 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
 
     private final String defaultVariation = "Single";
     private final String defaultUnitOfMeasurement = "Ea";
-    private final String warehouse = "WarehouseMain";
+    //private final String warehouse = "WarehouseMain";
 
     @BeforeEach
     public void setUp() {
@@ -78,7 +80,7 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
         stockSetupPage.clickAddLocationButton();
         stockSetupPage.clickChooseLocationButton();
 
-        stockSetupPage.selectWarehouse(warehouse);
+        stockSetupPage.selectWarehouse(WAREHOUSE_MAIN.value());
         stockSetupPage.setQuantity(material.quantity);
         stockSetupPage.clickSaveLocationButton();
 
@@ -94,7 +96,7 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
 
         materialsListPage.clickFirstLocationArrowDown();
 
-        Assertions.assertThat(materialsListPage.getMaterialLocationFromDropdown()).contains(warehouse);
+        Assertions.assertThat(materialsListPage.getMaterialLocationFromDropdown()).contains(WAREHOUSE_MAIN.value());
         Assertions.assertThat(materialsListPage.getFirstMaterialVariation()).isEqualTo(material.variationName);
         Assertions.assertThat(materialsListPage.getQtyFromMaterialLocation()).isEqualTo(material.quantity);
     }

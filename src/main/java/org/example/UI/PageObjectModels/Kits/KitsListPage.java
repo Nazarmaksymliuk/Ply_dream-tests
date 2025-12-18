@@ -33,7 +33,7 @@ public class KitsListPage {
         this.firstKitBusinessInTheList = page.locator("").first();
 
         // Business — друге грошове значення у рядку
-        this.firstKitCostInTheList = page.locator(".font-semibold").nth(2);
+        this.firstKitCostInTheList = page.locator(".font-semibold").nth(4);
     }
 
     // ====== Getters (текст) ======
