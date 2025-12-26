@@ -6,12 +6,11 @@ import org.example.Api.helpers.MaterialTagsHelper.MaterialTagsClient;
 import org.example.Api.helpers.SuppliersContactsHelper.SupplierContactsClient;
 import org.example.Api.helpers.ToolsHelper.ToolsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.apifactories.ToolsFinancingTestDataFactory;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ToolsE2ETests extends BaseApiTest {
@@ -24,7 +23,7 @@ public class ToolsE2ETests extends BaseApiTest {
     private String supplierId;
     private String materialTagId;
     private String materialTagName;
-    private String toolUnitId;   // id створеного toolUnit для апдейта
+    private String toolUnitId;
 
     private static final String LOCATION_ID_WAREHOUSE_MAIN =
             "ac1f56fd-9919-137e-8199-1f504b6607e8";
@@ -35,18 +34,14 @@ public class ToolsE2ETests extends BaseApiTest {
         supplierContactsClient = new SupplierContactsClient(userApi);
         materialTagsClient = new MaterialTagsClient(userApi);
 
-        // Суплаєри
+        // suppliers
         APIResponse suppliersResp = supplierContactsClient.getAllSupplierContacts();
         int supStatus = suppliersResp.status();
 
         System.out.println("SUPPLIER-CONTACTS status: " + supStatus);
         System.out.println("SUPPLIER-CONTACTS body: " + suppliersResp.text());
 
-        Assertions.assertEquals(
-                200,
-                supStatus,
-                "Expected 200 from GET /supplier-contacts"
-        );
+        Assertions.assertEquals(200, supStatus, "Expected 200 from GET /supplier-contacts");
 
         JsonNode suppliersRoot = supplierContactsClient.parseResponse(suppliersResp);
         supplierId = supplierContactsClient.extractFirstSupplierId(suppliersRoot);
@@ -58,18 +53,14 @@ public class ToolsE2ETests extends BaseApiTest {
 
         System.out.println("Resolved supplierId from /supplier-contacts: " + supplierId);
 
-        //  Material tags
+        // material tags
         APIResponse tagsResp = materialTagsClient.getMaterialTags(0, 20);
         int tagsStatus = tagsResp.status();
 
         System.out.println("MATERIAL-TAGS status: " + tagsStatus);
         System.out.println("MATERIAL-TAGS body: " + tagsResp.text());
 
-        Assertions.assertEquals(
-                200,
-                tagsStatus,
-                "Expected 200 from GET /materials-financings/materials/material-tags"
-        );
+        Assertions.assertEquals(200, tagsStatus, "Expected 200 from material-tags endpoint");
 
         JsonNode tagsRoot = materialTagsClient.parseResponse(tagsResp);
         materialTagId = materialTagsClient.extractFirstTagId(tagsRoot);
@@ -88,7 +79,15 @@ public class ToolsE2ETests extends BaseApiTest {
     @Test
     @Order(1)
     void createToolsFinancing_createsWithEmbeddedToolUnit() throws IOException {
-        Map<String, Object> body = buildCreateToolsFinancingBody();
+        Map<String, Object> body = ToolsFinancingTestDataFactory.buildCreateToolsFinancingBody(
+                "API Materials Financing Tool ",
+                "Created via API E2E materials-financings/tools test",
+                "API-MFG-",
+                materialTagId,
+                materialTagName,
+                supplierId,
+                LOCATION_ID_WAREHOUSE_MAIN
+        );
 
         APIResponse response = materialsFinancingsToolsClient.createToolsFinancing(body);
         int status = response.status();
@@ -96,117 +95,57 @@ public class ToolsE2ETests extends BaseApiTest {
         System.out.println("CREATE /materials-financings/tools status: " + status);
         System.out.println("CREATE /materials-financings/tools body: " + response.text());
 
-        Assertions.assertEquals(
-                201,
-                status,
-                "Expected 201 Created from POST /materials-financings/tools, but got: " + status
-        );
+        Assertions.assertEquals(201, status, "Expected 201 Created from POST /materials-financings/tools");
 
         JsonNode root = materialsFinancingsToolsClient.parseFinancing(response);
 
-        // id створеного фінансування
         financingId = materialsFinancingsToolsClient.extractFinancingId(response);
         Assertions.assertNotNull(financingId, "financing id must not be null");
         Assertions.assertFalse(financingId.isEmpty(), "financing id must not be empty");
 
-        // базові поля
-        Assertions.assertEquals(
-                body.get("name"),
-                root.get("name").asText(),
-                "name in response must match request"
-        );
-        Assertions.assertEquals(
-                body.get("description"),
-                root.get("description").asText(),
-                "description in response must match request"
-        );
-        Assertions.assertEquals(
-                body.get("mfg"),
-                root.get("mfg").asText(),
-                "mfg in response must match request"
-        );
+        Assertions.assertEquals(body.get("name"), root.get("name").asText(), "name in response must match request");
+        Assertions.assertEquals(body.get("description"), root.get("description").asText(), "description in response must match request");
+        Assertions.assertEquals(body.get("mfg"), root.get("mfg").asText(), "mfg in response must match request");
 
-        // 🔍 tags
         JsonNode tags = root.get("tags");
         Assertions.assertNotNull(tags, "tags should not be null");
         Assertions.assertTrue(tags.isArray(), "tags should be an array");
         Assertions.assertFalse(tags.isEmpty(), "Expected at least one tag");
 
         JsonNode firstTagResp = tags.get(0);
-        Assertions.assertEquals(
-                materialTagId,
-                firstTagResp.get("id").asText(),
-                "tag.id must match materialTagId from material-tags endpoint"
-        );
+        Assertions.assertEquals(materialTagId, firstTagResp.get("id").asText(), "tag.id must match materialTagId");
         if (materialTagName != null) {
-            Assertions.assertEquals(
-                    materialTagName,
-                    firstTagResp.get("name").asText(),
-                    "tag.name must match materialTagName from material-tags endpoint"
-            );
+            Assertions.assertEquals(materialTagName, firstTagResp.get("name").asText(), "tag.name must match materialTagName");
         }
 
-        // 🔍 toolUnits
         JsonNode firstToolUnit = materialsFinancingsToolsClient.getFirstToolUnit(root);
         Assertions.assertNotNull(firstToolUnit, "Expected at least one toolUnit in response");
-
         System.out.println("FIRST TOOL UNIT NODE: " + firstToolUnit.toPrettyString());
 
-        // зберігаємо id toolUnit для апдейта
-        JsonNode toolUnitIdNode = firstToolUnit.get("id");
-        Assertions.assertNotNull(toolUnitIdNode, "toolUnit.id must not be null");
-        toolUnitId = toolUnitIdNode.asText();
+        toolUnitId = firstToolUnit.get("id").asText();
+        Assertions.assertNotNull(toolUnitId, "toolUnit.id must not be null");
         Assertions.assertFalse(toolUnitId.isEmpty(), "toolUnit.id must not be empty");
 
-        // 🔹 LOCATION: location.id має дорівнювати LOCATION_ID_WAREHOUSE_MAIN
         JsonNode locationNode = firstToolUnit.get("location");
-        Assertions.assertNotNull(
-                locationNode,
-                "location object not found in firstToolUnit. Actual node: " + firstToolUnit.toPrettyString()
-        );
-
-        JsonNode locationIdNode = locationNode.get("id");
-        Assertions.assertNotNull(
-                locationIdNode,
-                "location.id not found in location object. Actual location node: " + locationNode.toPrettyString()
-        );
-
+        Assertions.assertNotNull(locationNode, "location object not found in firstToolUnit");
         Assertions.assertEquals(
                 LOCATION_ID_WAREHOUSE_MAIN,
-                locationIdNode.asText(),
-                "location.id must match warehouse location id from request"
+                locationNode.get("id").asText(),
+                "location.id must match warehouse location id"
         );
 
-        // 🔹 SUPPLIER: supplier.id має дорівнювати supplierId з /supplier-contacts
         JsonNode supplierNode = firstToolUnit.get("supplier");
-        Assertions.assertNotNull(
-                supplierNode,
-                "supplier object not found in firstToolUnit"
-        );
-
-        JsonNode supplierIdNode = supplierNode.get("id");
-        Assertions.assertNotNull(
-                supplierIdNode,
-                "supplier.id not found in supplier object"
-        );
-
+        Assertions.assertNotNull(supplierNode, "supplier object not found in firstToolUnit");
         Assertions.assertEquals(
                 supplierId,
-                supplierIdNode.asText(),
+                supplierNode.get("id").asText(),
                 "supplier.id must match supplierId from /supplier-contacts"
         );
 
-        // 🔹 решта полів, які точно є
-        Assertions.assertEquals(
-                "AVAILABLE",
-                firstToolUnit.get("status").asText(),
-                "toolUnit.status must be AVAILABLE"
-        );
+        Assertions.assertEquals("AVAILABLE", firstToolUnit.get("status").asText(), "toolUnit.status must be AVAILABLE");
 
-        // purchaseDate – не пустий
         Assertions.assertTrue(
-                firstToolUnit.hasNonNull("purchaseDate")
-                        && !firstToolUnit.get("purchaseDate").asText().isEmpty(),
+                firstToolUnit.hasNonNull("purchaseDate") && !firstToolUnit.get("purchaseDate").asText().isEmpty(),
                 "purchaseDate should not be null or empty"
         );
     }
@@ -218,7 +157,17 @@ public class ToolsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(financingId, "financingId is null – create test probably failed");
         Assertions.assertNotNull(toolUnitId, "toolUnitId is null – create test probably failed");
 
-        Map<String, Object> body = buildUpdateToolsFinancingBody();
+        Map<String, Object> body = ToolsFinancingTestDataFactory.buildUpdateToolsFinancingBody(
+                financingId,
+                toolUnitId,
+                "API Materials Financing Tool UPDATED ",
+                "Updated via API E2E materials-financings/tools test",
+                "API-MFG-UPDATED-",
+                materialTagId,
+                materialTagName,
+                supplierId,
+                LOCATION_ID_WAREHOUSE_MAIN
+        );
 
         APIResponse response = materialsFinancingsToolsClient.updateToolsFinancing(financingId, body);
         int status = response.status();
@@ -226,85 +175,35 @@ public class ToolsE2ETests extends BaseApiTest {
         System.out.println("UPDATE /materials-financings/tools status: " + status);
         System.out.println("UPDATE /materials-financings/tools body: " + response.text());
 
-        Assertions.assertEquals(
-                200,
-                status,
-                "Expected 200 OK from PUT /materials-financings/tools/{id}, but got: " + status
-        );
+        Assertions.assertEquals(200, status, "Expected 200 OK from PUT /materials-financings/tools/{id}");
 
         JsonNode root = materialsFinancingsToolsClient.parseFinancing(response);
 
-        // id фінансування не змінюється
-        Assertions.assertEquals(
-                financingId,
-                root.get("id").asText(),
-                "Updated financing id must remain the same as created"
-        );
+        Assertions.assertEquals(financingId, root.get("id").asText(), "Updated financing id must remain the same");
 
-        // базові поля оновлені
-        Assertions.assertEquals(
-                body.get("name"),
-                root.get("name").asText(),
-                "Updated name must match request"
-        );
-        Assertions.assertEquals(
-                body.get("description"),
-                root.get("description").asText(),
-                "Updated description must match request"
-        );
-        Assertions.assertEquals(
-                body.get("mfg"),
-                root.get("mfg").asText(),
-                "Updated mfg must match request"
-        );
+        Assertions.assertEquals(body.get("name"), root.get("name").asText(), "Updated name must match request");
+        Assertions.assertEquals(body.get("description"), root.get("description").asText(), "Updated description must match request");
+        Assertions.assertEquals(body.get("mfg"), root.get("mfg").asText(), "Updated mfg must match request");
 
-        // 🔍 tags — усе ще той самий тег
         JsonNode tags = root.get("tags");
         Assertions.assertNotNull(tags, "tags should not be null after update");
         Assertions.assertTrue(tags.isArray(), "tags should be an array after update");
         Assertions.assertFalse(tags.isEmpty(), "Expected at least one tag after update");
-        JsonNode firstTagResp = tags.get(0);
-        Assertions.assertEquals(
-                materialTagId,
-                firstTagResp.get("id").asText(),
-                "tag.id after update must still match materialTagId from material-tags endpoint"
-        );
+        Assertions.assertEquals(materialTagId, tags.get(0).get("id").asText(), "tag.id after update must still match");
 
-        // 🔍 toolUnits — перевіряємо, що лінки збереглися, а поля оновилися
         JsonNode firstToolUnit = materialsFinancingsToolsClient.getFirstToolUnit(root);
         Assertions.assertNotNull(firstToolUnit, "Expected at least one toolUnit in response after update");
-
         System.out.println("UPDATED FIRST TOOL UNIT NODE: " + firstToolUnit.toPrettyString());
 
-        // той самий toolUnitId
-        Assertions.assertEquals(
-                toolUnitId,
-                firstToolUnit.get("id").asText(),
-                "toolUnit.id after update must remain the same"
-        );
+        Assertions.assertEquals(toolUnitId, firstToolUnit.get("id").asText(), "toolUnit.id after update must remain the same");
 
-        // LOCATION
         JsonNode locationNode = firstToolUnit.get("location");
         Assertions.assertNotNull(locationNode, "location object not found in updated firstToolUnit");
-        JsonNode locationIdNode = locationNode.get("id");
-        Assertions.assertNotNull(locationIdNode, "location.id not found in updated location object");
-        Assertions.assertEquals(
-                LOCATION_ID_WAREHOUSE_MAIN,
-                locationIdNode.asText(),
-                "location.id after update must still match warehouse location id"
-        );
+        Assertions.assertEquals(LOCATION_ID_WAREHOUSE_MAIN, locationNode.get("id").asText(), "location.id must remain same");
 
-        // SUPPLIER
         JsonNode supplierNode = firstToolUnit.get("supplier");
         Assertions.assertNotNull(supplierNode, "supplier object not found in updated firstToolUnit");
-        JsonNode supplierIdNode = supplierNode.get("id");
-        Assertions.assertNotNull(supplierIdNode, "supplier.id not found in updated supplier object");
-        Assertions.assertEquals(
-                supplierId,
-                supplierIdNode.asText(),
-                "supplier.id after update must still match supplierId from /supplier-contacts"
-        );
-
+        Assertions.assertEquals(supplierId, supplierNode.get("id").asText(), "supplier.id must remain same");
     }
 
     // 3️⃣ DELETE: DELETE /materials-financings/tools/{id}
@@ -319,114 +218,6 @@ public class ToolsE2ETests extends BaseApiTest {
         System.out.println("DELETE /materials-financings/tools/{id} status: " + status);
         System.out.println("DELETE /materials-financings/tools/{id} body: '" + response.text() + "'");
 
-        Assertions.assertEquals(
-                204,
-                status,
-                "Expected 204 No Content from DELETE /materials-financings/tools/{id}, but got: " + status
-        );
-    }
-
-    // ---------- helpers ----------
-
-    private Map<String, Object> buildCreateToolsFinancingBody() {
-        Map<String, Object> body = new HashMap<>();
-        long ts = System.currentTimeMillis();
-
-        body.put("name", "API Materials Financing Tool " + ts);
-        body.put("description", "Created via API E2E materials-financings/tools test");
-        body.put("mfg", "API-MFG-" + ts);
-
-        // 🔹 реальний material tag з бекенду
-        Map<String, Object> tag = new HashMap<>();
-        tag.put("id", materialTagId);
-        if (materialTagName != null) {
-            tag.put("name", materialTagName);
-        }
-        body.put("tags", List.of(tag));
-
-        // toolUnit
-        Map<String, Object> toolUnit = new HashMap<>();
-        toolUnit.put("name", "API Tool Unit " + ts);
-        toolUnit.put("note", "Created from materials-financings/tools E2E test");
-
-        toolUnit.put("barcodes", List.of("API-BC-" + ts));
-        toolUnit.put("jobIds", Collections.emptyList());
-
-        toolUnit.put("locationId", LOCATION_ID_WAREHOUSE_MAIN);
-
-        Map<String, Object> locationPosition = new HashMap<>();
-        locationPosition.put("aisle", "A1");
-        locationPosition.put("bay", "B1");
-        locationPosition.put("bin", "BIN1");
-        locationPosition.put("level", "L1");
-        toolUnit.put("locationPosition", locationPosition);
-
-        toolUnit.put("purchaseCost", 100.0);
-        toolUnit.put("purchaseValue", 100.0);
-
-        // формат як у createdAt/updatedAt: без таймзони
-        String purchaseDate = LocalDateTime.now()
-                .truncatedTo(ChronoUnit.MICROS)
-                .toString();
-        toolUnit.put("purchaseDate", purchaseDate);
-
-        toolUnit.put("serialNumber", "SN-" + ts);
-        toolUnit.put("status", "AVAILABLE");
-        toolUnit.put("supplierId", supplierId);
-        // userId бек, судячи з усього, не вимагає
-
-        body.put("toolUnits", List.of(toolUnit));
-
-        return body;
-    }
-
-    private Map<String, Object> buildUpdateToolsFinancingBody() {
-        Map<String, Object> body = new HashMap<>();
-        long ts = System.currentTimeMillis();
-
-        body.put("id", financingId); // можна й не слати, але за схемою він є
-        body.put("name", "API Materials Financing Tool UPDATED " + ts);
-        body.put("description", "Updated via API E2E materials-financings/tools test");
-        body.put("mfg", "API-MFG-UPDATED-" + ts);
-
-        Map<String, Object> tag = new HashMap<>();
-        tag.put("id", materialTagId);
-        if (materialTagName != null) {
-            tag.put("name", materialTagName);
-        }
-        body.put("tags", List.of(tag));
-
-        Map<String, Object> toolUnit = new HashMap<>();
-        toolUnit.put("id", toolUnitId); // 🔹 обов'язково, щоб апдейтнув існуючий
-        toolUnit.put("name", "API Tool Unit UPDATED " + ts);
-        toolUnit.put("note", "Updated from materials-financings/tools E2E test");
-
-        toolUnit.put("barcodes", List.of("API-BC-UPDATED-" + ts));
-        toolUnit.put("jobIds", Collections.emptyList());
-
-        toolUnit.put("locationId", LOCATION_ID_WAREHOUSE_MAIN);
-
-        Map<String, Object> locationPosition = new HashMap<>();
-        locationPosition.put("aisle", "A2");
-        locationPosition.put("bay", "B2");
-        locationPosition.put("bin", "BIN2");
-        locationPosition.put("level", "L2");
-        toolUnit.put("locationPosition", locationPosition);
-
-        toolUnit.put("purchaseCost", 200.0);
-        toolUnit.put("purchaseValue", 200.0);
-
-        String purchaseDate = LocalDateTime.now()
-                .truncatedTo(ChronoUnit.MICROS)
-                .toString();
-        toolUnit.put("purchaseDate", purchaseDate);
-
-        toolUnit.put("serialNumber", "SN-UPDATED-" + ts);
-        toolUnit.put("status", "AVAILABLE");
-        toolUnit.put("supplierId", supplierId);
-
-        body.put("toolUnits", List.of(toolUnit));
-
-        return body;
+        Assertions.assertEquals(204, status, "Expected 204 No Content from DELETE /materials-financings/tools/{id}");
     }
 }

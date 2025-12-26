@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
 import org.example.Api.helpers.FoldersHelper.FoldersClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.apifactories.FoldersTestDataFactory;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -25,7 +25,8 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
     @Test
     @Order(1)
     void createFolder_createsAndStoresId() throws IOException {
-        Map<String, Object> body = buildCreateFolderBody();
+        Map<String, Object> body =
+                FoldersTestDataFactory.buildCreateFolderBody("API Folder ");
 
         APIResponse response = foldersClient.createFolder(body);
         int status = response.status();
@@ -33,7 +34,6 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
         System.out.println("CREATE FOLDER status: " + status);
         System.out.println("CREATE FOLDER body: " + response.text());
 
-        // swagger: 201 Created, але може бути й 200 OK
         Assertions.assertTrue(
                 status == 201 || status == 200,
                 "Expected 201 or 200 on createFolder, but got: " + status
@@ -51,7 +51,6 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
                 "Created folder name must match request"
         );
 
-        // опціонально – можна перевіряти, що counters = 0
         Assertions.assertEquals(0, created.get("countKits").asInt());
         Assertions.assertEquals(0, created.get("countMaterials").asInt());
         Assertions.assertEquals(0, created.get("countToolUnits").asInt());
@@ -63,7 +62,8 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
     void updateFolder_updatesName() throws IOException {
         Assertions.assertNotNull(folderId, "folderId is null – create test probably failed");
 
-        Map<String, Object> body = buildUpdateFolderBody(folderId);
+        Map<String, Object> body =
+                FoldersTestDataFactory.buildUpdateFolderBody(folderId, "API Folder UPDATED ");
 
         APIResponse response = foldersClient.updateFolder(folderId, body);
         int status = response.status();
@@ -85,7 +85,6 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
                 "Updated folder name must match request"
         );
 
-        // якщо ти явно передаєш parentId – можна теж перевірити
         if (body.get("parentId") != null) {
             Assertions.assertEquals(
                     body.get("parentId"),
@@ -101,7 +100,6 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
     void deleteFolder_deletesPreviouslyCreated() {
         Assertions.assertNotNull(folderId, "folderId is null – create test probably failed");
 
-        // не переносимо нічого – просто видаляємо
         APIResponse response = foldersClient.deleteFolder(
                 folderId,
                 false, // transferFolder
@@ -113,38 +111,10 @@ public class MaterialsCatalogFoldersE2ETests extends BaseApiTest {
         System.out.println("DELETE FOLDER status: " + status);
         System.out.println("DELETE FOLDER body: '" + response.text() + "'");
 
-        // swagger: 204 No Content
         Assertions.assertEquals(
                 204,
                 status,
                 "Expected 204 on deleteFolder, but got: " + status
         );
-    }
-
-    // ---------- helpers ----------
-
-    // POST body – створюємо root folder (без parentId)
-    private Map<String, Object> buildCreateFolderBody() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("name", "API Folder " + System.currentTimeMillis());
-        // id не передаємо – нехай генерується на бекенді
-        // parentId – теж не передаємо, буде root
-
-        return body;
-    }
-
-    // PUT body – оновлюємо тільки name, id можемо передати за бажанням
-    private Map<String, Object> buildUpdateFolderBody(String folderId) {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("id", folderId); // часто для PUT так і роблять у схемі
-        body.put("name", "API Folder UPDATED " + System.currentTimeMillis());
-
-        // Якщо потрібно пересунути папку в іншу:
-        // body.put("parentId", "some-other-parent-id");
-        // Зараз залишаємо, як є (root) – просто не ставимо parentId
-
-        return body;
     }
 }

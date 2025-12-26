@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
 import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.apifactories.TruckLocationsTestDataFactory;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -25,7 +25,8 @@ public class TruckLocationE2ETests extends BaseApiTest {
     @Test
     @Order(1)
     void createTruck_createsAndStoresId() throws IOException {
-        Map<String, Object> body = buildCreateTruckBody();
+        Map<String, Object> body =
+                TruckLocationsTestDataFactory.buildCreateTruckBody("API Truck ");
 
         APIResponse response = locationsClient.createLocation(body, false);
         int status = response.status();
@@ -56,7 +57,8 @@ public class TruckLocationE2ETests extends BaseApiTest {
     void updateTruck_updatesNameAndPlateAndMakeModel() throws IOException {
         Assertions.assertNotNull(locationId, "locationId is null – create test probably failed");
 
-        Map<String, Object> body = buildUpdateTruckBody();
+        Map<String, Object> body =
+                TruckLocationsTestDataFactory.buildUpdateTruckBody("API Truck UPDATED ");
 
         APIResponse response = locationsClient.updateLocation(locationId, body, true);
         int status = response.status();
@@ -72,6 +74,7 @@ public class TruckLocationE2ETests extends BaseApiTest {
         JsonNode updated = locationsClient.parseLocation(response);
 
         Assertions.assertEquals(locationId, updated.get("id").asText(), "Updated id must be the same");
+
         Assertions.assertEquals(
                 body.get("name"),
                 updated.get("name").asText(),
@@ -116,49 +119,5 @@ public class TruckLocationE2ETests extends BaseApiTest {
                 status == 204 || status == 200,
                 "Expected 204 or 200 on delete, but got: " + status
         );
-    }
-
-    // ---------- helpers ----------
-
-    // POST /locations – truck без адреси (як у твоєму прикладі з порталу)
-    private Map<String, Object> buildCreateTruckBody() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("name", "API Truck " + System.currentTimeMillis());
-        body.put("truckStockType", "TRUCK");
-        body.put("plateNumber", "123");
-        body.put("make", "123");
-        body.put("model", "123");
-
-        // опціонально
-        body.put("note", "Created via API Truck E2E test");
-
-        // address/locationAddress можемо не ставити – у тебе з порталу теж null
-        // body.put("location", null);
-        // body.put("locationAddress", null);
-
-        return body;
-    }
-
-    // PUT /locations/{id} – апдейтимо основні поля треку
-    private Map<String, Object> buildUpdateTruckBody() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("name", "API Truck UPDATED " + System.currentTimeMillis());
-        body.put("plateNumber", "TRK-9999");
-        body.put("make", "Ford");
-        body.put("model", "F-150");
-
-        body.put("note", "Updated via API Truck E2E test");
-
-        // адреса опціональна, можемо залишити без неї (бек буде тримати location = null)
-        // або додати, якщо хочеш:
-        // body.put("address", "Truck Yard 1");
-        // body.put("city", "Some City");
-        // body.put("state", "CONNECTICUT");
-        // body.put("suite", "A1");
-        // body.put("usZipCode", "11111");
-
-        return body;
     }
 }
