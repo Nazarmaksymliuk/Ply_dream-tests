@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
 import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.apifactories.JobLocationsTestDataFactory;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -25,7 +25,8 @@ public class JobLocationE2ETests extends BaseApiTest {
     @Test
     @Order(1)
     void createJobLocation_createsAndStoresId() throws IOException {
-        Map<String, Object> body = buildCreateJobBody();
+        Map<String, Object> body =
+                JobLocationsTestDataFactory.buildCreateJobBody("API Job ");
 
         APIResponse response = locationsClient.createLocation(body, false);
         int status = response.status();
@@ -33,7 +34,6 @@ public class JobLocationE2ETests extends BaseApiTest {
         System.out.println("CREATE JOB status: " + status);
         System.out.println("CREATE JOB body: " + response.text());
 
-        // swagger каже 201, але іноді буває 200 → допускаємо обидва
         Assertions.assertTrue(
                 status == 201 || status == 200,
                 "Expected 201 or 200 on create, but got: " + status
@@ -53,7 +53,8 @@ public class JobLocationE2ETests extends BaseApiTest {
     void updateJobLocation_updatesNameAndClientData() throws IOException {
         Assertions.assertNotNull(locationId, "locationId is null – create test probably failed");
 
-        Map<String, Object> body = buildUpdateJobBody();
+        Map<String, Object> body =
+                JobLocationsTestDataFactory.buildUpdateJobBody("API Job UPDATED ");
 
         APIResponse response = locationsClient.updateLocation(locationId, body, true);
         int status = response.status();
@@ -61,7 +62,6 @@ public class JobLocationE2ETests extends BaseApiTest {
         System.out.println("UPDATE JOB status: " + status);
         System.out.println("UPDATE JOB body: " + response.text());
 
-        // swagger: 200 / 201
         Assertions.assertTrue(
                 status == 200 || status == 201,
                 "Expected 200 or 201 on update, but got: " + status
@@ -90,7 +90,7 @@ public class JobLocationE2ETests extends BaseApiTest {
 
         APIResponse response = locationsClient.deleteLocation(
                 locationId,
-                null, // toLocationId – не вказуємо, якщо не потрібно переносити запаси
+                null,
                 "Delete via API E2E test"
         );
 
@@ -99,56 +99,9 @@ public class JobLocationE2ETests extends BaseApiTest {
         System.out.println("DELETE JOB status: " + status);
         System.out.println("DELETE JOB body: '" + response.text() + "'");
 
-        // swagger каже 204 No Content, але на всяк випадок допускаємо 200 теж
         Assertions.assertTrue(
                 status == 204 || status == 200,
                 "Expected 204 or 200 on delete, but got: " + status
         );
-    }
-
-    // ---------- helpers ----------
-
-    private Map<String, Object> buildCreateJobBody() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("name", "API Job " + System.currentTimeMillis());
-        body.put("truckStockType", "JOB"); // важливо, щоб це був саме Job
-        body.put("clientName", "API Test Client");
-        body.put("clientPhoneNumber", "+10000000000");
-        body.put("note", "Created via Playwright API E2E test");
-
-        // мінімальна адреса – nested locationAddress (як в POST схемі)
-        Map<String, Object> locationAddress = new HashMap<>();
-        locationAddress.put("address", "123 Test Street");
-        locationAddress.put("city", "Test City");
-        locationAddress.put("state", "ALABAMA"); // з enum у swagger
-        locationAddress.put("suite", "Suite 1");
-        locationAddress.put("usZipCode", "12345");
-        body.put("locationAddress", locationAddress);
-
-        // решта полів (projectId, truckId, usersId...) можна не чіпати, якщо бекенд їх не вимагає
-
-        return body;
-    }
-
-    private Map<String, Object> buildUpdateJobBody() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("name", "API Job UPDATED " + System.currentTimeMillis());
-        body.put("clientName", "API Test Client UPDATED");
-        body.put("clientPhoneNumber", "+19999999999");
-        body.put("note", "Updated via Playwright API E2E test");
-
-        // PUT має пласку адресу, без locationAddress-обʼєкта
-        body.put("address", "456 Updated Street");
-        body.put("city", "Updated City");
-        body.put("state", "ALABAMA");
-        body.put("suite", "Updated Suite");
-        body.put("usZipCode", "54321");
-
-        // можеш додати location, make, model, якщо хочеш, але не обовʼязково
-        body.put("location", "Updated Job Location");
-
-        return body;
     }
 }

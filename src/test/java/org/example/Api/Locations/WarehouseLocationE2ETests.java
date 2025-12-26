@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
 import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.apifactories.LocationsTestDataFactory;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -25,7 +25,8 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
     @Test
     @Order(1)
     void createWarehouse_createsAndStoresId() throws IOException {
-        Map<String, Object> body = buildCreateWarehouseBody();
+        Map<String, Object> body =
+                LocationsTestDataFactory.buildCreateWarehouseBody("API Warehouse ");
 
         APIResponse response = locationsClient.createLocation(body, false);
         int status = response.status();
@@ -48,12 +49,14 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
         Assertions.assertEquals("AQA MAIN BUSINESS", created.get("businessName").asText());
     }
 
+    // 2️⃣ UPDATE WAREHOUSE
     @Test
     @Order(2)
     void updateWarehouse_updatesNameAndLocation() throws IOException {
         Assertions.assertNotNull(locationId, "locationId is null – create test probably failed");
 
-        Map<String, Object> body = buildUpdateWarehouseBody();
+        Map<String, Object> body =
+                LocationsTestDataFactory.buildUpdateWarehouseBody("API Warehouse UPDATED ");
 
         APIResponse response = locationsClient.updateLocation(locationId, body, true);
         int status = response.status();
@@ -75,7 +78,7 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
                 "Updated name must match request"
         );
 
-        // перевіряємо структуровану адресу
+        // перевіряємо структуровану адресу, яка повертається як locationAddress
         JsonNode addr = updated.get("locationAddress");
         Assertions.assertNotNull(addr, "locationAddress should be present in response");
 
@@ -101,8 +104,7 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
         );
     }
 
-
-    //  DELETE WAREHOUSE
+    // 3️⃣ DELETE WAREHOUSE
     @Test
     @Order(3)
     void deleteWarehouse_deletesPreviouslyCreated() {
@@ -124,54 +126,5 @@ public class WarehouseLocationE2ETests extends BaseApiTest {
                 status == 204 || status == 200,
                 "Expected 204 or 200 on delete, but got: " + status
         );
-    }
-
-    // ---------- helpers ----------
-
-    // POST /locations – з nested locationAddress
-    private Map<String, Object> buildCreateWarehouseBody() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("name", "API Warehouse " + System.currentTimeMillis());
-        body.put("truckStockType", "WAREHOUSE");
-        body.put("note", "Created via API Warehouse E2E test");
-
-        // те, що ти створювала з порталу: "123 123, dsdasd, CT, 12323"
-        body.put("location", "123 123, dsdasd, CT, 12323");
-
-        Map<String, Object> locationAddress = new HashMap<>();
-        locationAddress.put("address", "123");
-        locationAddress.put("suite", "123");
-        locationAddress.put("city", "dsdasd");
-        locationAddress.put("state", "CONNECTICUT");
-        locationAddress.put("usZipCode", "12323");
-        body.put("locationAddress", locationAddress);
-
-        // clientName / clientPhoneNumber можна залишити null або задати, бек це терпить
-        body.put("clientName", "Warehouse Client");
-        body.put("clientPhoneNumber", "+10000000000");
-
-        return body;
-    }
-
-    // PUT /locations/{id} – пласка адреса
-    private Map<String, Object> buildUpdateWarehouseBody() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("name", "API Warehouse UPDATED " + System.currentTimeMillis());
-        body.put("note", "Updated via API Warehouse E2E test");
-
-        // тут вже не locationAddress, а address/city/state/...
-        body.put("location", "456 Updated, New City, CT, 99999");
-        body.put("address", "456 Updated");
-        body.put("city", "New City");
-        body.put("state", "CONNECTICUT");
-        body.put("suite", "999");
-        body.put("usZipCode", "99999");
-
-        body.put("clientName", "Warehouse Client UPDATED");
-        body.put("clientPhoneNumber", "+19999999999");
-
-        return body;
     }
 }

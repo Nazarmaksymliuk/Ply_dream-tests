@@ -4,17 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
 import org.example.Api.helpers.MaterialsHelper.MaterialsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.apifactories.MaterialsTestDataFactory;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MaterialE2ETests extends BaseApiTest {
 
     private MaterialsClient materialsClient;
-    private String materialId; // сюди збережемо id створеного матеріалу
+    private String materialId;
 
     @BeforeAll
     void initClient() {
@@ -24,7 +24,10 @@ public class MaterialE2ETests extends BaseApiTest {
     @Test
     @Order(1)
     void createMaterial_createsAndStoresId() throws IOException {
-        Map<String, Object> body = buildCreateMaterialRequest();
+        Map<String, Object> body = MaterialsTestDataFactory.buildCreateMaterialRequest(
+                "API CRUD Material ",
+                "CRUD-"
+        );
 
         APIResponse response = materialsClient.createMaterial(body);
         int status = response.status();
@@ -47,7 +50,11 @@ public class MaterialE2ETests extends BaseApiTest {
     void updateMaterial_updatesPreviouslyCreated() throws IOException {
         Assertions.assertNotNull(materialId, "materialId is null – create test probably failed");
 
-        Map<String, Object> updateBody = buildUpdateMaterialRequest(materialId);
+        Map<String, Object> updateBody = MaterialsTestDataFactory.buildUpdateMaterialRequest(
+                materialId,
+                "API CRUD Material UPDATED ",
+                "CRUD-UPD-"
+        );
 
         APIResponse response = materialsClient.updateMaterial(materialId, updateBody);
         int status = response.status();
@@ -60,9 +67,11 @@ public class MaterialE2ETests extends BaseApiTest {
         JsonNode materialNode = materialsClient.extractMaterialNode(response);
         Assertions.assertNotNull(materialNode, "Updated response should contain 'material'");
 
-        String actualName = materialNode.get("name").asText();
-        String expectedName = (String) updateBody.get("name");
-        Assertions.assertEquals(expectedName, actualName, "Updated name must match request");
+        Assertions.assertEquals(
+                updateBody.get("name"),
+                materialNode.get("name").asText(),
+                "Updated name must match request"
+        );
     }
 
     @Test
@@ -80,54 +89,5 @@ public class MaterialE2ETests extends BaseApiTest {
                 status == 200 || status == 204,
                 "Expected 200 or 204 on delete, but got: " + status
         );
-    }
-
-    // ---------- helpers ----------
-
-    private static Map<String, Object> buildCreateMaterialRequest() {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("active", true);
-        body.put("name", "API CRUD Material " + System.currentTimeMillis());
-        body.put("description", "Created via CRUD API test");
-        body.put("itemNumber", "CRUD-" + System.currentTimeMillis());
-        body.put("brand", "API-CRUD-Brand");
-        body.put("manufacturer", "API-CRUD-Manufacturer");
-
-        //body.put("materialType", "TEMPORARY_LINE_ITEM");
-        body.put("leadTime", "EIGHTEEN_WEEKS");
-        body.put("serialized", false);
-
-        Map<String, Object> measurementUnit = new HashMap<>();
-        measurementUnit.put("name", "Each");
-        measurementUnit.put("abbreviation", "EA");
-        measurementUnit.put("creationSource", "PLY");
-        body.put("measurementUnit", measurementUnit);
-
-        return body;
-    }
-
-    private static Map<String, Object> buildUpdateMaterialRequest(String materialId) {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("id", materialId);
-        body.put("active", true);
-        body.put("name", "API CRUD Material UPDATED " + System.currentTimeMillis());
-        body.put("description", "Updated via CRUD API test");
-        body.put("itemNumber", "CRUD-UPD-" + System.currentTimeMillis());
-        body.put("brand", "API-CRUD-Brand-Updated");
-        body.put("manufacturer", "API-CRUD-Manufacturer-Updated");
-
-        //body.put("materialType", "TEMPORARY_LINE_ITEM");
-        body.put("leadTime", "EIGHTEEN_WEEKS");
-        body.put("serialized", false);
-
-        Map<String, Object> measurementUnit = new HashMap<>();
-        measurementUnit.put("name", "Each");
-        measurementUnit.put("abbreviation", "EA");
-        measurementUnit.put("creationSource", "PLY");
-        body.put("measurementUnit", measurementUnit);
-
-        return body;
     }
 }
