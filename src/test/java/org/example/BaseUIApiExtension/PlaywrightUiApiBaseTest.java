@@ -22,8 +22,8 @@ public abstract class PlaywrightUiApiBaseTest {
     // =======================
     // URLs
     // =======================
-    protected static final String UI_BASE  = "https://stage.getply.com";
-    protected static final String API_BASE = "https://stage-api.getply.com";
+    protected static final String UI_BASE  = "https://dev.getply.com";
+    protected static final String API_BASE = "https://dev-api.getply.com";
     protected static final String DASHBOARD_PATH = "/dashboard";
 
     // =======================
