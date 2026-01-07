@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class PlaywrightUiLoginBaseTest {
     // === URLs ===
-    protected static final String UI_BASE  = "https://stage.getply.com";
+    protected static final String UI_BASE  = "https://dev.getply.com";
     protected static final String DASHBOARD_PATH = "/dashboard";
 
     // === Creds (краще через ENV у CI) ===
@@ -44,7 +44,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         browser = playwright.chromium().launch(
                 new BrowserType.LaunchOptions()
                         .setHeadless(Boolean.parseBoolean(System.getenv()
-                                .getOrDefault("HEADLESS","true")))
+                                .getOrDefault("HEADLESS","false")))
                         .setArgs(java.util.List.of("--disable-dev-shm-usage","--disk-cache-size=0","--disable-application-cache"))
         );
 

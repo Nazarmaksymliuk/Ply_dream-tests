@@ -12,6 +12,7 @@ import java.util.List;
 
 
 import static com.microsoft.playwright.Page.*;
+import static org.example.UI.PageObjectModels.Utils.Waits.WaitUtils.waitForVisible;
 
 
 public class MaterialsListPage {
@@ -232,6 +233,7 @@ public class MaterialsListPage {
 
     // ===== Getters from list =====
     public String getFirstMaterialNameInTheList() {
+        waitForVisible(materialFirstNameInTheList);
         return materialFirstNameInTheList.innerText();
     }
 

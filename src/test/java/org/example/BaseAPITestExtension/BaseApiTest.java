@@ -89,7 +89,7 @@ public abstract class BaseApiTest {
 
         return playwright.request().newContext(
                 new APIRequest.NewContextOptions()
-                        .setBaseURL("https://stage-api.getply.com")
+                        .setBaseURL("https://dev-api.getply.com")
                         .setExtraHTTPHeaders(headers)
         );
     }
