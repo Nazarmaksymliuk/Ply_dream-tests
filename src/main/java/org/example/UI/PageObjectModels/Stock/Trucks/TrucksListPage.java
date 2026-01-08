@@ -20,6 +20,7 @@ public class TrucksListPage {
     private final Locator confirmDeleteButton;
     private final Locator trucksListRoot;
     private final Locator firstTruckLink;
+    private final Locator deleteConfirmationInputField;
 
     public TrucksListPage(Page page) {
         this.page = page;
@@ -36,6 +37,7 @@ public class TrucksListPage {
         menuItemDelete = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Delete"));
         confirmDeleteButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete"));
 
+        deleteConfirmationInputField = page.locator("div.m_20 input[type='text']");
 
     }
 
@@ -58,6 +60,11 @@ public class TrucksListPage {
     public TruckFormPopUpPage clickOnEditTruckButton() {
         menuItemEdit.click();
         return new TruckFormPopUpPage(page);
+    }
+
+    public void fillDeleteInTheConfirmationInputField() {
+        deleteConfirmationInputField.click();
+        deleteConfirmationInputField.fill("delete");
     }
 
     public void clickOnDeleteButton() { menuItemDelete.click(); }

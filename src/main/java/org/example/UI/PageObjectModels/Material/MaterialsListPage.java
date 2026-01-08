@@ -7,6 +7,7 @@ import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 import org.example.UI.PageObjectModels.Transfer.TransferModalPage;
+import org.example.UI.PageObjectModels.Utils.Waits.WaitUtils;
 
 import java.util.List;
 
@@ -89,7 +90,7 @@ public class MaterialsListPage {
     // ===== Waits =====
     public void waitFirstRowVisible() {
         materialFirstNameInTheList.waitFor(
-                new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(60000)
+                new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(6000)
         );
     }
 
@@ -234,6 +235,8 @@ public class MaterialsListPage {
     // ===== Getters from list =====
     public String getFirstMaterialNameInTheList() {
         waitForVisible(materialFirstNameInTheList);
+        waitFirstRowVisible();
+        WaitUtils.waitForLoaderToDisappear(page);
         return materialFirstNameInTheList.innerText();
     }
 
