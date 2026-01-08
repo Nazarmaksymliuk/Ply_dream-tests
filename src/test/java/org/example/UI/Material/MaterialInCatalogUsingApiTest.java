@@ -86,6 +86,20 @@ public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
             15.5,
             10
     );
+    Material materialUpdated = new Material(
+            "Updated-Material" + new Random().nextInt(100000),
+            "ITEM-" + new Random().nextInt(100000),
+            "Sample description",
+            "BrandXXX",
+            "ManufacturerYYY",
+            "CategoryZZZ",
+            defaultUnitOfMeasurement,
+            defaultVariation,
+            "Single Description",
+            25.5,
+            15.5,
+            10
+    );
 
     @Test
     @Order(0)
@@ -134,11 +148,13 @@ public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
 
         waitForElementPresent(name);
 
-        materialSpecsPage.setMaterialName("Edited-" + material.name);
+        materialSpecsPage.setMaterialName(materialUpdated.name);
         materialSpecsPage.clickSaveButtonInTheEditMaterialFlow();
 
+        waitForElementPresent(materialUpdated.name);
+
         Assertions.assertThat(materialsListPage.getFirstMaterialNameInTheList())
-                .startsWith("Edited-");
+                .isEqualTo(materialUpdated.name);
     }
 
     @Test

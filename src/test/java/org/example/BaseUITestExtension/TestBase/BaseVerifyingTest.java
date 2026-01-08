@@ -1,4 +1,4 @@
-package org.example.BaseUITestExtension;
+package org.example.BaseUITestExtension.TestBase;
 
 import com.google.gson.Gson;
 import com.microsoft.playwright.*;

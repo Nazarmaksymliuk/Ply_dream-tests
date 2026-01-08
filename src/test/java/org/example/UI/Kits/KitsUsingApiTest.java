@@ -1,7 +1,10 @@
 package org.example.UI.Kits;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.microsoft.playwright.APIResponse;
 import org.assertj.core.api.Assertions;
-import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.Api.helpers.LocationsHelper.LocationsClient;
+import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
 import org.example.UI.Models.Kit;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
 import org.example.UI.PageObjectModels.Catalog.CatalogPage;
@@ -9,20 +12,71 @@ import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformati
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
 import org.example.UI.PageObjectModels.Kits.KitsListPage;
+import org.example.apifactories.LocationsTestDataFactory;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.util.Random;
 
-import static org.example.domain.LocationName.WAREHOUSE_MAIN;
-
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class KitsTests extends PlaywrightUiLoginBaseTest {
+public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
+
+    private static LocationsClient locationsClient;
+    private static String warehouseId;
+    private static String warehouseName;
+
     KitGeneralInformationPage generalInformationPage;
     KitsListPage kitsListPage;
     CatalogPage catalogPage;
     KitStockSetupPage kitStockSetupPage;
     KitSettingsPage kitSettingsPage;
 
+    // =========================
+    // ✅ API SETUP / CLEANUP
+    // =========================
+    @BeforeAll
+    void createWarehouseViaApi() throws IOException {
+        locationsClient = new LocationsClient(userApi);
+
+        APIResponse response = locationsClient.createLocation(
+                LocationsTestDataFactory.buildCreateWarehouseBody("UI-KITS-E2E "),
+                false
+        );
+
+        Assertions.assertThat(response.status())
+                .as("Expected 201 or 200 on create warehouse")
+                .isIn(201, 200);
+
+        JsonNode created = locationsClient.parseLocation(response);
+        warehouseId = created.get("id").asText();
+        warehouseName = created.get("name").asText();
+
+        org.junit.jupiter.api.Assertions.assertNotNull(warehouseId);
+        org.junit.jupiter.api.Assertions.assertFalse(warehouseId.isBlank());
+
+        org.junit.jupiter.api.Assertions.assertNotNull(warehouseName);
+        org.junit.jupiter.api.Assertions.assertFalse(warehouseName.isBlank());
+    }
+
+    @AfterAll
+    static void deleteWarehouseViaApi() {
+        if (warehouseId == null) return;
+
+        APIResponse response = locationsClient.deleteLocation(
+                warehouseId,
+                null,
+                "Cleanup after KitsUsingApiTest (warehouse created via API)"
+        );
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+                response.status() == 204 || response.status() == 200,
+                "Expected 204 or 200 on delete, but got: " + response.status()
+        );
+    }
+
+    // =========================
+    // UI SETUP
+    // =========================
     @BeforeEach
     public void setUp() {
         openPath("/catalog");
@@ -30,19 +84,21 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
         kitsListPage = new KitsListPage(page);
     }
 
+    // ✅ Важливо: location беремо з API
     Kit kit = new Kit(
             "Kit-" + new Random().nextInt(100000),
             "High-performance kit for any type of work.",
             "test tag",
-            WAREHOUSE_MAIN.value()
+            null
     );
 
-    @DisplayName("Create Kit Test")
+    @DisplayName("Create Kit Test (Warehouse via API)")
     @Order(0)
     @Test
     public void testCreateKit() {
-        catalogPage.waitForLoaded();
+        kit.location = warehouseName;
 
+        catalogPage.waitForLoaded();
         catalogPage.openKitsTab();
 
         generalInformationPage = catalogPage.clickAddItem(KitGeneralInformationPage.class);
@@ -55,8 +111,9 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
 
         kitStockSetupPage.clickGenerateCode();
         kitStockSetupPage.clickAddCode();
-        kitStockSetupPage.setWarehouseUsingUtility(kit.location);
 
+        // ✅ Динамічний warehouse з API
+        kitStockSetupPage.setWarehouseUsingUtility(kit.location);
 
         kitSettingsPage = kitStockSetupPage.clickNext();
         kitSettingsPage.addFirstMaterialByName("Test");
@@ -66,32 +123,27 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
 
         kitSettingsPage.clickBottomSave();
 
-
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully created", kit.name);
         AlertUtils.waitForAlertHidden(page);
 
-        //waitForElementPresent(kit.name);
         Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(kit.name);
         Assertions.assertThat(kitsListPage.getFirstKitCostInTheListAsDouble()).isEqualTo(kitPrice);
-
     }
 
     Kit editedKit = new Kit(
             "Kit-edited" + new Random().nextInt(100000),
             "High-performance kit for any type of work-edited",
             "test tag-edited",
-            WAREHOUSE_MAIN.value()
+            null
     );
 
     @DisplayName("Update Kit Test")
     @Order(1)
     @Test
     public void testUpdateKit() {
-
         catalogPage.waitForLoaded();
-
         catalogPage.openKitsTab();
 
         catalogPage.openFirstRowKitThreeDots();
@@ -108,9 +160,7 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
         Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully updated", editedKit.name);
         AlertUtils.waitForAlertHidden(page);
 
-        //waitForElementPresent(editedKit.name);
         Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(editedKit.name);
-
     }
 
     @DisplayName("Delete Kit Test")
@@ -123,7 +173,6 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
         String kitName = kitsListPage.getFirstKitNameInTheList();
 
         catalogPage.openFirstRowKitThreeDots();
-
         catalogPage.chooseMenuActionDelete();
         catalogPage.confirmDeleteItemInModal();
 
@@ -134,9 +183,5 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
 
         waitForElementRemoved(kitName);
         Assertions.assertThat(kitsListPage.getKitNamesList()).doesNotContain(kitName);
-
     }
-
-
-
 }

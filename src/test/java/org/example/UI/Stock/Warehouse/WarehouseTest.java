@@ -135,6 +135,7 @@ public class WarehouseTest extends PlaywrightUiLoginBaseTest {
 
         warehousesListPage.clickOnWarehouseThreeDotsButton();
         warehousesListPage.clickOnDeleteButton();
+        warehousesListPage.fillDeleteInTheConfirmationInputField();
         warehousesListPage.clickDeleteWarehouseInConfirmationModalButton();
 
         AlertUtils.waitForAlertVisible(page);

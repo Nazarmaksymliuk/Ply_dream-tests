@@ -7,18 +7,22 @@ import com.microsoft.playwright.options.WaitForSelectorState;
 import com.microsoft.playwright.options.WaitUntilState;
 import org.example.BaseUITestExtension.ScreenShoot.ScreenshotManager;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
+import org.example.routes.Routes;
 import org.junit.jupiter.api.*;
+import org.example.routes.Routes.*;
+
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class PlaywrightUiLoginBaseTest {
     // === URLs ===
-    protected static final String UI_BASE  = "https://dev.getply.com";
+    //protected static final String UI_BASE  = "https://dev.getply.com";
     protected static final String DASHBOARD_PATH = "/dashboard";
 
     // === Creds (краще через ENV у CI) ===
@@ -45,7 +49,7 @@ public abstract class PlaywrightUiLoginBaseTest {
                 new BrowserType.LaunchOptions()
                         .setHeadless(Boolean.parseBoolean(System.getenv()
                                 .getOrDefault("HEADLESS","false")))
-                        .setArgs(java.util.List.of("--disable-dev-shm-usage","--disk-cache-size=0","--disable-application-cache"))
+                        .setArgs(List.of("--disable-dev-shm-usage","--disk-cache-size=0","--disable-application-cache"))
         );
 
         APIRequestContext api = playwright.request().newContext(
@@ -54,7 +58,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         );
 
         APIResponse resp = api.get(
-                UI_BASE,
+                Routes.BASE_URL,
                 RequestOptions.create().setTimeout(20_000)
         );
 
@@ -82,7 +86,7 @@ public abstract class PlaywrightUiLoginBaseTest {
 
         // 2) Перейти на логін і залогінитись через UI
         //page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.LOAD));  //MAINNNNNNNN
-        page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.COMMIT));
+        page.navigate(Routes.BASE_URL, new Page.NavigateOptions().setWaitUntil(WaitUntilState.COMMIT));
 
         SignInPage signIn = new SignInPage(page);
         //signIn.signIntoApplication(EMAIL, PASSWORD);         //ПРОТЕ МОЖЕ БУТИ ТУТ , тоді наступна перевірка лишня
@@ -168,7 +172,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         context.setDefaultTimeout(150_000);
         context.setDefaultNavigationTimeout(150_000);
 
-        page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+        page.navigate(Routes.BASE_URL, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
         new SignInPage(page).signIntoApplication(EMAIL, PASSWORD);
 
         // чекати стан застосунку (без мережевих флейків)
@@ -201,7 +205,7 @@ public abstract class PlaywrightUiLoginBaseTest {
 
             // health-check
             page.navigate(
-                    UI_BASE,
+                    Routes.BASE_URL,
                     new Page.NavigateOptions()
                             .setWaitUntil(WaitUntilState.DOMCONTENTLOADED) // або NETWORKIDLE, якщо потрібно
                             .setTimeout(5000_000) // 60 секунд = 1 хв
@@ -236,7 +240,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         page = context.newPage();
 
         page.navigate(
-                UI_BASE,
+                Routes.BASE_URL,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
                         .setTimeout(5000_000)
@@ -277,7 +281,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     /** Відкрити шлях у поточній сторінці. */
     protected void openPath(String path) {
         page.navigate(
-                UI_BASE + path,
+                Routes.BASE_URL + path,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
                         .setTimeout(100_000) // ← 120 секунд
@@ -299,7 +303,7 @@ public abstract class PlaywrightUiLoginBaseTest {
     protected void attachErrorLogger(BrowserContext ctx) {
         ctx.onRequestFinished(req -> {
             Response res = req.response();
-            if (res != null && res.status() >= 400 && req.url().startsWith(UI_BASE)) {
+            if (res != null && res.status() >= 400 && req.url().startsWith(Routes.BASE_URL)) {
                 System.out.println("[ERR] " + res.status() + " " + req.url());
                 try { System.out.println("      " + res.text()); } catch (Exception ignored) {}
             }

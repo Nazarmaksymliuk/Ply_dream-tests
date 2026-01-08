@@ -1,4 +1,4 @@
-package org.example.BaseUITestExtension;
+package org.example.BaseUITestExtension.TestBase;
 
 public class AuthResponseDto {
     public String token;

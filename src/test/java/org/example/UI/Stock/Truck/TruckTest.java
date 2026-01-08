@@ -109,6 +109,7 @@ public class TruckTest extends PlaywrightUiLoginBaseTest {
         // Якщо не TruckMain — виконуємо видалення
         trucksListPage.clickOnTruckThreeDotsButton();
         trucksListPage.clickOnDeleteButton();
+        trucksListPage.fillDeleteInTheConfirmationInputField();
         trucksListPage.confirmDeleteInModal();
 
         AlertUtils.waitForAlertVisible(page);

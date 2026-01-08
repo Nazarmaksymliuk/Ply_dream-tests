@@ -15,6 +15,7 @@ public class WarehousesListPage {
     private final Locator firstRowThreeDots;      // три крапки у першому складі
     private final Locator menuItemEdit;           // пункт меню Edit
     private final Locator menuItemDelete;
+    private final Locator deleteConfirmationInputField;
     private final Locator deleteWarehouseInConfirmationModalButton;
     private final Locator firstWarehouseLink;     // перший склад у списку
     private final Locator mainWarehouseLink;      // конкретно WarehouseMain (за href)
@@ -54,6 +55,10 @@ public class WarehousesListPage {
                 AriaRole.MENUITEM,
                 new Page.GetByRoleOptions().setName("Delete")
         );
+
+        deleteConfirmationInputField = page.locator("div.m_20 input[type='text']");
+
+
         deleteWarehouseInConfirmationModalButton = page.getByRole(
                 AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete without transferring")
         );
@@ -82,6 +87,11 @@ public class WarehousesListPage {
 
     public void clickOnDeleteButton(){
         menuItemDelete.click();
+    }
+
+    public void fillDeleteInTheConfirmationInputField() {
+        deleteConfirmationInputField.click();
+        deleteConfirmationInputField.fill("delete");
     }
 
     public void clickDeleteWarehouseInConfirmationModalButton() {

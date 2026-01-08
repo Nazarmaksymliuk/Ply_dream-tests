@@ -1,9 +1,8 @@
-package org.example.BaseUITestExtension;
+package org.example.BaseUITestExtension.TestBase;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.WaitUntilState;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
-import org.junit.jupiter.api.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
