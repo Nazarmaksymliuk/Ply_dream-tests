@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.Random;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FieldRequestUITest extends PlaywrightUiApiBaseTest {
     FieldRequestsPage fr;
 
@@ -22,6 +22,7 @@ public class FieldRequestUITest extends PlaywrightUiApiBaseTest {
     String editedFieldRequestName = "Edited-AQA-FR-" + new Random().nextInt(100000);
 
     @Test
+    @Order(0)
     @DisplayName("Creating FR")
     void createFieldRequest_warehouse_success() {
 
@@ -40,6 +41,7 @@ public class FieldRequestUITest extends PlaywrightUiApiBaseTest {
     }
 
     @Test
+    @Order(1)
     @DisplayName("Updating FR")
     void updateFieldRequest_warehouse_success() {
         fr.openEditMenuOption()
@@ -52,6 +54,7 @@ public class FieldRequestUITest extends PlaywrightUiApiBaseTest {
     }
 
     @Test
+    @Order(2)
     @DisplayName("Deleting FR")
     void deleteFieldRequest_warehouse_success() {
         fr.openDeleteAndConfirmMenuOption();
