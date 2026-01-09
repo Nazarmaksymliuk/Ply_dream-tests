@@ -42,6 +42,10 @@ public class LocationSelect {
         page.keyboard().press("Enter");
     }
 
+    public Locator getLocationDropdownLocator() {
+       return locationSelect;
+    }
+
     public static void selectLocationStatic(Page page, String locationName) {
         new LocationSelect(page).setLocationByEnter(locationName);
     }

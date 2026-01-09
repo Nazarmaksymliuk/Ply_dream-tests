@@ -63,6 +63,41 @@ public class MaterialsTestDataFactory {
         return body;
     }
 
+    // ✅ NEW: attach material to location (POST /locations/materials?isReconciled=false)
+    public static Map<String, Object> buildAttachMaterialToLocationRequest(
+            String locationId,
+            String materialId,
+            String materialVariationId,
+            int quantity
+    ) {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("locationId", locationId);
+        dto.put("materialId", materialId);
+        dto.put("materialVariationId", materialVariationId);
+
+        dto.put("quantity", quantity);
+        dto.put("lowAmount", 1);
+        dto.put("criticalAmount", 0);
+
+        // баркод як у твоєму прикладі (можна прибрати якщо не треба)
+        String barcode = String.valueOf(10000000000L + new Random().nextInt(900000000));
+        dto.put("barcodes", List.of(barcode));
+
+        dto.put("cost", 0);
+        dto.put("isReplenishable", true);
+        dto.put("replenishablePeriods", Collections.emptyList());
+        dto.put("isSmartMinMaxEnabled", false);
+        dto.put("locationPositions", Collections.emptyList());
+        dto.put("sageDocumentHref", null);
+        dto.put("serialNumbers", Collections.emptyList());
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("materialLocationRequestDtoList", List.of(dto));
+
+        return body;
+    }
+
+
     // ---------------------------------------------------------------------
     // ✅ NEW: CREATE MATERIAL IN LOCATION (POST /materials-financings/v2/create-material-item)
     // ---------------------------------------------------------------------
