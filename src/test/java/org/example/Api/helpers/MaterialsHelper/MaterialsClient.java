@@ -26,6 +26,21 @@ public class MaterialsClient {
         );
     }
 
+    // ✅ NEW: POST /locations/materials?isReconciled=false  (attach material to location)
+    public APIResponse attachMaterialToLocation(Map<String, Object> body) {
+        return request.post(
+                "/locations/materials",
+                RequestOptions.create()
+                        .setQueryParam("isReconciled", "false")
+                        .setData(body)
+        );
+    }
+
+    // ✅ NEW: GET /materials-financings/materials/{id} (verify attachment)
+    public APIResponse getMaterial(String materialId) {
+        return request.get("/materials-financings/materials/" + materialId);
+    }
+
     // PUT /materials-financings/materials/{materialId}
     public APIResponse updateMaterial(String materialId, Map<String, Object> body) {
         return request.put(
@@ -36,24 +51,26 @@ public class MaterialsClient {
 
     // DELETE /materials-financings/materials/{id}
     public APIResponse deleteMaterial(String materialId) {
-        return request.delete(
-                "/materials-financings/materials/" + materialId
-        );
+        return request.delete("/materials-financings/materials/" + materialId);
     }
 
-    // Витягнути вузол "material" з відповіді
     public JsonNode extractMaterialNode(APIResponse response) throws IOException {
-        String json = response.text();
-        JsonNode root = objectMapper.readTree(json);
+        JsonNode root = objectMapper.readTree(response.text());
         return root.get("material");
     }
 
-    // Витягнути materialId з відповіді
     public String extractMaterialId(APIResponse response) throws IOException {
         JsonNode materialNode = extractMaterialNode(response);
-        if (materialNode == null || materialNode.get("id") == null) {
-            return null;
-        }
+        if (materialNode == null || materialNode.get("id") == null) return null;
         return materialNode.get("id").asText();
+    }
+
+    // ✅ NEW: extract first variationId from create response
+    public String extractFirstVariationId(APIResponse response) throws IOException {
+        JsonNode root = objectMapper.readTree(response.text());
+        JsonNode variations = root.path("materialVariations");
+        if (!variations.isArray() || variations.size() == 0) return null;
+        JsonNode idNode = variations.get(0).get("id");
+        return idNode == null ? null : idNode.asText();
     }
 }
