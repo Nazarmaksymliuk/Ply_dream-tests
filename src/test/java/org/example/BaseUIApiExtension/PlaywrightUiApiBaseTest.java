@@ -59,7 +59,7 @@ public abstract class PlaywrightUiApiBaseTest {
 
         boolean headless = Boolean.parseBoolean(
                 System.getProperty("headless",
-                        System.getenv().getOrDefault("HEADLESS", "false"))
+                        System.getenv().getOrDefault("HEADLESS", "true"))
         );
 
         browser = playwright.chromium().launch(
