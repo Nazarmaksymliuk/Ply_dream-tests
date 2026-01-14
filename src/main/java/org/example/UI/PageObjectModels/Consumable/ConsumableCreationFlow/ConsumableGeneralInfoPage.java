@@ -61,7 +61,7 @@ public class ConsumableGeneralInfoPage {
     public void setTag(String tag) {
         tagsInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         tagsInput.fill(tag);
-        page.waitForTimeout(1000);
+        page.waitForTimeout(2500);
         page.keyboard().press("Enter");
     }
 
