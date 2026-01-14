@@ -93,6 +93,12 @@ public class WarehouseTest extends PlaywrightUiLoginBaseTest {
 
         String oldName = warehousesListPage.getFirstWarehouseName();
 
+        // Перед видаленням
+        if ("WarehouseMain".equals(oldName)) {
+            System.out.println("⚠️ WarehouseMain could not be deleted");
+            Assumptions.assumeTrue(false, "WarehouseMain — could not be deleted");
+        }
+
         editWarehousePopUpPage.waitForLoaded();
         editWarehousePopUpPage.setWarehouseName(editedWarehouse.name);
         editWarehousePopUpPage.setWarehouseAddress(editedWarehouse.address);

@@ -46,7 +46,7 @@ public class ToolsTests extends PlaywrightUiLoginBaseTest {
             400.00
     );
 
-    @DisplayName("Create Tool in the Catalog Test")
+    @DisplayName("Create Tool with Unit in the Catalog Test")
     @Order(0)
     @Test
     public void testCreateTool() {

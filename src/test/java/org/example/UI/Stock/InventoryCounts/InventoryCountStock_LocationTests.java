@@ -113,6 +113,7 @@ public class InventoryCountStock_LocationTests extends PlaywrightUiLoginBaseTest
         createInventoryCountPage = inventoryCountListPage.clickCreateInventoryCountButton();
 
         PlaywrightAssertions.assertThat(createInventoryCountPage.getTheWarehouseMainLocator()).isVisible();
+        LocationSelect.selectLocationStatic(page, WAREHOUSE_MAIN.value());
 
         // 3) вибрати користувача (react-select)
         String userToAssign = "NAZARII"; // підстав свого користувача

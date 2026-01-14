@@ -68,7 +68,7 @@ public class FieldRequestsPage {
         closeBtn = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Close"));
         deleteButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete"));
 
-        firstMaterialCheckbox = page.locator("input[type='checkbox']").nth(3);
+        firstMaterialCheckbox = page.locator("input[type='checkbox']").nth(1);
 
         locationSelectByEnter = new LocationSelect(page);
 
