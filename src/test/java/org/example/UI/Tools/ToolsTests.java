@@ -107,7 +107,7 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
         Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(tool.name);
         Assertions.assertThat(toolsListPage.getFirstUnitNameInTheList()).isEqualTo(toolUnit.unitName);
         Assertions.assertThat(toolsListPage.getFirstToolMFGInTheList()).isEqualTo(toolUnit.serialNumber);
-        Assertions.assertThat(toolsListPage.getFirstToolUnitWarehouseLocationInTheList()).isEqualTo(toolUnit.location);
+        Assertions.assertThat(toolsListPage.getFirstToolUnitWarehouseLocationInTheList()).isEqualTo(warehouseName);
         Assertions.assertThat(toolsListPage.getFirstToolStatusLocationInTheList()).isEqualTo("Available");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -157,7 +157,7 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
         Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(toolName);
         Assertions.assertThat(toolsListPage.getFirstUnitNameInTheList()).isEqualTo(toolUnit.unitName);
         Assertions.assertThat(toolsListPage.getFirstToolMFGInTheList()).isEqualTo(toolUnit.serialNumber);
-        Assertions.assertThat(toolsListPage.getFirstToolUnitWarehouseLocationInTheList()).isEqualTo(toolUnit.location);
+        Assertions.assertThat(toolsListPage.getFirstToolUnitWarehouseLocationInTheList()).isEqualTo(warehouseName);
         Assertions.assertThat(toolsListPage.getFirstToolStatusLocationInTheList()).isEqualTo("Available");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
