@@ -14,6 +14,7 @@ import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSt
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.PriceAndVariantsPage;
 import org.example.UI.PageObjectModels.Material.MaterialsListPage;
 import org.example.apifactories.LocationsTestDataFactory;
+import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -36,32 +37,22 @@ public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
     private final String defaultVariation = "Single";
     private final String defaultUnitOfMeasurement = "Ea";
 
+    private static WarehouseApiFixture warehouseFixture;
+
     @BeforeAll
     void createWarehouse() throws IOException {
-        locationsClient = new LocationsClient(userApi);
+        warehouseFixture = WarehouseApiFixture.create(userApi)
+                .provisionWarehouse("UI-CATALOG-E2E ");
 
-        APIResponse response = locationsClient.createLocation(
-                LocationsTestDataFactory.buildCreateWarehouseBody("UI-CATALOG-E2E "),
-                false
-        );
-
-        JsonNode created = locationsClient.parseLocation(response);
-        warehouseId = created.get("id").asText();
-        warehouseName = created.get("name").asText();
-
-        org.junit.jupiter.api.Assertions.assertNotNull(warehouseId);
-        org.junit.jupiter.api.Assertions.assertFalse(warehouseId.isBlank());
+        warehouseId = warehouseFixture.warehouseId();
+        warehouseName = warehouseFixture.warehouseName();
     }
 
     @AfterAll
     void deleteWarehouse() {
-        if (warehouseId == null) return;
-
-        locationsClient.deleteLocation(
-                warehouseId,
-                null,
-                "Cleanup after MaterialInCatalogTest"
-        );
+        if (warehouseFixture != null) {
+            warehouseFixture.cleanup("Cleanup after MaterialInCatalogTest");
+        }
     }
 
     @BeforeEach

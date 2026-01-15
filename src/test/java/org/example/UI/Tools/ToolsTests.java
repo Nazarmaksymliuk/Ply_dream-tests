@@ -1,6 +1,7 @@
 package org.example.UI.Tools;
 
 import org.assertj.core.api.Assertions;
+import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.Models.Tool;
 import org.example.UI.Models.ToolUnit;
@@ -9,8 +10,10 @@ import org.example.UI.PageObjectModels.Catalog.CatalogPage;
 import org.example.UI.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
 import org.example.UI.PageObjectModels.Tools.ToolsCreationFlow.ToolGeneralInformationPage;
 import org.example.UI.PageObjectModels.Tools.ToolsListPage;
+import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -18,17 +21,38 @@ import java.util.Random;
 import static org.example.domain.LocationName.WAREHOUSE_MAIN;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ToolsTests extends PlaywrightUiLoginBaseTest {
+public class ToolsTests extends PlaywrightUiApiBaseTest {
     CatalogPage catalogPage;
     ToolsListPage toolsListPage;
     ToolGeneralInformationPage generalInformationPage;
     AddEditUnitsPage addUnitsPage;
+
+    private static WarehouseApiFixture warehouseFixture;
+
+    private static String warehouseId;
+    private static String warehouseName;
 
     @BeforeEach
     public void setUp() {
         openPath("/catalog");
         catalogPage = new CatalogPage(page);
         toolsListPage = new ToolsListPage(page);
+    }
+
+    @BeforeAll
+    void createWarehouse() throws IOException {
+        warehouseFixture = WarehouseApiFixture.create(userApi)
+                .provisionWarehouse("UI-CATALOG-E2E ");
+
+        warehouseId = warehouseFixture.warehouseId();
+        warehouseName = warehouseFixture.warehouseName();
+    }
+
+    @AfterAll
+    void deleteWarehouse() {
+        if (warehouseFixture != null) {
+            warehouseFixture.cleanup("Cleanup after MaterialInCatalogTest");
+        }
     }
 
     Tool tool = new Tool(
@@ -66,7 +90,7 @@ public class ToolsTests extends PlaywrightUiLoginBaseTest {
         addUnitsPage.setUnitName(toolUnit.unitName);
         addUnitsPage.setSerialNumber(toolUnit.serialNumber);
         addUnitsPage.selectFirstStatus();
-        addUnitsPage.setWarehouseWithoutUtility(toolUnit.location);
+        addUnitsPage.setWarehouseWithoutUtility(warehouseName);
         addUnitsPage.setPurchaseCost(toolUnit.purchaseCost);
         addUnitsPage.setValue(toolUnit.unitValue);
 

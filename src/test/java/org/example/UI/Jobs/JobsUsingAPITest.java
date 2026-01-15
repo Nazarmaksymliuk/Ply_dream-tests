@@ -14,6 +14,7 @@ import org.example.UI.PageObjectModels.Jobs.ContactsJobPage;
 import org.example.UI.PageObjectModels.Jobs.FinishedJobsPage;
 import org.example.UI.PageObjectModels.Jobs.GeneralInfoJobPage;
 import org.example.apifactories.TruckLocationsTestDataFactory;
+import org.example.fixtures.TruckApiFixture;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -60,45 +61,22 @@ public class JobsUsingAPITest extends PlaywrightUiApiBaseTest {
     // =========================
     // ✅ API SETUP / CLEANUP
     // =========================
+    private static TruckApiFixture truckFixture;
+
     @BeforeAll
     void createTruckViaApi() throws IOException {
-        locationsClient = new LocationsClient(userApi);
+        truckFixture = TruckApiFixture.create(userApi)
+                .provisionTruck("UI-JOBS-API Truck ");
 
-        Map<String, Object> body =
-                TruckLocationsTestDataFactory.buildCreateTruckBody("UI-JOBS-API Truck ");
-
-        APIResponse response = locationsClient.createLocation(body, false);
-
-        Assertions.assertThat(response.status())
-                .as("Expected 201 or 200 on create truck")
-                .isIn(201, 200);
-
-        JsonNode created = locationsClient.parseLocation(response);
-
-        truckId = created.get("id").asText();
-        truckName = created.get("name").asText();
-
-        org.junit.jupiter.api.Assertions.assertNotNull(truckId);
-        org.junit.jupiter.api.Assertions.assertFalse(truckId.isBlank());
-
-        org.junit.jupiter.api.Assertions.assertNotNull(truckName);
-        org.junit.jupiter.api.Assertions.assertFalse(truckName.isBlank());
+        truckId = truckFixture.truckId();
+        truckName = truckFixture.truckName();
     }
 
     @AfterAll
-    static void deleteTruckViaApi() {
-        if (truckId == null) return;
-
-        APIResponse response = locationsClient.deleteLocation(
-                truckId,
-                null,
-                "Cleanup after JobsTest (truck created via API)"
-        );
-
-        org.junit.jupiter.api.Assertions.assertTrue(
-                response.status() == 204 || response.status() == 200,
-                "Expected 204 or 200 on delete, but got: " + response.status()
-        );
+    void deleteTruckViaApi() {
+        if (truckFixture != null) {
+            truckFixture.cleanup("Cleanup after JobsTest (truck created via API)");
+        }
     }
 
     // =========================

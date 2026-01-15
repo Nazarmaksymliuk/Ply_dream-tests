@@ -13,6 +13,7 @@ import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
 import org.example.UI.PageObjectModels.Kits.KitsListPage;
 import org.example.apifactories.LocationsTestDataFactory;
+import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -31,47 +32,25 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
     KitStockSetupPage kitStockSetupPage;
     KitSettingsPage kitSettingsPage;
 
+    private static WarehouseApiFixture warehouseFixture;
+
     // =========================
     // ✅ API SETUP / CLEANUP
     // =========================
     @BeforeAll
     void createWarehouseViaApi() throws IOException {
-        locationsClient = new LocationsClient(userApi);
+        warehouseFixture = WarehouseApiFixture.create(userApi)
+                .provisionWarehouse("UI-CATALOG-E2E ");
 
-        APIResponse response = locationsClient.createLocation(
-                LocationsTestDataFactory.buildCreateWarehouseBody("UI-KITS-E2E "),
-                false
-        );
-
-        Assertions.assertThat(response.status())
-                .as("Expected 201 or 200 on create warehouse")
-                .isIn(201, 200);
-
-        JsonNode created = locationsClient.parseLocation(response);
-        warehouseId = created.get("id").asText();
-        warehouseName = created.get("name").asText();
-
-        org.junit.jupiter.api.Assertions.assertNotNull(warehouseId);
-        org.junit.jupiter.api.Assertions.assertFalse(warehouseId.isBlank());
-
-        org.junit.jupiter.api.Assertions.assertNotNull(warehouseName);
-        org.junit.jupiter.api.Assertions.assertFalse(warehouseName.isBlank());
+        warehouseId = warehouseFixture.warehouseId();
+        warehouseName = warehouseFixture.warehouseName();
     }
 
     @AfterAll
     static void deleteWarehouseViaApi() {
-        if (warehouseId == null) return;
-
-        APIResponse response = locationsClient.deleteLocation(
-                warehouseId,
-                null,
-                "Cleanup after KitsUsingApiTest (warehouse created via API)"
-        );
-
-        org.junit.jupiter.api.Assertions.assertTrue(
-                response.status() == 204 || response.status() == 200,
-                "Expected 204 or 200 on delete, but got: " + response.status()
-        );
+        if (warehouseFixture != null) {
+            warehouseFixture.cleanup("Cleanup after MaterialInCatalogTest");
+        }
     }
 
     // =========================

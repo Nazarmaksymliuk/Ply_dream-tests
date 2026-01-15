@@ -1,6 +1,7 @@
 package org.example.UI.Consumable;
 
 import org.assertj.core.api.Assertions;
+import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.Models.Consumable;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
@@ -8,24 +9,49 @@ import org.example.UI.PageObjectModels.Catalog.CatalogPage;
 import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
 import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableStockSetupPage;
 import org.example.UI.PageObjectModels.Consumable.ConsumableListPage;
+import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.util.Random;
 
 import static org.example.domain.LocationName.WAREHOUSE_MAIN;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ConsumableTests extends PlaywrightUiLoginBaseTest {
+public class ConsumableTests extends PlaywrightUiApiBaseTest {
     CatalogPage catalogPage;
     ConsumableGeneralInfoPage consumableGeneralInfoPage;
     ConsumableStockSetupPage consumableStockSetupPage;
     ConsumableListPage consumableListPage;
+
+    private static WarehouseApiFixture warehouseFixture;
+
+    private static String warehouseId;
+    private static String warehouseName;
+
     @BeforeEach
     public void setUp() {
         openPath("/catalog");
         catalogPage = new CatalogPage(page);
         consumableListPage = new ConsumableListPage(page);
     }
+
+    @BeforeAll
+    void createWarehouse() throws IOException {
+        warehouseFixture = WarehouseApiFixture.create(userApi)
+                .provisionWarehouse("UI-CATALOG-E2E ");
+
+        warehouseId = warehouseFixture.warehouseId();
+        warehouseName = warehouseFixture.warehouseName();
+    }
+
+    @AfterAll
+    void deleteWarehouse() {
+        if (warehouseFixture != null) {
+            warehouseFixture.cleanup("Cleanup after MaterialInCatalogTest");
+        }
+    }
+
     Consumable consumable = new Consumable(
             "Consumable-" + new Random().nextInt(100000),          // name
             "P-" + new Random().nextInt(100000),                  // itemNumber
@@ -35,6 +61,17 @@ public class ConsumableTests extends PlaywrightUiLoginBaseTest {
             10.1,
             WAREHOUSE_MAIN.value(),
             "test-tag"
+    );
+
+    Consumable editedConsumable = new Consumable(
+            "Consumable-edited-" + new Random().nextInt(100000),          // name
+            "P-edited-" + new Random().nextInt(100000),                  // itemNumber
+            "A4 size, 80gsm edited",         // description
+            "pack",                   // unitOfMeasurement
+            10.75,                    // costForBusiness
+            10.1,
+            WAREHOUSE_MAIN.value(),
+            "test-tag-edited"
     );
 
     @DisplayName("Create Consumable Test")
@@ -56,7 +93,7 @@ public class ConsumableTests extends PlaywrightUiLoginBaseTest {
         consumableStockSetupPage = consumableGeneralInfoPage.clickNextButton();
 
         consumableStockSetupPage.clickAddWarehouseButton();
-        consumableStockSetupPage.setWarehouseUsingUtility(consumable.location);
+        consumableStockSetupPage.setWarehouseUsingUtility(warehouseName);
         consumableStockSetupPage.setQuantity(consumable.quantity);
 
         consumableStockSetupPage.clickSaveWarehouseButton();
@@ -75,17 +112,6 @@ public class ConsumableTests extends PlaywrightUiLoginBaseTest {
 
     }
 
-
-    Consumable editedConsumable = new Consumable(
-            "Consumable-edited-" + new Random().nextInt(100000),          // name
-            "P-edited-" + new Random().nextInt(100000),                  // itemNumber
-            "A4 size, 80gsm edited",         // description
-            "pack",                   // unitOfMeasurement
-            10.75,                    // costForBusiness
-            10.1,
-            WAREHOUSE_MAIN.value(),
-            "test-tag-edited"
-    );
     @DisplayName("Update Consumable Test")
     @Order(1)
     @Test
