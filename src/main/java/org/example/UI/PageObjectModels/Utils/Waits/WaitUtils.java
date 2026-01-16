@@ -16,6 +16,7 @@ public class WaitUtils {
     // BASIC WAITS
     // =========================
 
+
     public static void waitForVisible(Locator locator, int timeoutMs) {
         locator.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)

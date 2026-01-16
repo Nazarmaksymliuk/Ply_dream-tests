@@ -85,6 +85,12 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.mailslurp</groupId>
+      <artifactId>mailslurp-client-java</artifactId>
+      <version>17.0.0</version>
+    </dependency>
+
   </dependencies>
 
 

@@ -4,6 +4,8 @@ import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.*;
 import org.example.Api.helpers.LoginHelper.LoginClient;
 import org.example.Api.helpers.LoginHelper.LoginResponse;
+import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.BaseUITestExtension.TestBase.PlaywrightBaseTest;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
 import org.junit.jupiter.api.*;
 
@@ -18,7 +20,7 @@ import org.example.routes.Routes.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class PlaywrightUiApiBaseTest {
+public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
 
     // =======================
     // URLs
@@ -34,6 +36,14 @@ public abstract class PlaywrightUiApiBaseTest {
             System.getenv().getOrDefault("PLY_EMAIL", "maksimlukoleg56@gmail.com");
     protected static final String USER_PASSWORD =
             System.getenv().getOrDefault("PLY_PASSWORD", "Test+1234");
+
+    protected APIRequestContext adminApi;
+    private static volatile String cachedAdminToken;
+
+    protected static final String ADMIN_EMAIL =
+            System.getenv().getOrDefault("PLY_ADMIN_EMAIL", "admin@getply.com");
+    protected static final String ADMIN_PASSWORD =
+            System.getenv().getOrDefault("PLY_ADMIN_PASSWORD", "WJoXYjE1n8m8!J");
 
     // =======================
     // Playwright UI objects
@@ -59,7 +69,7 @@ public abstract class PlaywrightUiApiBaseTest {
 
         boolean headless = Boolean.parseBoolean(
                 System.getProperty("headless",
-                        System.getenv().getOrDefault("HEADLESS", "true"))
+                        System.getenv().getOrDefault("HEADLESS", "false"))
         );
 
         browser = playwright.chromium().launch(
@@ -77,6 +87,8 @@ public abstract class PlaywrightUiApiBaseTest {
         // =======================
         String userToken = getOrCreateUserToken(USER_EMAIL, USER_PASSWORD);
         userApi = createApiContextWithBearer(userToken);
+        String adminToken = getOrCreateToken("admin", ADMIN_EMAIL, ADMIN_PASSWORD);
+        adminApi = createApiContextWithBearer(adminToken);
 
         // =======================
         // 2) UI LOGIN (same user)
@@ -115,7 +127,7 @@ public abstract class PlaywrightUiApiBaseTest {
     @AfterAll
     void afterAll_closeEverything() {
         if (userApi != null) userApi.dispose();
-
+        if (adminApi != null) adminApi.dispose();
         if (context != null) context.close();
         if (browser != null) browser.close();
         if (playwright != null) playwright.close();
@@ -215,6 +227,51 @@ public abstract class PlaywrightUiApiBaseTest {
             }
         }
     }
+    private static String getOrCreateToken(String label, String email, String password) throws IOException {
+        if ("admin".equals(label) && cachedAdminToken != null) return cachedAdminToken;
+        if ("user".equals(label) && cachedUserToken != null) return cachedUserToken;
+
+        synchronized (PlaywrightUiApiBaseTest.class) {
+            if ("admin".equals(label) && cachedAdminToken != null) return cachedAdminToken;
+            if ("user".equals(label) && cachedUserToken != null) return cachedUserToken;
+
+            Map<String, String> headers = Map.of("Content-Type", "application/json", "Accept", "*/*");
+            System.out.println("=== LOGIN (" + label.toUpperCase() + " API) START ===");
+
+            try (Playwright pw = Playwright.create()) {
+                APIRequestContext loginContext = pw.request().newContext(
+                        new APIRequest.NewContextOptions()
+                                .setBaseURL(API_BASE)
+                                .setExtraHTTPHeaders(headers)
+                                .setIgnoreHTTPSErrors(true)
+                );
+
+                LoginClient loginClient = new LoginClient(loginContext);
+                APIResponse loginResponse = loginClient.login(email, password);
+
+                int status = loginResponse.status();
+                String body = loginResponse.text();
+
+                String token;
+                if (status == 200 || status == 201) {
+                    LoginResponse parsed = loginClient.parseLoginResponse(loginResponse);
+                    token = parsed.getToken();
+                } else if (status == 409 && body.contains("uq_refresh_token")) {
+                    token = extractTokenFromConflict(body);
+                } else {
+                    throw new IllegalStateException(label + " API login failed: status=" + status + ", body=" + body);
+                }
+
+                if (token == null || token.isBlank()) throw new IllegalStateException(label + " token is null/empty");
+
+                if ("admin".equals(label)) cachedAdminToken = token;
+                else cachedUserToken = token;
+
+                return token;
+            }
+        }
+    }
+
 
     private static String extractTokenFromConflict(String body) {
         Pattern p = Pattern.compile("Key \\(token\\)=\\(([^)]+)\\)");
