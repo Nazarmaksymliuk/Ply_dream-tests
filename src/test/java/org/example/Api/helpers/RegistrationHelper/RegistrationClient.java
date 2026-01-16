@@ -18,6 +18,10 @@ public class RegistrationClient {
         this.request = request;
     }
 
+    // =========================
+    // EXISTING METHODS (DO NOT TOUCH)
+    // =========================
+
     // POST /register
     public APIResponse registerBusiness(Map<String, Object> body) {
         String url = "/register";
@@ -25,7 +29,6 @@ public class RegistrationClient {
     }
 
     // DELETE /businesses/admin/{businessId}
-    // ⚠️ важливо: сюди передаємо context з adminApi, де вже є Authorization: Bearer <adminToken>
     public APIResponse deleteBusinessAsAdmin(String businessId) {
         String url = "/businesses/admin/" + businessId;
         return request.delete(url);
@@ -39,5 +42,18 @@ public class RegistrationClient {
         JsonNode root = parseRegistrationResponse(response);
         JsonNode idNode = root.get("businessId");
         return (idNode == null || idNode.isNull()) ? null : idNode.asText();
+    }
+
+    // =========================
+    // NEW METHODS (ADMIN)
+    // =========================
+
+    /**
+     * POST /admin/register
+     * Requires adminApi context (Authorization: Bearer <adminToken>)
+     */
+    public APIResponse registerBusinessByAdmin(Map<String, Object> body) {
+        String url = "/admin/register";
+        return request.post(url, RequestOptions.create().setData(body));
     }
 }

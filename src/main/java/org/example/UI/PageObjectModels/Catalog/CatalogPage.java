@@ -11,6 +11,8 @@ import org.example.UI.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
 
 import java.util.List;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+
 public class CatalogPage {
     private final Page page;
 
@@ -251,6 +253,8 @@ public class CatalogPage {
         return materialNamesInTheList.allInnerTexts();
     }
 
-
-
+    public void assertSampleDataPresent() {
+        assertThat(page.locator("#root"))
+                .containsText("Sample Data");
+    }
 }
