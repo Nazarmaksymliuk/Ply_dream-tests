@@ -37,19 +37,18 @@ public class ConsumableTransferTest extends PlaywrightUiLoginBaseTest {
 
         String consName = consumablePage.getFirstConsumableNameInTheList();
         Double consQty = consumablePage.getQtyFromConsumableLocationStock();
-        // 1️⃣ Вибрати чекбокс у першому рядку
+
         transferPage.checkFirstRow();
 
         modalPage = transferPage.clickTransferButton();
         modalPage.waitForLoaded();
 
-        // 3️⃣ Обрати цільовий склад
+
         modalPage.selectDestinationForConsumable(warehouseToTransfer);
         modalPage.setQtyForConsumable(qtyForTransfer);
-        // 4️⃣ Натиснути “Move 1 Tool”
+
         modalPage.clickTransfer();
 
-        // 6️⃣ Перевірка: алерт успішного трансферу
         AlertUtils.waitForAlertVisible(page);
         String alertText = AlertUtils.getAlertText(page);
         org.assertj.core.api.Assertions.assertThat(alertText).isEqualTo("Consumable transfer was successful");

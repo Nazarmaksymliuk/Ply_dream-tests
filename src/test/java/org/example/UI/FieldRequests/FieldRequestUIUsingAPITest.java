@@ -66,6 +66,7 @@ public class FieldRequestUIUsingAPITest extends PlaywrightUiApiBaseTest {
 
         fr.startCreate()
                 .selectLocation(warehouseName)
+                .continueNext()
                 .setName(fieldRequestName)
                 .chooseDate(LocalDate.now())
                 .setNotes("test note")

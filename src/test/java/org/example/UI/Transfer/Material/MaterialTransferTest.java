@@ -63,7 +63,7 @@ public class MaterialTransferTest extends PlaywrightUiLoginBaseTest {
     }
 
     @DisplayName("Transfer material from warehouse WarehouseMain to JobMain (set 100 → transfer 50)")
-    @Order(0)
+    @Order(1)
     @Test
     public void transferMaterialFromLocationToJobTest() {
         Integer materialQty = materialsListPage.getQtyFromMaterialLocationStock();

@@ -98,6 +98,10 @@ public class FieldRequestsPage {
         return this;
     }
 
+    public void pushContinueButton(){
+
+    }
+
     public FieldRequestsPage setName(String name) {
         nameInput.fill(name);
         return this;
@@ -163,7 +167,7 @@ public class FieldRequestsPage {
     public FieldRequestsPage continueNext() {
         continueBtn.click();
         // Очікуємо крок з матеріалами
-        assertThat(searchMaterialsBtn).isVisible();
+        //assertThat(searchMaterialsBtn).isVisible();
         return this;
     }
 

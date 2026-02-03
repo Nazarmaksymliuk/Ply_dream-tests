@@ -29,6 +29,7 @@ public class FieldRequestUITest extends PlaywrightUiApiBaseTest {
         // create field request
         fr.startCreate()
                 .selectLocation("Warehouse")
+                .continueNext()
                 .setName(fieldRequestName)
                 .chooseDate(LocalDate.now())   // або конкретно LocalDate.of(2026, 1, 8)
                 .setNotes("test note")
