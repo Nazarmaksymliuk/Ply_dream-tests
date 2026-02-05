@@ -64,8 +64,8 @@ public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
         materialSpecsPage.setBrand(material.brand);
         materialSpecsPage.setManufacturer(material.manufacturer);
 
-        // варіація
-        materialSpecsPage.clickAddMaterialVariantButton();
+        // noo needs now
+        //materialSpecsPage.clickAddMaterialVariantButton();
         materialSpecsPage.setVariantName(material.variationName);
         materialSpecsPage.setVariantDescription(material.variationDescription);
 

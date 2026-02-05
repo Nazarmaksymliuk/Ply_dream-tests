@@ -87,7 +87,7 @@ public class KitSettingsPage {
         addButtonsInPopover.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         addButtonsInPopover.first().click();
 
-
+        toolsTab.click();
         // Save під "Kit Price" (перший "Save")
         clickSectionSave();
     }
