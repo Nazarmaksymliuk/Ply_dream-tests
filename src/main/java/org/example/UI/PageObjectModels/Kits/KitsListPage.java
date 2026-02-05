@@ -2,6 +2,8 @@ package org.example.UI.PageObjectModels.Kits;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.AriaRole;
+import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
 
 import java.util.List;
 
@@ -34,7 +36,8 @@ public class KitsListPage {
 
         // Business — друге грошове значення у рядку
         this.firstKitCostInTheList = page.locator(".font-semibold").nth(2);
-    }
+
+        }
 
     // ====== Getters (текст) ======
     public String getFirstKitNameInTheList() {
@@ -52,6 +55,7 @@ public class KitsListPage {
     public String getFirstKitBusinessTextInTheList() {
         return firstKitBusinessInTheList.innerText();  // напр., "$15.50"
     }
+
 
     public List<String> getKitNamesList() {
         return kitNamesList.allInnerTexts();
