@@ -237,7 +237,7 @@ public class ConsumableTests extends PlaywrightUiApiBaseTest {
     }
 
     @DisplayName("Delete Consumable In Location Test")
-    @Order(2)
+    @Order(5)
     @Test
     public void testDeleteConsumableInLocation() {
         openPath("/stock/warehouse/" + warehouseName.toLowerCase() + "/" + warehouseId);
