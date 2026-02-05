@@ -241,6 +241,7 @@ public class CatalogPage {
         editPricePenButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         editPricePenButton.click();
     }
+
     public void confirmDeleteMaterialInModal() {
         deleteMaterialInConfirmationModalButton.click();
     }
