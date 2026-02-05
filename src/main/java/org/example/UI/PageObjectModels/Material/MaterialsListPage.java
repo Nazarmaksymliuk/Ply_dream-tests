@@ -9,6 +9,8 @@ import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSp
 import org.example.UI.PageObjectModels.Transfer.TransferModalPage;
 import org.example.UI.PageObjectModels.Utils.Waits.WaitUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 
@@ -48,6 +50,12 @@ public class MaterialsListPage {
     private final Locator transferToolbarButton;  // глобальна кнопка Transfer
     private final Locator materialFirstVariationInTheList;  // глобальна кнопка Transfer
 
+    private final Locator firstMaterialPrice;
+    private final Locator editPricePenButton;
+    private final Locator costForBusinessInTheAdjustPricesModal;
+    private final Locator costForClientInTheAdjustPricesModal;
+    private final Locator saveChangesButton;
+    private final Locator errorEmptyPriceMessage;
 
     public MaterialsListPage(Page page) {
         this.page = page;
@@ -86,6 +94,19 @@ public class MaterialsListPage {
         firstRowCheckbox      = page.getByRole(AriaRole.CHECKBOX).nth(1);
         transferToolbarButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Transfer"));
         materialFirstVariationInTheList = page.locator("[class*='variation_name']");
+
+        firstMaterialPrice = page.getByTestId("ply_catalog_material_item_line_cost");
+
+        editPricePenButton = page
+                .getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Edit price"))
+                .first();
+
+        costForClientInTheAdjustPricesModal = page.locator("[inputmode='decimal']").first();
+        costForBusinessInTheAdjustPricesModal = page.locator("[inputmode='decimal']").nth(1);
+
+        saveChangesButton = page.getByRole(AriaRole.BUTTON, new GetByRoleOptions().setName("Save changes"));
+
+        errorEmptyPriceMessage = page.getByText("Please enter a price").first();
     }
 
     // ===== Waits =====
@@ -258,6 +279,34 @@ public class MaterialsListPage {
         return materialNamesInTheList.allInnerTexts();
     }
 
+    public void clickEditPricePen() {
+        editPricePenButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        editPricePenButton.click();
+    }
+
+    public void setPriceInTheAdjustPricesModal(Double costForClient, Double costForBusiness){
+        costForClientInTheAdjustPricesModal.click();
+        costForClientInTheAdjustPricesModal.fill(costForClient.toString());
+        costForBusinessInTheAdjustPricesModal.click();
+        costForBusinessInTheAdjustPricesModal.fill(costForBusiness.toString());
+    }
+
+    public void clearPriceInTheAdjustPricesModal(){
+        costForClientInTheAdjustPricesModal.click();
+        costForClientInTheAdjustPricesModal.fill("");
+        costForBusinessInTheAdjustPricesModal.click();
+        costForBusinessInTheAdjustPricesModal.fill("");
+    }
+
+
+    public void clickSaveChangesButton(){
+        saveChangesButton.click();
+    }
+
+    public Locator getErrorMessageLocator(){
+        return errorEmptyPriceMessage;
+    }
+
     /** Кількість з першого рядка гріда (значення у <b><span>10</span>...) */
     public int getFirstRowQuantity() {
         Locator qtySpan = page.locator("div[role='button'][class^='_edit_wrapper_'] b span:nth-of-type(1)").first();
@@ -272,5 +321,26 @@ public class MaterialsListPage {
         return Integer.parseInt(text);
     }
 
+    public BigDecimal getFirstMaterialCostForClient() {
+        waitForVisible(materialFirstNameInTheList);
+        waitFirstRowVisible();
+        WaitUtils.waitForLoaderToDisappear(page);
+
+        String rawText = firstMaterialPrice.first().innerText().trim().replace("$", "");
+        String[] parts = rawText.split("/");
+
+        return new BigDecimal(parts[0].trim()).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal getFirstMaterialCostForBusiness() {
+        waitForVisible(materialFirstNameInTheList);
+        waitFirstRowVisible();
+        WaitUtils.waitForLoaderToDisappear(page);
+
+        String rawText = firstMaterialPrice.first().innerText().trim().replace("$", "");
+        String[] parts = rawText.split("/");
+
+        return new BigDecimal(parts[1].trim()).setScale(2, RoundingMode.HALF_UP);
+    }
 
 }
