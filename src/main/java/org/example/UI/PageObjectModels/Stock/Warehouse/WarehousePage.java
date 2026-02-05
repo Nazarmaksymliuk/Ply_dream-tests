@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 import org.example.UI.PageObjectModels.Stock.InventoryCount.InventoryCountListPage;
@@ -20,10 +21,12 @@ public class WarehousePage {
     private final Locator kitsTabButton;
 
     private final Locator inventoryCountTabButton;
-    private final Locator firstThreeDotsInTheKitsList;
+    private final Locator firstThreeDotsInTheList;
     private final Locator editKitButton;
+    private final Locator editConsumableButton;
     private final Locator deleteButton;
     private final Locator deleteItemInConfirmationModalButton;
+    private final Locator addConsumableButton;
 
     // === Constructor ===
     public WarehousePage(Page page) {
@@ -57,14 +60,19 @@ public class WarehousePage {
                 AriaRole.BUTTON,
                 new Page.GetByRoleOptions().setName("Inventory Counts"));
 
-        this.firstThreeDotsInTheKitsList = page.getByTestId("ply_kit_item_line_actions_button");
+        this.firstThreeDotsInTheList = page.getByTestId("ply_kit_item_line_actions_button");
 
         this.editKitButton = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Edit Kit Info"));
+
+        this.editConsumableButton = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Edit consumable"));
 
         this.deleteButton = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Delete"));
 
         deleteItemInConfirmationModalButton =
                 page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete"));
+
+        addConsumableButton =
+                page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Consumable"));
 
     }
 
@@ -111,19 +119,30 @@ public class WarehousePage {
         consumablesTabButton.click();
     }
 
-    public void openFirstRowKitThreeDots(){
-        firstThreeDotsInTheKitsList.click();
+    public ConsumableGeneralInfoPage clickAddConsumable(){
+        addConsumableButton.click();
+        return new ConsumableGeneralInfoPage(page);
+    }
+
+    public void openFirstRowThreeDots(){
+        firstThreeDotsInTheList.click();
     }
 
     public KitGeneralInformationPage clickOnEditKitButton(){
         editKitButton.click();
         return new KitGeneralInformationPage(page);
     }
+
+    public ConsumableGeneralInfoPage clickOnEditConsumableButton(){
+        editConsumableButton.click();
+        return new ConsumableGeneralInfoPage(page);
+    }
+
     public void clickOnDeleteButton(){
         deleteButton.click();
     }
 
-    public void confirmKitDeletion(){
+    public void confirmDeletion(){
         deleteItemInConfirmationModalButton.click();
     }
 

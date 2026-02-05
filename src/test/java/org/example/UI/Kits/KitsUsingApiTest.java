@@ -1,7 +1,5 @@
 package org.example.UI.Kits;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.microsoft.playwright.APIResponse;
 import org.assertj.core.api.Assertions;
 import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
@@ -13,7 +11,6 @@ import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
 import org.example.UI.PageObjectModels.Kits.KitsListPage;
 import org.example.UI.PageObjectModels.Stock.Warehouse.WarehousePage;
-import org.example.apifactories.LocationsTestDataFactory;
 import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
 
@@ -42,7 +39,7 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
     @BeforeAll
     void createWarehouseViaApi() throws IOException {
         warehouseFixture = WarehouseApiFixture.create(userApi)
-                .provisionWarehouse("UI-CATALOG-E2E");
+                .provisionWarehouse("UI-CATALOG-E2E ");
 
         warehouseId = warehouseFixture.warehouseId();
         warehouseName = warehouseFixture.warehouseName();
@@ -221,7 +218,7 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
         warehousePage.waitForLoaded();
         warehousePage.clickOnKitsTabButton();
 
-        warehousePage.openFirstRowKitThreeDots();
+        warehousePage.openFirstRowThreeDots();
 
         generalInformationPage = warehousePage.clickOnEditKitButton();
         generalInformationPage.setKitName(editedKit.name);
@@ -248,9 +245,9 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
 
         String kitName = kitsListPage.getFirstKitNameInTheList();
 
-        warehousePage.openFirstRowKitThreeDots();
+        warehousePage.openFirstRowThreeDots();
         warehousePage.clickOnDeleteButton();
-        warehousePage.confirmKitDeletion();
+        warehousePage.confirmDeletion();
 
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
