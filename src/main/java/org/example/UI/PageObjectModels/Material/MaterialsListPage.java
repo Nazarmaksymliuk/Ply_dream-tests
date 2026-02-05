@@ -46,6 +46,7 @@ public class MaterialsListPage {
     private final Locator firstRowQty;      // кнопка “X Each” у першому рядку
     private final Locator firstRowCheckbox;       // чекбокс першого рядка
     private final Locator transferToolbarButton;  // глобальна кнопка Transfer
+    private final Locator materialFirstVariationInTheList;  // глобальна кнопка Transfer
 
 
     public MaterialsListPage(Page page) {
@@ -84,7 +85,7 @@ public class MaterialsListPage {
 
         firstRowCheckbox      = page.getByRole(AriaRole.CHECKBOX).nth(1);
         transferToolbarButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Transfer"));
-
+        materialFirstVariationInTheList = page.locator("[class*='variation_name']");
     }
 
     // ===== Waits =====
@@ -240,11 +241,16 @@ public class MaterialsListPage {
         return materialFirstNameInTheList.innerText();
     }
 
+
     public String getFirstItemNumberInTheList() {
         return firstItemNumberInTheList.innerText();
     }
 
     public String getFirstMaterialVariation() {
+        waitForVisible(firstMaterialVariation);
+        waitFirstRowVisible();
+        WaitUtils.waitForLoaderToDisappear(page);
+        //page.waitForTimeout(1000);
         return firstMaterialVariation.innerText();
     }
 

@@ -10,7 +10,7 @@ import org.example.UI.PageObjectModels.Stock.InventoryCount.InventoryCountListPa
 public class WarehousePage {private final Page page;
 
     // === Locators ===
-    private final Locator addNewMaterialButton;
+    private final Locator SetupMaterialsButton;
     private final Locator consumablesTabButton;
 
     private final Locator toolsTabButton;
@@ -24,9 +24,9 @@ public class WarehousePage {private final Page page;
         this.page = page;
 
         // Playwright-friendly selectors замість XPath
-        addNewMaterialButton = page.getByRole(
+        SetupMaterialsButton = page.getByRole(
                 AriaRole.BUTTON,
-                new Page.GetByRoleOptions().setName("Add material")
+                new Page.GetByRoleOptions().setName("Setup Materials")
         );
 
         consumablesTabButton = page.getByRole(
@@ -51,15 +51,15 @@ public class WarehousePage {private final Page page;
     }
 
     public MaterialSpecsPage clickOnAddNewMaterialButton() {
-        addNewMaterialButton.waitFor(
+        SetupMaterialsButton.waitFor(
                 new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE)
         );
-        addNewMaterialButton.click();
+        SetupMaterialsButton.click();
         return new MaterialSpecsPage(page);
     }
 
     public void waitForLoaded() {
-        addNewMaterialButton.waitFor(
+        SetupMaterialsButton.waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.VISIBLE)
                         .setTimeout(15000)
