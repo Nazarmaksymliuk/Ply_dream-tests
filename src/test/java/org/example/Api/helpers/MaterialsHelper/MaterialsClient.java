@@ -7,6 +7,8 @@ import com.microsoft.playwright.APIResponse;
 import com.microsoft.playwright.options.RequestOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class MaterialsClient {
@@ -73,4 +75,33 @@ public class MaterialsClient {
         JsonNode idNode = variations.get(0).get("id");
         return idNode == null ? null : idNode.asText();
     }
+
+    public APIResponse checkDuplicates(Map<String, Object> body) {
+        return request.post(
+                "/materials-financings/duplicates",
+                RequestOptions.create().setData(body)
+        );
+    }
+
+    public List<String> extractErrorMessages(APIResponse response) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(response.text());
+
+        List<String> messages = new ArrayList<>();
+        JsonNode msgNode = root.get("message");
+
+        if (msgNode == null || msgNode.isNull()) return messages;
+
+        if (msgNode.isArray()) {
+            for (JsonNode n : msgNode) {
+                if (n != null && n.isTextual()) messages.add(n.asText());
+            }
+        } else if (msgNode.isTextual()) {
+            messages.add(msgNode.asText());
+        }
+
+        return messages;
+    }
+
+
 }
