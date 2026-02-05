@@ -12,6 +12,7 @@ import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformati
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitSettingsPage;
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
 import org.example.UI.PageObjectModels.Kits.KitsListPage;
+import org.example.UI.PageObjectModels.Stock.Warehouse.WarehousePage;
 import org.example.apifactories.LocationsTestDataFactory;
 import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
@@ -31,6 +32,7 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
     CatalogPage catalogPage;
     KitStockSetupPage kitStockSetupPage;
     KitSettingsPage kitSettingsPage;
+    WarehousePage warehousePage;
 
     private static WarehouseApiFixture warehouseFixture;
 
@@ -40,7 +42,7 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
     @BeforeAll
     void createWarehouseViaApi() throws IOException {
         warehouseFixture = WarehouseApiFixture.create(userApi)
-                .provisionWarehouse("UI-CATALOG-E2E ");
+                .provisionWarehouse("UI-CATALOG-E2E");
 
         warehouseId = warehouseFixture.warehouseId();
         warehouseName = warehouseFixture.warehouseName();
@@ -61,6 +63,7 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
         openPath("/catalog");
         catalogPage = new CatalogPage(page);
         kitsListPage = new KitsListPage(page);
+        warehousePage = new WarehousePage(page);
     }
 
     // ✅ Важливо: location беремо з API
@@ -163,4 +166,99 @@ public class KitsUsingApiTest extends PlaywrightUiApiBaseTest {
         waitForElementRemoved(kitName);
         Assertions.assertThat(kitsListPage.getKitNamesList()).doesNotContain(kitName);
     }
+
+    @DisplayName("Create Kit in Location Test")
+    @Order(3)
+    @Test
+    public void testCreateKitInLocation() {
+        openPath("/stock/warehouse/" + warehouseName.toLowerCase() + "/" + warehouseId);
+
+        kit.location = warehouseName;
+
+        warehousePage.waitForLoaded();
+        warehousePage.clickOnKitsTabButton();
+        generalInformationPage = warehousePage.clickOnAddNewKitButton();
+
+        generalInformationPage.setKitName(kit.name);
+        generalInformationPage.setDescription(kit.description);
+        generalInformationPage.setTag(kit.tags);
+
+        kitStockSetupPage = generalInformationPage.clickNext();
+
+        //no needed
+        //kitStockSetupPage.clickAddLocation();
+
+        kitStockSetupPage.clickGenerateCode();
+        kitStockSetupPage.clickAddCode();
+
+        // warehouse pre-filled
+        //kitStockSetupPage.setWarehouseUsingUtility(kit.location);
+
+        kitSettingsPage = kitStockSetupPage.clickNext();
+        kitSettingsPage.addFirstMaterialByName("Test");
+        kitSettingsPage.setQtyForMaterialInKit(5);
+        kitSettingsPage.addFirstToolByName("Test");
+
+        //Double kitPrice = kitSettingsPage.getTheKitPrice();
+
+        kitSettingsPage.clickBottomSave();
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully created", kit.name);
+        AlertUtils.waitForAlertHidden(page);
+
+        Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(kit.name);
+        //Assertions.assertThat(kitsListPage.getFirstKitCostInTheListAsDouble()).isEqualTo(kitPrice);
+    }
+
+    @DisplayName("Update Kit in Location Test")
+    @Order(4)
+    @Test
+    public void testUpdateKitInLocation() {
+
+        openPath("/stock/warehouse/" + warehouseName.toLowerCase() + "/" + warehouseId);
+        warehousePage.waitForLoaded();
+        warehousePage.clickOnKitsTabButton();
+
+        warehousePage.openFirstRowKitThreeDots();
+
+        generalInformationPage = warehousePage.clickOnEditKitButton();
+        generalInformationPage.setKitName(editedKit.name);
+        generalInformationPage.setDescription(editedKit.description);
+        generalInformationPage.setTag(editedKit.tags);
+
+        generalInformationPage.clickSave();
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully updated", editedKit.name);
+        AlertUtils.waitForAlertHidden(page);
+
+        Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(editedKit.name);
+    }
+
+    @DisplayName("Delete Kit in Location Test")
+    @Order(5)
+    @Test
+    public void testDeleteKitInLocation() {
+        openPath("/stock/warehouse/" + warehouseName.toLowerCase() + "/" + warehouseId);
+        warehousePage.waitForLoaded();
+        warehousePage.clickOnKitsTabButton();
+
+        String kitName = kitsListPage.getFirstKitNameInTheList();
+
+        warehousePage.openFirstRowKitThreeDots();
+        warehousePage.clickOnDeleteButton();
+        warehousePage.confirmKitDeletion();
+
+        AlertUtils.waitForAlertVisible(page);
+        String alert = AlertUtils.getAlertText(page);
+        Assertions.assertThat(alert).isEqualTo("Kit has been successfully deleted");
+        AlertUtils.waitForAlertHidden(page);
+
+        waitForElementRemoved(kitName);
+        Assertions.assertThat(kitsListPage.getKitNamesList()).doesNotContain(kitName);
+    }
+
 }

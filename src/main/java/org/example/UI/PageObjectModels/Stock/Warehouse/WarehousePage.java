@@ -4,20 +4,26 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 import org.example.UI.PageObjectModels.Stock.InventoryCount.InventoryCountListPage;
 
-public class WarehousePage {private final Page page;
+public class WarehousePage {
+    private final Page page;
 
     // === Locators ===
     private final Locator SetupMaterialsButton;
     private final Locator consumablesTabButton;
+    private final Locator addNewKitButton;
 
     private final Locator toolsTabButton;
     private final Locator kitsTabButton;
 
     private final Locator inventoryCountTabButton;
-
+    private final Locator firstThreeDotsInTheKitsList;
+    private final Locator editKitButton;
+    private final Locator deleteButton;
+    private final Locator deleteItemInConfirmationModalButton;
 
     // === Constructor ===
     public WarehousePage(Page page) {
@@ -42,11 +48,23 @@ public class WarehousePage {private final Page page;
                 new Page.GetByRoleOptions().setName("Kits")
         );
 
+        addNewKitButton = page.getByRole(
+                AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Add kit")
+        );
+
         inventoryCountTabButton = page.getByRole(
                 AriaRole.BUTTON,
                 new Page.GetByRoleOptions().setName("Inventory Counts"));
 
+        this.firstThreeDotsInTheKitsList = page.getByTestId("ply_kit_item_line_actions_button");
 
+        this.editKitButton = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Edit Kit Info"));
+
+        this.deleteButton = page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Delete"));
+
+        deleteItemInConfirmationModalButton =
+                page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete"));
 
     }
 
@@ -56,6 +74,14 @@ public class WarehousePage {private final Page page;
         );
         SetupMaterialsButton.click();
         return new MaterialSpecsPage(page);
+    }
+
+    public KitGeneralInformationPage clickOnAddNewKitButton() {
+        addNewKitButton.waitFor(
+                new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE)
+        );
+        addNewKitButton.click();
+        return new KitGeneralInformationPage(page);
     }
 
     public void waitForLoaded() {
@@ -83,6 +109,22 @@ public class WarehousePage {private final Page page;
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
                 .setTimeout(10_000)); // чекаємо до 10 секунд, поки стане видимим
         consumablesTabButton.click();
+    }
+
+    public void openFirstRowKitThreeDots(){
+        firstThreeDotsInTheKitsList.click();
+    }
+
+    public KitGeneralInformationPage clickOnEditKitButton(){
+        editKitButton.click();
+        return new KitGeneralInformationPage(page);
+    }
+    public void clickOnDeleteButton(){
+        deleteButton.click();
+    }
+
+    public void confirmKitDeletion(){
+        deleteItemInConfirmationModalButton.click();
     }
 
     public InventoryCountListPage clickOnInventoryCountTabButton() {
