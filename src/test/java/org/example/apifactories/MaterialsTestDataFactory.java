@@ -249,4 +249,17 @@ public class MaterialsTestDataFactory {
         return body;
     }
 
+    public static Map<String, Object> buildDuplicatesRequest(
+            String name,
+            String itemNumber,
+            List<String> materialIdsToExclude
+    ) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("name", name);               // можна null
+        body.put("itemNumber", itemNumber);   // можна null
+        body.put("materialIdsToExclude",
+                materialIdsToExclude == null ? Collections.emptyList() : materialIdsToExclude);
+        return body;
+    }
+
 }

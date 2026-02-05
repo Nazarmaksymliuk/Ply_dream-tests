@@ -20,6 +20,9 @@ public class MaterialSpecsPage {
     private final Locator variantDescriptionInput;
     private final Locator addVariantButton;
     private final Locator saveButton;
+    private final Locator serializedCheckBox;
+    private final Locator addNewMaterialButton;
+    private final Locator specialorderItemCheckBox;
 
     // === Constructor ===
     public MaterialSpecsPage(Page page) {
@@ -36,7 +39,9 @@ public class MaterialSpecsPage {
         variantDescriptionInput = page.locator("input[placeholder='Enter description']");
         addVariantButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Material Variant"));
         saveButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Save"));
-
+        serializedCheckBox = page.getByTestId("ply_checkbox").nth(1);
+        addNewMaterialButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add New Material"));
+        specialorderItemCheckBox = page.getByTestId("ply_checkbox").nth(2);
     }
 
     // === Actions ===
@@ -45,7 +50,14 @@ public class MaterialSpecsPage {
         materialNameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         materialNameInput.click();    // THIS CLICK IS NEEDED CAUSE PLACEHOLDER CLEARED AND THE NEW DATA IS NOT FILLED
         materialNameInput.fill(materialValue);
+
+        clickOnButtonAddNewMaterial();
     }
+
+    public void clickOnButtonAddNewMaterial() {
+        addNewMaterialButton.click();
+    }
+
     public Locator materialNameLocator() {
         return materialNameInput;
     }
@@ -54,6 +66,15 @@ public class MaterialSpecsPage {
         itemNumberInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         itemNumberInput.fill(itemNumberValue);
     }
+
+    public void checkSerializedCheckBox(){
+        serializedCheckBox.click();
+    }
+
+    public void checkSpecialOrderItemCheckBox(){
+        specialorderItemCheckBox.click();
+    }
+
 
     public void setDescription(String descriptionValue) {
         descriptionTextArea.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
@@ -98,6 +119,7 @@ public class MaterialSpecsPage {
         nextButton.click();
         return new PriceAndVariantsPage(page);
     }
+
 
     public void clickSaveButtonInTheEditMaterialFlow(){
         saveButton.click();
