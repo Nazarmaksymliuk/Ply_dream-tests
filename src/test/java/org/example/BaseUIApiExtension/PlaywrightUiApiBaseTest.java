@@ -36,12 +36,12 @@ public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
 
     @BeforeAll
     void beforeAll_setupUi() throws IOException {
-        // BaseApiTest.setUp() should have already run and set up userApi, adminApi, playwright.
+        // BaseApiTest.setUpApi() should have already run and set up userApi, adminApi, playwright.
         // Safety net: if parent @BeforeAll didn't execute (cross-package visibility),
         // initialise playwright ourselves.
         if (playwright == null) {
-            log.warn("playwright was null – calling setUp() explicitly");
-            setUp();
+            log.warn("playwright was null – calling setUpApi() explicitly");
+            setUpApi();
         }
 
         boolean headless = Boolean.parseBoolean(
@@ -90,7 +90,7 @@ public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
     void afterAll_closeBrowser() {
         if (context != null) context.close();
         if (browser != null) browser.close();
-        // playwright and API contexts are closed by BaseApiTest.tearDown()
+        // playwright and API contexts are closed by BaseApiTest.tearDownApi()
     }
 
     protected void openPath(String path) {
