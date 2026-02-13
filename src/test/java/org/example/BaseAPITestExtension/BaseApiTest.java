@@ -30,7 +30,7 @@ public abstract class BaseApiTest {
     private static volatile CachedToken cachedAdminToken;
 
     @BeforeAll
-    void setUp() throws IOException {
+    protected void setUp() throws IOException {
         playwright = Playwright.create();
 
         Map<String, String> defaultHeaders = Map.of(
@@ -54,7 +54,7 @@ public abstract class BaseApiTest {
     }
 
     @AfterAll
-    void tearDown() {
+    protected void tearDown() {
         if (userApi != null) userApi.dispose();
         if (adminApi != null) adminApi.dispose();
         if (playwright != null) playwright.close();
