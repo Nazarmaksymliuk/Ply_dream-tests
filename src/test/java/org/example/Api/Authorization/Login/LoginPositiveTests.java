@@ -12,9 +12,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import org.example.config.TestEnvironment;
+import org.junit.jupiter.api.Timeout;
 
 @Epic("Authorization")
 @Feature("Login Positive Scenarios")
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class LoginPositiveTests extends BaseApiTest {
 
     private LoginClient loginClient;

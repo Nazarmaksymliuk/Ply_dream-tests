@@ -29,4 +29,19 @@ public final class TestEnvironment {
             "warehouseMainId",
             System.getenv().getOrDefault("PLY_WAREHOUSE_MAIN_ID", "ac1f56fd-9919-137e-8199-1f504b6607e8")
     );
+
+    public static final String WAREHOUSE_TRANSFER_ID = System.getProperty(
+            "warehouseTransferId",
+            System.getenv().getOrDefault("PLY_WAREHOUSE_TRANSFER_ID", "ac1f56fd-9a4a-154f-819a-4c1fc3ea0711")
+    );
+
+    // === API Keys ===
+    public static final String MAILSLURP_API_KEY = System.getProperty(
+            "mailslurpApiKey",
+            System.getenv().getOrDefault("MAILSLURP_API_KEY", "")
+    );
+
+    // === Test Timeouts (JUnit @Timeout, seconds) ===
+    public static final int TEST_TIMEOUT_SECONDS = 120;
+    public static final int E2E_TEST_TIMEOUT_SECONDS = 180;
 }

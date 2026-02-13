@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,8 +26,8 @@ public abstract class BaseApiTest {
     protected APIRequestContext userApi;
     protected APIRequestContext adminApi;
 
-    private static volatile String cachedUserToken;
-    private static volatile String cachedAdminToken;
+    private static volatile CachedToken cachedUserToken;
+    private static volatile CachedToken cachedAdminToken;
 
     @BeforeAll
     void setUp() throws IOException {
@@ -40,12 +41,10 @@ public abstract class BaseApiTest {
         String userToken = getOrCreateToken(
                 Users.ADMIN.email(), Users.ADMIN.password(), "user", defaultHeaders
         );
-        cachedUserToken = userToken;
 
         String adminToken = getOrCreateToken(
                 Users.SUPER_ADMIN.email(), Users.SUPER_ADMIN.password(), "admin", defaultHeaders
         );
-        cachedAdminToken = adminToken;
 
         userApi = createApiContext(userToken);
         adminApi = createApiContext(adminToken);
@@ -81,15 +80,18 @@ public abstract class BaseApiTest {
             Map<String, String> headers
     ) throws IOException {
 
-        String cached = label.equals("admin") ? cachedAdminToken : cachedUserToken;
-        if (cached != null) return cached;
+        CachedToken cached = "admin".equals(label) ? cachedAdminToken : cachedUserToken;
+        if (cached != null && !cached.isExpired()) {
+            return cached.token;
+        }
 
         synchronized (BaseApiTest.class) {
-            cached = label.equals("admin") ? cachedAdminToken : cachedUserToken;
-            if (cached != null) return cached;
+            cached = "admin".equals(label) ? cachedAdminToken : cachedUserToken;
+            if (cached != null && !cached.isExpired()) {
+                return cached.token;
+            }
 
-            Logger logger = LoggerFactory.getLogger(BaseApiTest.class);
-            logger.info("Login ({}) starting...", label.toUpperCase());
+            log.info("Login ({}) starting...", label.toUpperCase());
 
             try (Playwright pw = Playwright.create()) {
                 APIRequestContext loginContext = pw.request().newContext(
@@ -104,8 +106,8 @@ public abstract class BaseApiTest {
                 int status = loginResponse.status();
                 String text = loginResponse.text();
 
-                logger.info("Login ({}) status: {}", label, status);
-                logger.debug("Login ({}) body: {}", label, text);
+                log.info("Login ({}) status: {}", label, status);
+                log.debug("Login ({}) body: {}", label, text);
 
                 if (status != 200 && status != 201) {
                     throw new IllegalStateException(
@@ -120,11 +122,42 @@ public abstract class BaseApiTest {
                     throw new IllegalStateException("Token (" + label + ") is null or empty");
                 }
 
-                if (label.equals("admin")) cachedAdminToken = token;
-                else cachedUserToken = token;
+                Instant expiresAt = parseExpiresAt(parsed.getExpiresAt());
+                CachedToken newCached = new CachedToken(token, expiresAt);
+
+                if ("admin".equals(label)) cachedAdminToken = newCached;
+                else cachedUserToken = newCached;
 
                 return token;
             }
+        }
+    }
+
+    private static Instant parseExpiresAt(String expiresAt) {
+        if (expiresAt == null || expiresAt.isEmpty()) {
+            // Default: assume token valid for 55 minutes (safety margin under 1h)
+            return Instant.now().plusSeconds(55 * 60);
+        }
+        try {
+            return Instant.parse(expiresAt);
+        } catch (Exception e) {
+            log.warn("Could not parse expiresAt '{}', defaulting to 55min from now", expiresAt);
+            return Instant.now().plusSeconds(55 * 60);
+        }
+    }
+
+    private static class CachedToken {
+        final String token;
+        final Instant expiresAt;
+
+        CachedToken(String token, Instant expiresAt) {
+            this.token = token;
+            this.expiresAt = expiresAt;
+        }
+
+        boolean isExpired() {
+            // Consider expired 2 minutes before actual expiry to avoid race conditions
+            return Instant.now().isAfter(expiresAt.minusSeconds(120));
         }
     }
 }

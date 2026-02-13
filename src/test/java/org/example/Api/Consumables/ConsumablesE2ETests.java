@@ -14,10 +14,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import org.example.config.TestEnvironment;
+import org.junit.jupiter.api.Timeout;
 
 @Epic("Consumables")
 @Feature("Consumables E2E CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class ConsumablesE2ETests extends BaseApiTest {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumablesE2ETests.class);

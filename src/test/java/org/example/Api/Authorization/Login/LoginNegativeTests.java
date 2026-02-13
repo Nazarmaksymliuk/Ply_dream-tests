@@ -10,9 +10,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+import java.util.concurrent.TimeUnit;
+
+import org.example.config.TestEnvironment;
 
 @Epic("Authorization")
 @Feature("Login Negative Scenarios")
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class LoginNegativeTests extends BaseApiTest {
 
     private LoginClient loginClient;

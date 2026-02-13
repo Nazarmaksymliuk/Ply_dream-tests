@@ -7,20 +7,25 @@ import org.example.Api.helpers.LocationMaterials.LocationMaterialsClient;
 import org.example.Api.helpers.PickListsHelper.PickListsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.PickListsTestDataFactory;
+import org.example.config.TestEnvironment;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.Timeout;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class PickListsE2ETests extends BaseApiTest {
 
     private PickListsClient pickListsClient;
     private LocationMaterialsClient locationMaterialsClient;
     private LocationConsumablesClient locationConsumablesClient;
 
-    private static final String FROM_LOCATION_ID = "ac1f56fd-9919-137e-8199-1f504b6607e8"; // WarehouseMain
-    private static final String TO_LOCATION_ID   = "ac1f56fd-9a4a-154f-819a-4c1fc3ea0711"; // WarehouseToTransfer
+    private static final String FROM_LOCATION_ID = TestEnvironment.WAREHOUSE_MAIN_ID;
+    private static final String TO_LOCATION_ID   = TestEnvironment.WAREHOUSE_TRANSFER_ID;
 
     private String materialDetailsFromLocationId;
     private String consumableUnitFromLocationId;
