@@ -5,6 +5,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import org.example.config.TestEnvironment;
+
 import java.util.List;
 
 
@@ -111,7 +113,7 @@ public class ActiveJobsPage {
         jobNames.first().waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.VISIBLE)
-                        .setTimeout(60000)
+                        .setTimeout(TestEnvironment.NAVIGATION_TIMEOUT_MS)
         );
     }
 

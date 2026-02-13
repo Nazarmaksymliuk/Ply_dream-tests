@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.RequestOptions;
 import com.microsoft.playwright.options.WaitUntilState;
+import org.example.config.TestEnvironment;
 import org.junit.jupiter.api.*;
 
 import java.nio.file.Paths;
@@ -168,7 +169,7 @@ public class BaseVerifyingTest {
         assertEquals(200, okUsers.status());
 
         // 8) Перевірка UI (постав свій стабільний селектор)
-        page.waitForSelector("[class='header_dashboard_title']", new Page.WaitForSelectorOptions().setTimeout(20000));
+        page.waitForSelector("[class='header_dashboard_title']", new Page.WaitForSelectorOptions().setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
         assertTrue(page.url().contains("/dashboard"), "Not on dashboard: " + page.url());
 
         // (опційно) зберегти авторизацію для наступних тестів

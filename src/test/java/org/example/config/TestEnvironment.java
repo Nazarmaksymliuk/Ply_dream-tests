@@ -8,11 +8,21 @@ public final class TestEnvironment {
 
     private TestEnvironment() {}
 
-    // === Timeouts (ms) ===
+    // === Timeouts (ms) — for Playwright .setTimeout() ===
     public static final int DEFAULT_TIMEOUT_MS = 50_000;
     public static final int NAVIGATION_TIMEOUT_MS = 60_000;
-    public static final int ELEMENT_WAIT_TIMEOUT_MS = 15_000;
+    public static final int EXTENDED_TIMEOUT_MS = 30_000;
+    public static final int DIALOG_TIMEOUT_MS = 20_000;
     public static final int HEALTH_CHECK_TIMEOUT_MS = 20_000;
+    public static final int ELEMENT_WAIT_TIMEOUT_MS = 15_000;
+    public static final int DROPDOWN_TIMEOUT_MS = 10_000;
+    public static final int SHORT_TIMEOUT_MS = 5_000;
+
+    // === Delays for waitForTimeout (ms) ===
+    public static final int SEARCH_DELAY_MS = 2_500;
+    public static final int DROPDOWN_DELAY_MS = 2_000;
+    public static final int MEDIUM_DELAY_MS = 1_500;
+    public static final int SMALL_DELAY_MS = 500;
 
     // === Location IDs ===
     public static final String WAREHOUSE_MAIN_ID = System.getProperty(

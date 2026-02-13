@@ -4,6 +4,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 
+import org.example.config.TestEnvironment;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -119,7 +121,7 @@ public class PurchaseOrdersPage {
         waitForVisible(first);
         first.click();
         first.fill(value);
-        page.waitForTimeout(2500);
+        page.waitForTimeout(TestEnvironment.SEARCH_DELAY_MS);
         first.press("Enter");
         return this;
     }
@@ -136,7 +138,7 @@ public class PurchaseOrdersPage {
         waitForVisible(second);
         second.click();
         second.fill(value);
-        page.waitForTimeout(2500);
+        page.waitForTimeout(TestEnvironment.SEARCH_DELAY_MS);
         second.press("Enter");
         return this;
     }

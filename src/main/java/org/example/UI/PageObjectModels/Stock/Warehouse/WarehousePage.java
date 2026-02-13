@@ -5,6 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
+import org.example.config.TestEnvironment;
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 import org.example.UI.PageObjectModels.Stock.InventoryCount.InventoryCountListPage;
@@ -96,26 +97,26 @@ public class WarehousePage {
         SetupMaterialsButton.waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.VISIBLE)
-                        .setTimeout(15000)
+                        .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS)
         );
     }
 
     public void clickOnToolsTabButton() {
         toolsTabButton.waitFor(new Locator.WaitForOptions()
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
-                .setTimeout(10_000)); // чекаємо до 10 секунд, поки стане видимим
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS))
         toolsTabButton.click();        toolsTabButton.click();
     }
     public void clickOnKitsTabButton() {
         kitsTabButton.waitFor(new Locator.WaitForOptions()
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
-                .setTimeout(10_000)); // чекаємо до 10 секунд, поки стане видимим
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS))
         kitsTabButton.click();
     }
     public void clickOnConsumablesTabButton() {
         consumablesTabButton.waitFor(new Locator.WaitForOptions()
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
-                .setTimeout(10_000)); // чекаємо до 10 секунд, поки стане видимим
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS))
         consumablesTabButton.click();
     }
 

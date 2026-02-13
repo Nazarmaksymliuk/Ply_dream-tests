@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 public class TransferPage {
     private final Page page;
@@ -42,14 +43,14 @@ public class TransferPage {
     public void waitForReady() {
         firstRowQtyButton.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(15_000));
+                .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
     }
 
     /** Клік по чекбоксу першого рядка */
     public void checkFirstRow() {
         firstRowCheckbox.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(10_000));
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         firstRowCheckbox.check();
     }
 
@@ -57,7 +58,7 @@ public class TransferPage {
     public TransferModalPage clickTransferButton() {
         transferToolbarButton.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(10_000));
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         transferToolbarButton.click();
         return new TransferModalPage(page);
     }
@@ -66,14 +67,14 @@ public class TransferPage {
     public TransferModalPage clickMoveToLocationButton() {
         moveToLocationButton.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(10_000));
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         moveToLocationButton.click();
         return new TransferModalPage(page);
     }
     public TransferModalPage clickMoveToJobButton() {
         moveToJobButton.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(10_000));
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         moveToJobButton.click();
         return new TransferModalPage(page);
     }

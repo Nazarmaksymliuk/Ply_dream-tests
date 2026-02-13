@@ -3,6 +3,7 @@ package org.example.BaseUITestExtension.TestBase;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.WaitUntilState;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
+import org.example.config.TestEnvironment;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,7 +64,7 @@ public abstract class BaseUiTest {
         loginPage.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
         new SignInPage(loginPage).signIntoApplication(EMAIL, PASSWORD);
 
-        loginPage.waitForURL("**/dashboard", new Page.WaitForURLOptions().setTimeout(60_000));
+        loginPage.waitForURL("**/dashboard", new Page.WaitForURLOptions().setTimeout(TestEnvironment.NAVIGATION_TIMEOUT_MS));
 
         boolean hasPlyUser = (Boolean) loginPage.evaluate("() => !!localStorage.getItem('ply_user')");
         assertTrue(hasPlyUser, "LocalStorage does not contain 'ply_user' after login.");

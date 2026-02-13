@@ -5,6 +5,7 @@ import io.qameta.allure.Feature;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
+import org.example.config.TestEnvironment;
 import org.example.UI.Models.Tool;
 import org.example.UI.Models.ToolUnit;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
@@ -150,7 +151,7 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
         addUnitsPage.clickSaveInformationButton();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Unit updated successfully");
         AlertUtils.waitForAlertHidden(page);
@@ -183,7 +184,7 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
         catalogPage.confirmDeleteItemInModal();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Tool deleted successfully");
         AlertUtils.waitForAlertHidden(page);

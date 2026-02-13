@@ -5,6 +5,7 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import org.assertj.core.api.Assertions;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.config.TestEnvironment;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
 import org.example.creds.Users;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,6 @@ public class SignIntoApplicationTest extends PlaywrightUiLoginBaseTest {
         Assertions.assertThat(signInPage.isErrorVisible()).isTrue();
         Assertions.assertThat(signInPage.getTheErrorMessageText()).isEqualTo("Incorrect username or password.");
         assertThat(signInPage.error())
-                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(10000));
+                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
     }
 }

@@ -3,6 +3,7 @@ package org.example.UI.PageObjectModels.Utils;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 /**
  * Компонент для вибору локації (react-select) зі стандартними селекторами:
@@ -38,7 +39,7 @@ public class LocationSelect {
 
     public void setLocationByEnter(String location) {
         locationSelect.type(location);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         page.keyboard().press("Enter");
     }
 
@@ -52,27 +53,27 @@ public class LocationSelect {
 
     public void setJobByEnter(String location) {
         locationSelect.type(location);
-        page.waitForTimeout(2500);
+        page.waitForTimeout(TestEnvironment.SEARCH_DELAY_MS);
         page.keyboard().press("Enter");
     }
 
 
     /** Відкрити селект */
     public void open() {
-        control.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+        control.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
         control.click();
     }
 
     /** Надрукувати фільтр у input (react-select) */
     public void type(String text) {
-        input.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+        input.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         input.fill(text);
     }
 
     /** Обрати першу опцію, що містить текст */
     public void chooseContains(String text) {
         Locator candidate = options.filter(new Locator.FilterOptions().setHasText(text)).first();
-        candidate.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+        candidate.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         candidate.click();
     }
 
@@ -81,7 +82,7 @@ public class LocationSelect {
         Locator candidate = options.filter(new Locator.FilterOptions().setHasText(exactText))
                 .filter(new Locator.FilterOptions().setHasNotText(exactText + " ")) // грубий фільтр від "починається з"
                 .first();
-        candidate.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+        candidate.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         candidate.click();
     }
 

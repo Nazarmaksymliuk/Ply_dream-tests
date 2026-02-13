@@ -5,6 +5,7 @@ import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 public class SignInPage {
 
@@ -33,12 +34,12 @@ public class SignInPage {
         signInButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED));
 
         try {
-            signInButton.click(new Locator.ClickOptions().setTimeout(15_000));
+            signInButton.click(new Locator.ClickOptions().setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
         } catch (PlaywrightException e) {
             // інколи допомагає мікропаузa + повтор
-            page.waitForTimeout(300);
+            page.waitForTimeout(TestEnvironment.SMALL_DELAY_MS);
             signInButton.scrollIntoViewIfNeeded();
-            signInButton.click(new Locator.ClickOptions().setTimeout(15_000));
+            signInButton.click(new Locator.ClickOptions().setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
         }
 
         //signInButton.click();

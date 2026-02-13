@@ -8,6 +8,7 @@ import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.Consuma
 import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitGeneralInformationPage;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 import org.example.UI.PageObjectModels.Tools.ToolsCreationFlow.AddEditUnitsPage;
+import org.example.config.TestEnvironment;
 
 import java.util.List;
 
@@ -139,7 +140,7 @@ public class CatalogPage {
 
     public void waitForLoaded() {
         pageHeader.waitFor(new Locator.WaitForOptions()
-                .setState(WaitForSelectorState.VISIBLE).setTimeout(60000));
+                .setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.NAVIGATION_TIMEOUT_MS));
     }
 
     public <T> T clickAddItem(Class<T> pageClass) {

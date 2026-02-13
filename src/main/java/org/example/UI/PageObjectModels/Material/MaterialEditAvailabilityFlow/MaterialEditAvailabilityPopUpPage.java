@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 public class MaterialEditAvailabilityPopUpPage {
     private final Page page;
@@ -33,7 +34,7 @@ public class MaterialEditAvailabilityPopUpPage {
     }
 
     public void waitForLoaded() {
-        dialogRoot.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(20_000));
+        dialogRoot.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
         saveChangesButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
     }
 
