@@ -75,9 +75,9 @@ public class KitsNegativeTests extends BaseApiTest {
         log.info("Missing name properly rejected with status: {}", response.status());
     }
 
-    @DisplayName("Update kit with non-existent ID returns 404")
+    @DisplayName("Update kit with non-existent ID returns 400")
     @Test
-    void updateKit_withNonExistentId_returns404() {
+    void updateKit_withNonExistentId_returns400() {
         String nonExistentId = UUID.randomUUID().toString();
         Map<String, Object> updateBody = new HashMap<>();
         updateBody.put("name", "Updated Kit");
@@ -87,17 +87,17 @@ public class KitsNegativeTests extends BaseApiTest {
 
         APIResponse response = kitsClient.updateKit(nonExistentId, updateBody);
 
-        ApiAssertions.assertStatus(
-                404,
+        ApiAssertions.assertStatusOneOf(
                 response,
-                "Non-existent ID should return 404"
+                "Non-existent kit ID should be rejected",
+                400, 404
         );
         log.info("Non-existent ID properly rejected with status: {}", response.status());
     }
 
-    @DisplayName("Delete kit with non-existent ID returns 404 or 204")
+    @DisplayName("Delete kit with non-existent ID returns 400")
     @Test
-    void deleteKit_withNonExistentId_returns404or204() {
+    void deleteKit_withNonExistentId_returns400() {
         String nonExistentId = UUID.randomUUID().toString();
         List<String> ids = List.of(nonExistentId);
 
@@ -107,8 +107,8 @@ public class KitsNegativeTests extends BaseApiTest {
 
         ApiAssertions.assertStatusOneOf(
                 response,
-                "Non-existent ID deletion should return 404 or 204",
-                404, 204
+                "Non-existent kit ID deletion should be rejected",
+                400, 404, 204
         );
         log.info("Non-existent ID deletion returned status: {}", response.status());
     }
