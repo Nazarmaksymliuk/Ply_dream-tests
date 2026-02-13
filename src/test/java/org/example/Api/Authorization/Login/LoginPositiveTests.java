@@ -1,15 +1,20 @@
 package org.example.Api.Authorization.Login;
 
 import com.microsoft.playwright.APIResponse;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.example.Api.helpers.LoginHelper.LoginClient;
 import org.example.Api.helpers.LoginHelper.LoginResponseValidator;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.creds.Users;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+@Epic("Authorization")
+@Feature("Login Positive Scenarios")
 public class LoginPositiveTests extends BaseApiTest {
 
     private LoginClient loginClient;
@@ -19,24 +24,23 @@ public class LoginPositiveTests extends BaseApiTest {
         loginClient = new LoginClient(userApi);
     }
 
-    @DisplayName("Logic for Admin User")
+    @DisplayName("Login for Admin User")
     @Test
     void successfulLogin_returns200AndValidBody() throws IOException {
-        // TODO: реальні креденшіали тестового юзера
         APIResponse response = loginClient.login(
-                "maksimlukoleg56@gmail.com",
-                "Test+1234"
+                Users.ADMIN.email(),
+                Users.ADMIN.password()
         );
 
         LoginResponseValidator.expectValid200(response, loginClient);
     }
 
-    @DisplayName("Logic for Tech Role")
+    @DisplayName("Login for Tech Role")
     @Test
     void successfulLogin_techRole() {
         APIResponse response = loginClient.login(
-                "kityby@forexzig.com",
-                "Test+1234"
+                Users.TECH.email(),
+                Users.TECH.password()
         );
 
         int status = response.status();

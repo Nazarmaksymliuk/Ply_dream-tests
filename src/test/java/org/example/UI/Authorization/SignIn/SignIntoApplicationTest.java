@@ -1,23 +1,22 @@
 package org.example.UI.Authorization.SignIn;
 
 import com.microsoft.playwright.assertions.LocatorAssertions;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.assertj.core.api.Assertions;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
+import org.example.creds.Users;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
+@Epic("Authorization")
+@Feature("Sign In UI")
 public class SignIntoApplicationTest extends PlaywrightUiLoginBaseTest {
     SignInPage signInPage;
-    private static final String email = "maksimlukoleg56@gmail.com";
-    private static final String password = "Test+1234";
-
-    private static final String invalidEmail = "invalid@gmail.com";
-    private static final String invalidPassword = "invalid_code";
-
 
     @BeforeEach
     public void setUp() {
@@ -28,17 +27,15 @@ public class SignIntoApplicationTest extends PlaywrightUiLoginBaseTest {
     @DisplayName("Sign into application")
     @Test
     public void signIntoApplicationTest(){
-        //Check if we are in the page
         Assertions.assertThat(signInPage.getTitle()).contains("Welcome back, sign in!");
-        //Sign in to application
-        signInPage.signIntoApplication(email, password);
+        signInPage.signIntoApplication(Users.ADMIN.email(), Users.ADMIN.password());
     }
 
     @DisplayName("Sign into application negative test")
     @Test
     public void signIntoApplicationNegativeTest(){
         Assertions.assertThat(signInPage.getTitle()).contains("Welcome back, sign in!");
-        signInPage.signIntoApplication(invalidEmail, invalidPassword);
+        signInPage.signIntoApplication(Users.INVALID_USER.email(), Users.INVALID_USER.password());
 
         signInPage.waitUntilErrorVisible();
         Assertions.assertThat(signInPage.isErrorVisible()).isTrue();
@@ -46,6 +43,4 @@ public class SignIntoApplicationTest extends PlaywrightUiLoginBaseTest {
         assertThat(signInPage.error())
                 .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(10000));
     }
-
-
 }

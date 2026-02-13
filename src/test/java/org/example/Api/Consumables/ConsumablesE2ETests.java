@@ -2,26 +2,33 @@ package org.example.Api.Consumables;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.example.Api.helpers.ConsumablesHelper.ConsumablesClient;
 import org.example.Api.helpers.MeasurementUnits.MeasurementUnitsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.ConsumablesTestDataFactory;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 
+@Epic("Consumables")
+@Feature("Consumables E2E CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ConsumablesE2ETests extends BaseApiTest {
+
+    private static final Logger log = LoggerFactory.getLogger(ConsumablesE2ETests.class);
 
     private ConsumablesClient consumablesClient;
     private MeasurementUnitsClient measurementUnitsClient;
 
     private String consumableId;
 
-    // measurement units, які дістанемо з /materials/measurement-units
     private JsonNode eachMeasurementUnit;
-    private JsonNode kgMeasurementUnit; // або fallback на Each
+    private JsonNode kgMeasurementUnit;
 
     @BeforeAll
     void initClient() throws IOException {
@@ -31,8 +38,8 @@ public class ConsumablesE2ETests extends BaseApiTest {
         APIResponse muResponse = measurementUnitsClient.getMeasurementUnits();
         int status = muResponse.status();
 
-        System.out.println("MEASUREMENT UNITS status: " + status);
-        System.out.println("MEASUREMENT UNITS body: " + muResponse.text());
+        log.info("MEASUREMENT UNITS status: {}", status);
+        log.debug("MEASUREMENT UNITS body: {}", muResponse.text());
 
         Assertions.assertEquals(200, status, "Expected 200 from /materials/measurement-units");
 
@@ -43,12 +50,12 @@ public class ConsumablesE2ETests extends BaseApiTest {
 
         kgMeasurementUnit = measurementUnitsClient.findUnit(root, "KG", "Kilogram");
         if (kgMeasurementUnit == null) {
-            System.out.println("KG measurement unit not found, using EACH for update as well");
+            log.info("KG measurement unit not found, using EACH for update as well");
             kgMeasurementUnit = eachMeasurementUnit;
         }
     }
 
-    // 1️⃣ CREATE: POST /consumables/create
+    @DisplayName("Create Consumable")
     @Test
     @Order(1)
     void createConsumable_createsAndStoresId() throws IOException {
@@ -64,8 +71,8 @@ public class ConsumablesE2ETests extends BaseApiTest {
         APIResponse response = consumablesClient.createConsumable(body);
         int status = response.status();
 
-        System.out.println("CREATE CONSUMABLE status: " + status);
-        System.out.println("CREATE CONSUMABLE body: " + response.text());
+        log.info("CREATE CONSUMABLE status: {}", status);
+        log.debug("CREATE CONSUMABLE body: {}", response.text());
 
         Assertions.assertEquals(
                 201,
@@ -96,7 +103,7 @@ public class ConsumablesE2ETests extends BaseApiTest {
         Assertions.assertEquals(muReq.get("abbreviation"), muResp.get("abbreviation").asText(), "measurementUnit.abbreviation must match request");
     }
 
-    // 2️⃣ UPDATE: PUT /consumables/{id}
+    @DisplayName("Update Consumable")
     @Test
     @Order(2)
     void updateConsumable_updatesAllMainFields() throws IOException {
@@ -115,8 +122,8 @@ public class ConsumablesE2ETests extends BaseApiTest {
         APIResponse response = consumablesClient.updateConsumable(consumableId, body);
         int status = response.status();
 
-        System.out.println("UPDATE CONSUMABLE status: " + status);
-        System.out.println("UPDATE CONSUMABLE body: " + response.text());
+        log.info("UPDATE CONSUMABLE status: {}", status);
+        log.debug("UPDATE CONSUMABLE body: {}", response.text());
 
         Assertions.assertTrue(
                 status == 200 || status == 201,
@@ -152,7 +159,7 @@ public class ConsumablesE2ETests extends BaseApiTest {
         }
     }
 
-    // 3️⃣ PARTIAL UPDATE: PATCH /consumables/{id}
+    @DisplayName("Partial Update Consumable (PATCH)")
     @Test
     @Disabled("PATCH /consumables/{id} currently not implemented on backend (returns 405)")
     @Order(3)
@@ -164,8 +171,8 @@ public class ConsumablesE2ETests extends BaseApiTest {
         APIResponse response = consumablesClient.partialUpdateConsumable(consumableId, body);
         int status = response.status();
 
-        System.out.println("PATCH CONSUMABLE status: " + status);
-        System.out.println("PATCH CONSUMABLE body: " + response.text());
+        log.info("PATCH CONSUMABLE status: {}", status);
+        log.debug("PATCH CONSUMABLE body: {}", response.text());
 
         Assertions.assertTrue(
                 status == 200 || status == 204,
@@ -189,7 +196,7 @@ public class ConsumablesE2ETests extends BaseApiTest {
         }
     }
 
-    // 4️⃣ DELETE: DELETE /consumables (ids = [consumableId])
+    @DisplayName("Delete Consumable")
     @Test
     @Order(4)
     void deleteConsumable_deletesById() {
@@ -198,8 +205,8 @@ public class ConsumablesE2ETests extends BaseApiTest {
         APIResponse response = consumablesClient.deleteConsumables(Collections.singletonList(consumableId));
         int status = response.status();
 
-        System.out.println("DELETE CONSUMABLE status: " + status);
-        System.out.println("DELETE CONSUMABLE body: '" + response.text() + "'");
+        log.info("DELETE CONSUMABLE status: {}", status);
+        log.debug("DELETE CONSUMABLE body: '{}'", response.text());
 
         Assertions.assertEquals(
                 204,

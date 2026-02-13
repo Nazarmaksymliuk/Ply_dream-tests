@@ -2,18 +2,27 @@ package org.example.Api.Tools;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.example.Api.helpers.MaterialTagsHelper.MaterialTagsClient;
 import org.example.Api.helpers.SuppliersContactsHelper.SupplierContactsClient;
 import org.example.Api.helpers.ToolsHelper.ToolsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.ToolsFinancingTestDataFactory;
+import org.example.config.TestEnvironment;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
 
+@Epic("Tools")
+@Feature("Tools E2E CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ToolsE2ETests extends BaseApiTest {
+
+    private static final Logger log = LoggerFactory.getLogger(ToolsE2ETests.class);
 
     private ToolsClient materialsFinancingsToolsClient;
     private SupplierContactsClient supplierContactsClient;
@@ -25,9 +34,6 @@ public class ToolsE2ETests extends BaseApiTest {
     private String materialTagName;
     private String toolUnitId;
 
-    private static final String LOCATION_ID_WAREHOUSE_MAIN =
-            "ac1f56fd-9919-137e-8199-1f504b6607e8";
-
     @BeforeAll
     void initClientsAndResolveDependencies() throws IOException {
         materialsFinancingsToolsClient = new ToolsClient(userApi);
@@ -38,8 +44,8 @@ public class ToolsE2ETests extends BaseApiTest {
         APIResponse suppliersResp = supplierContactsClient.getAllSupplierContacts();
         int supStatus = suppliersResp.status();
 
-        System.out.println("SUPPLIER-CONTACTS status: " + supStatus);
-        System.out.println("SUPPLIER-CONTACTS body: " + suppliersResp.text());
+        log.info("SUPPLIER-CONTACTS status: {}", supStatus);
+        log.debug("SUPPLIER-CONTACTS body: {}", suppliersResp.text());
 
         Assertions.assertEquals(200, supStatus, "Expected 200 from GET /supplier-contacts");
 
@@ -51,14 +57,14 @@ public class ToolsE2ETests extends BaseApiTest {
                 "No suppliers found via /supplier-contacts – please ensure there is at least one supplier"
         );
 
-        System.out.println("Resolved supplierId from /supplier-contacts: " + supplierId);
+        log.info("Resolved supplierId from /supplier-contacts: {}", supplierId);
 
         // material tags
         APIResponse tagsResp = materialTagsClient.getMaterialTags(0, 20);
         int tagsStatus = tagsResp.status();
 
-        System.out.println("MATERIAL-TAGS status: " + tagsStatus);
-        System.out.println("MATERIAL-TAGS body: " + tagsResp.text());
+        log.info("MATERIAL-TAGS status: {}", tagsStatus);
+        log.debug("MATERIAL-TAGS body: {}", tagsResp.text());
 
         Assertions.assertEquals(200, tagsStatus, "Expected 200 from material-tags endpoint");
 
@@ -71,11 +77,10 @@ public class ToolsE2ETests extends BaseApiTest {
                 "No material tags found – please ensure there is at least one material tag"
         );
 
-        System.out.println("Resolved materialTagId from material-tags: " + materialTagId);
-        System.out.println("Resolved materialTagName from material-tags: " + materialTagName);
+        log.info("Resolved materialTagId: {}, materialTagName: {}", materialTagId, materialTagName);
     }
 
-    // 1️⃣ CREATE: POST /materials-financings/tools
+    @DisplayName("Create Tool Financing with embedded tool unit")
     @Test
     @Order(1)
     void createToolsFinancing_createsWithEmbeddedToolUnit() throws IOException {
@@ -86,14 +91,14 @@ public class ToolsE2ETests extends BaseApiTest {
                 materialTagId,
                 materialTagName,
                 supplierId,
-                LOCATION_ID_WAREHOUSE_MAIN
+                TestEnvironment.WAREHOUSE_MAIN_ID
         );
 
         APIResponse response = materialsFinancingsToolsClient.createToolsFinancing(body);
         int status = response.status();
 
-        System.out.println("CREATE /materials-financings/tools status: " + status);
-        System.out.println("CREATE /materials-financings/tools body: " + response.text());
+        log.info("CREATE /materials-financings/tools status: {}", status);
+        log.debug("CREATE /materials-financings/tools body: {}", response.text());
 
         Assertions.assertEquals(201, status, "Expected 201 Created from POST /materials-financings/tools");
 
@@ -120,7 +125,7 @@ public class ToolsE2ETests extends BaseApiTest {
 
         JsonNode firstToolUnit = materialsFinancingsToolsClient.getFirstToolUnit(root);
         Assertions.assertNotNull(firstToolUnit, "Expected at least one toolUnit in response");
-        System.out.println("FIRST TOOL UNIT NODE: " + firstToolUnit.toPrettyString());
+        log.debug("FIRST TOOL UNIT NODE: {}", firstToolUnit.toPrettyString());
 
         toolUnitId = firstToolUnit.get("id").asText();
         Assertions.assertNotNull(toolUnitId, "toolUnit.id must not be null");
@@ -129,7 +134,7 @@ public class ToolsE2ETests extends BaseApiTest {
         JsonNode locationNode = firstToolUnit.get("location");
         Assertions.assertNotNull(locationNode, "location object not found in firstToolUnit");
         Assertions.assertEquals(
-                LOCATION_ID_WAREHOUSE_MAIN,
+                TestEnvironment.WAREHOUSE_MAIN_ID,
                 locationNode.get("id").asText(),
                 "location.id must match warehouse location id"
         );
@@ -150,7 +155,7 @@ public class ToolsE2ETests extends BaseApiTest {
         );
     }
 
-    // 2️⃣ UPDATE: PUT /materials-financings/tools/{id}
+    @DisplayName("Update Tool Financing - update fields, keep links")
     @Test
     @Order(2)
     void updateToolsFinancing_updatesMainFieldsButKeepsLinks() throws IOException {
@@ -166,14 +171,14 @@ public class ToolsE2ETests extends BaseApiTest {
                 materialTagId,
                 materialTagName,
                 supplierId,
-                LOCATION_ID_WAREHOUSE_MAIN
+                TestEnvironment.WAREHOUSE_MAIN_ID
         );
 
         APIResponse response = materialsFinancingsToolsClient.updateToolsFinancing(financingId, body);
         int status = response.status();
 
-        System.out.println("UPDATE /materials-financings/tools status: " + status);
-        System.out.println("UPDATE /materials-financings/tools body: " + response.text());
+        log.info("UPDATE /materials-financings/tools status: {}", status);
+        log.debug("UPDATE /materials-financings/tools body: {}", response.text());
 
         Assertions.assertEquals(200, status, "Expected 200 OK from PUT /materials-financings/tools/{id}");
 
@@ -193,20 +198,20 @@ public class ToolsE2ETests extends BaseApiTest {
 
         JsonNode firstToolUnit = materialsFinancingsToolsClient.getFirstToolUnit(root);
         Assertions.assertNotNull(firstToolUnit, "Expected at least one toolUnit in response after update");
-        System.out.println("UPDATED FIRST TOOL UNIT NODE: " + firstToolUnit.toPrettyString());
+        log.debug("UPDATED FIRST TOOL UNIT NODE: {}", firstToolUnit.toPrettyString());
 
         Assertions.assertEquals(toolUnitId, firstToolUnit.get("id").asText(), "toolUnit.id after update must remain the same");
 
         JsonNode locationNode = firstToolUnit.get("location");
         Assertions.assertNotNull(locationNode, "location object not found in updated firstToolUnit");
-        Assertions.assertEquals(LOCATION_ID_WAREHOUSE_MAIN, locationNode.get("id").asText(), "location.id must remain same");
+        Assertions.assertEquals(TestEnvironment.WAREHOUSE_MAIN_ID, locationNode.get("id").asText(), "location.id must remain same");
 
         JsonNode supplierNode = firstToolUnit.get("supplier");
         Assertions.assertNotNull(supplierNode, "supplier object not found in updated firstToolUnit");
         Assertions.assertEquals(supplierId, supplierNode.get("id").asText(), "supplier.id must remain same");
     }
 
-    // 3️⃣ DELETE: DELETE /materials-financings/tools/{id}
+    @DisplayName("Delete Tool Financing by ID")
     @Test
     @Order(3)
     void deleteToolsFinancing_deletesById() {
@@ -215,8 +220,8 @@ public class ToolsE2ETests extends BaseApiTest {
         APIResponse response = materialsFinancingsToolsClient.deleteToolsFinancing(financingId);
         int status = response.status();
 
-        System.out.println("DELETE /materials-financings/tools/{id} status: " + status);
-        System.out.println("DELETE /materials-financings/tools/{id} body: '" + response.text() + "'");
+        log.info("DELETE /materials-financings/tools/{id} status: {}", status);
+        log.debug("DELETE /materials-financings/tools/{id} body: '{}'", response.text());
 
         Assertions.assertEquals(204, status, "Expected 204 No Content from DELETE /materials-financings/tools/{id}");
     }
