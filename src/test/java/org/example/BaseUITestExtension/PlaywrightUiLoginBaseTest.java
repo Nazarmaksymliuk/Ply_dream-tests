@@ -40,7 +40,7 @@ public abstract class PlaywrightUiLoginBaseTest {
         browser = playwright.chromium().launch(
                 new BrowserType.LaunchOptions()
                         .setHeadless(Boolean.parseBoolean(System.getenv()
-                                .getOrDefault("HEADLESS", "false")))
+                                .getOrDefault("HEADLESS", "true")))
                         .setArgs(List.of(
                                 "--disable-dev-shm-usage",
                                 "--disk-cache-size=0",
