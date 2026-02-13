@@ -104,19 +104,19 @@ public class WarehousePage {
     public void clickOnToolsTabButton() {
         toolsTabButton.waitFor(new Locator.WaitForOptions()
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
-                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS))
-        toolsTabButton.click();        toolsTabButton.click();
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
+        toolsTabButton.click();
     }
     public void clickOnKitsTabButton() {
         kitsTabButton.waitFor(new Locator.WaitForOptions()
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
-                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS))
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         kitsTabButton.click();
     }
     public void clickOnConsumablesTabButton() {
         consumablesTabButton.waitFor(new Locator.WaitForOptions()
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
-                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS))
+                .setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         consumablesTabButton.click();
     }
 
