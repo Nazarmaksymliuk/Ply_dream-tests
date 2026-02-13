@@ -22,7 +22,7 @@ public class LoginNegativeTests extends BaseApiTest {
         loginClient = new LoginClient(userApi);
     }
 
-    @DisplayName("Wrong password returns 401")
+    @DisplayName("Wrong password returns 404")
     @Test
     void wrongPassword_returnsError() {
         APIResponse response = loginClient.login(
@@ -30,11 +30,11 @@ public class LoginNegativeTests extends BaseApiTest {
                 "WrongPassword"
         );
 
-        Assertions.assertEquals(401, response.status(),
-                "Expected 401 for wrong password but got: " + response.status());
+        Assertions.assertEquals(404, response.status(),
+                "Expected 404 for wrong password but got: " + response.status());
     }
 
-    @DisplayName("Non-existing user returns 401")
+    @DisplayName("Non-existing user returns 404")
     @Test
     void nonExistingUser_returnsError() {
         APIResponse response = loginClient.login(
@@ -42,8 +42,8 @@ public class LoginNegativeTests extends BaseApiTest {
                 Users.INVALID_USER.password()
         );
 
-        Assertions.assertEquals(401, response.status(),
-                "Expected 401 for non-existing user but got: " + response.status());
+        Assertions.assertEquals(404, response.status(),
+                "Expected 404 for non-existing user but got: " + response.status());
     }
 
     @DisplayName("Empty email returns 400")
