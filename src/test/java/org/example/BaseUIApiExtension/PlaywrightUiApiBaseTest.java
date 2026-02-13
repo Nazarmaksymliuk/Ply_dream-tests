@@ -27,11 +27,6 @@ public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
 
     protected static final String DASHBOARD_PATH = "/dashboard";
 
-    private static final String ADMIN_EMAIL =
-            System.getenv().getOrDefault("PLY_ADMIN_EMAIL", "admin@getply.com");
-    private static final String ADMIN_PASSWORD =
-            System.getenv().getOrDefault("PLY_ADMIN_PASSWORD", "WJoXYjE1n8m8!J");
-
     protected APIRequestContext adminApi;
     private static volatile String cachedAdminToken;
 
@@ -65,7 +60,7 @@ public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
         String userToken = getOrCreateUserToken(Users.ADMIN.email(), Users.ADMIN.password());
         userApi = createApiContextWithBearer(userToken);
 
-        String adminToken = getOrCreateToken("admin", ADMIN_EMAIL, ADMIN_PASSWORD);
+        String adminToken = getOrCreateToken("admin", Users.SUPER_ADMIN.email(), Users.SUPER_ADMIN.password());
         adminApi = createApiContextWithBearer(adminToken);
 
         context = browser.newContext(new Browser.NewContextOptions()

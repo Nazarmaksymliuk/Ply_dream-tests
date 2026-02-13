@@ -42,6 +42,9 @@ public class Users {
             props.getProperty("invalid.password")
     );
 
-
+    public static final TestUser SUPER_ADMIN = new TestUser(
+            System.getenv().getOrDefault("PLY_ADMIN_EMAIL", props.getProperty("superAdmin.email")),
+            System.getenv().getOrDefault("PLY_ADMIN_PASSWORD", props.getProperty("superAdmin.password"))
+    );
 
 }

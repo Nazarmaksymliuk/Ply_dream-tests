@@ -28,11 +28,6 @@ public abstract class BaseApiTest {
     private static volatile String cachedUserToken;
     private static volatile String cachedAdminToken;
 
-    private static final String ADMIN_EMAIL =
-            System.getenv().getOrDefault("PLY_ADMIN_EMAIL", "admin@getply.com");
-    private static final String ADMIN_PASSWORD =
-            System.getenv().getOrDefault("PLY_ADMIN_PASSWORD", "WJoXYjE1n8m8!J");
-
     @BeforeAll
     void setUp() throws IOException {
         playwright = Playwright.create();
@@ -48,7 +43,7 @@ public abstract class BaseApiTest {
         cachedUserToken = userToken;
 
         String adminToken = getOrCreateToken(
-                ADMIN_EMAIL, ADMIN_PASSWORD, "admin", defaultHeaders
+                Users.SUPER_ADMIN.email(), Users.SUPER_ADMIN.password(), "admin", defaultHeaders
         );
         cachedAdminToken = adminToken;
 
