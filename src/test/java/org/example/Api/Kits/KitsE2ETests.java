@@ -7,10 +7,12 @@ import io.qameta.allure.Feature;
 import org.example.Api.helpers.KitsHelper.KitsClient;
 import org.example.Api.helpers.LocationMaterials.LocationMaterialsClient;
 import org.example.Api.helpers.MaterialTagsHelper.MaterialTagsClient;
+import org.example.Api.helpers.MaterialsHelper.MaterialsClient;
 import org.example.Api.helpers.SuppliersContactsHelper.SupplierContactsClient;
 import org.example.Api.helpers.ToolsHelper.ToolsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.KitsTestDataFactory;
+import org.example.apifactories.MaterialsTestDataFactory;
 import org.example.apifactories.ToolsFinancingTestDataFactory;
 import org.example.config.TestEnvironment;
 import org.junit.jupiter.api.*;
@@ -34,6 +36,7 @@ public class KitsE2ETests extends BaseApiTest {
 
     private KitsClient kitsClient;
     private LocationMaterialsClient locationMaterialsClient;
+    private MaterialsClient materialsClient;
 
     private ToolsClient toolsClient;
     private SupplierContactsClient supplierContactsClient;
@@ -41,6 +44,7 @@ public class KitsE2ETests extends BaseApiTest {
 
     private String kitId;
     private String materialVariationId;
+    private String createdMaterialId;
 
     private String financingId;
     private String toolUnitId;
@@ -53,21 +57,31 @@ public class KitsE2ETests extends BaseApiTest {
     void initClientsAndResolveDependencies() throws IOException {
         kitsClient = new KitsClient(userApi);
         locationMaterialsClient = new LocationMaterialsClient(userApi);
+        materialsClient = new MaterialsClient(userApi);
 
         toolsClient = new ToolsClient(userApi);
         supplierContactsClient = new SupplierContactsClient(userApi);
         materialTagsClient = new MaterialTagsClient(userApi);
 
-        // 1) materialVariationId
-        APIResponse materialsResp = locationMaterialsClient.searchMaterialsInLocation(TestEnvironment.WAREHOUSE_MAIN_ID);
-        Assertions.assertEquals(200, materialsResp.status(), "Expected 200 from materials search");
+        // 1) Create material in location (to guarantee it exists)
+        Map<String, Object> materialBody = MaterialsTestDataFactory.buildCreateMaterialInLocationRequest(
+                "API Material For Kits ",
+                "MAT-KITS-",
+                TestEnvironment.WAREHOUSE_MAIN_ID
+        );
 
-        JsonNode materialsRoot = locationMaterialsClient.parseResponse(materialsResp);
-        JsonNode firstMaterial = locationMaterialsClient.getFirstMaterial(materialsRoot);
-        Assertions.assertNotNull(firstMaterial, "No materials found in warehouse, cannot create kit");
+        APIResponse createMatResp = materialsClient.createMaterial(materialBody);
+        log.info("CREATE MATERIAL status: {}", createMatResp.status());
+        log.debug("CREATE MATERIAL body: {}", createMatResp.text());
+        Assertions.assertEquals(201, createMatResp.status(), "Expected 201 on material create");
 
-        materialVariationId = locationMaterialsClient.extractMaterialVariationId(firstMaterial);
-        Assertions.assertNotNull(materialVariationId, "materialVariationId could not be extracted");
+        createdMaterialId = materialsClient.extractMaterialId(createMatResp);
+        Assertions.assertNotNull(createdMaterialId, "createdMaterialId must not be null");
+        log.info("Created material for Kits: {}", createdMaterialId);
+
+        // Extract materialVariationId from create response
+        materialVariationId = materialsClient.extractFirstVariationId(createMatResp);
+        Assertions.assertNotNull(materialVariationId, "materialVariationId could not be extracted from create response");
         log.info("Resolved materialVariationId: {}", materialVariationId);
 
         // 2) supplierId
@@ -137,6 +151,15 @@ public class KitsE2ETests extends BaseApiTest {
                 log.info("CLEANUP DELETE TOOLS FINANCING status: {}", r.status());
             } catch (Exception e) {
                 log.warn("CLEANUP DELETE TOOLS FINANCING failed: {}", e.getMessage());
+            }
+        }
+
+        if (createdMaterialId != null) {
+            try {
+                APIResponse r = materialsClient.deleteMaterial(createdMaterialId);
+                log.info("CLEANUP DELETE MATERIAL status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE MATERIAL failed: {}", e.getMessage());
             }
         }
     }

@@ -70,6 +70,29 @@ public class ConsumablesTestDataFactory {
         return body;
     }
 
+    public static Map<String, Object> buildCreateConsumableWithLocationBody(
+            String namePrefix,
+            String itemNumberPrefix,
+            String tagPrefix,
+            String measurementUnitId,
+            String measurementUnitName,
+            String measurementUnitAbbreviation,
+            String locationId,
+            int quantity
+    ) {
+        Map<String, Object> body = buildCreateConsumableBody(
+                namePrefix, itemNumberPrefix, tagPrefix,
+                measurementUnitId, measurementUnitName, measurementUnitAbbreviation
+        );
+
+        Map<String, Object> unit = new HashMap<>();
+        unit.put("locationId", locationId);
+        unit.put("quantity", quantity);
+        body.put("consumableUnits", List.of(unit));
+
+        return body;
+    }
+
     public static Map<String, Object> buildPartialUpdateConsumableBody(String id) {
         Map<String, Object> body = new HashMap<>();
         long ts = System.currentTimeMillis();
