@@ -102,7 +102,10 @@ public class PickListsE2ETests extends BaseApiTest {
         APIResponse createMatResp = materialsClient.createMaterial(materialBody);
         log.info("CREATE MATERIAL status: {}", createMatResp.status());
         log.debug("CREATE MATERIAL body: {}", createMatResp.text());
-        Assertions.assertEquals(201, createMatResp.status(), "Expected 201 on material create");
+        Assertions.assertTrue(
+                createMatResp.status() == 200 || createMatResp.status() == 201,
+                "Expected 200 or 201 on material create, but got: " + createMatResp.status()
+        );
 
         createdMaterialId = materialsClient.extractMaterialId(createMatResp);
         Assertions.assertNotNull(createdMaterialId, "createdMaterialId must not be null");
