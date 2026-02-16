@@ -58,8 +58,8 @@ public class CreateNewBusinessUITest extends PlaywrightUiApiBaseTest {
 
         // ==== MailSlurp init ====
         String apiKey = TestEnvironment.MAILSLURP_API_KEY;
-        Assertions.assertFalse(apiKey.isBlank(),
-                "MAILSLURP_API_KEY must be set via env variable or -DmailslurpApiKey system property");
+        Assumptions.assumeFalse(apiKey.isBlank(),
+                "MAILSLURP_API_KEY must be set via env variable or -DmailslurpApiKey system property — skipping");
 
 
         ApiClient apiClient = new ApiClient();

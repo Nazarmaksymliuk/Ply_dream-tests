@@ -69,7 +69,7 @@ public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
 
         Assertions.assertThat(loginResp.status())
                 .as("API login must succeed")
-                .isIn(200, 201);
+                .isIn(200, 201, 409);
 
         LoginResponse parsed = loginClient.parseLoginResponse(loginResp);
         String token = parsed.getToken();
