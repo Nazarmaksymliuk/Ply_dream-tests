@@ -1,5 +1,7 @@
 package org.example.UI.Material;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.APIRequest;
 import com.microsoft.playwright.APIRequestContext;
 import com.microsoft.playwright.APIResponse;
@@ -7,8 +9,6 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
-import org.example.Api.helpers.LoginHelper.LoginClient;
-import org.example.Api.helpers.LoginHelper.LoginResponse;
 import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.Models.Material;
@@ -20,7 +20,6 @@ import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSt
 import org.example.UI.PageObjectModels.Material.MaterialsListPage;
 import org.example.UI.PageObjectModels.Stock.Warehouse.WarehousePage;
 import org.example.apifactories.LocationsTestDataFactory;
-import org.example.creds.Users;
 import org.example.routes.Routes;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -52,28 +51,13 @@ public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
 
     @BeforeAll
     void createWarehouseViaApi() throws IOException {
-        // Login via API to get auth token
-        Map<String, String> defaultHeaders = Map.of(
-                "Content-Type", "application/json",
-                "Accept", "*/*"
-        );
+        // Reuse auth token from UI login (stored in localStorage by frontend)
+        String plyUserRaw = (String) page.evaluate("() => localStorage.getItem('ply_user')");
+        org.junit.jupiter.api.Assertions.assertNotNull(plyUserRaw, "ply_user not found in localStorage after UI login");
 
-        APIRequestContext loginCtx = playwright.request().newContext(
-                new APIRequest.NewContextOptions()
-                        .setBaseURL(Routes.BASE_API_URL)
-                        .setExtraHTTPHeaders(defaultHeaders)
-        );
-
-        LoginClient loginClient = new LoginClient(loginCtx);
-        APIResponse loginResp = loginClient.login(Users.ADMIN.email(), Users.ADMIN.password());
-
-        Assertions.assertThat(loginResp.status())
-                .as("API login must succeed")
-                .isIn(200, 201, 409);
-
-        LoginResponse parsed = loginClient.parseLoginResponse(loginResp);
-        String token = parsed.getToken();
-        loginCtx.dispose();
+        JsonNode plyUser = new ObjectMapper().readTree(plyUserRaw);
+        String token = plyUser.path("state").path("token").asText(null);
+        org.junit.jupiter.api.Assertions.assertNotNull(token, "Token not found in ply_user localStorage");
 
         // Create authenticated API context
         Map<String, String> authHeaders = new HashMap<>();
