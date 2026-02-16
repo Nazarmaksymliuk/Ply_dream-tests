@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.Api.helpers.MaterialTagsHelper.MaterialTagsClient;
 import org.example.Api.helpers.SuppliersContactsHelper.SupplierContactsClient;
 import org.example.Api.helpers.ToolsHelper.ToolsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
+import org.example.apifactories.LocationsTestDataFactory;
 import org.example.apifactories.ToolsFinancingTestDataFactory;
 import org.example.config.TestEnvironment;
 import org.junit.jupiter.api.*;
@@ -31,7 +33,9 @@ public class ToolsE2ETests extends BaseApiTest {
     private ToolsClient materialsFinancingsToolsClient;
     private SupplierContactsClient supplierContactsClient;
     private MaterialTagsClient materialTagsClient;
+    private LocationsClient locationsClient;
 
+    private String createdLocationId;
     private String financingId;
     private String supplierId;
     private String materialTagId;
@@ -43,8 +47,23 @@ public class ToolsE2ETests extends BaseApiTest {
         materialsFinancingsToolsClient = new ToolsClient(userApi);
         supplierContactsClient = new SupplierContactsClient(userApi);
         materialTagsClient = new MaterialTagsClient(userApi);
+        locationsClient = new LocationsClient(userApi);
 
-        // suppliers
+        // 1) Create own warehouse location
+        Map<String, Object> locationBody = LocationsTestDataFactory.buildCreateWarehouseBody("API Warehouse For Tools ");
+        APIResponse createLocResp = locationsClient.createLocation(locationBody, false);
+        log.info("CREATE LOCATION status: {}", createLocResp.status());
+        log.debug("CREATE LOCATION body: {}", createLocResp.text());
+        Assertions.assertTrue(
+                createLocResp.status() == 201 || createLocResp.status() == 200,
+                "Expected 201 or 200 on location create, got: " + createLocResp.status()
+        );
+
+        createdLocationId = locationsClient.extractLocationId(createLocResp);
+        Assertions.assertNotNull(createdLocationId, "createdLocationId must not be null");
+        log.info("Created location for Tools: {}", createdLocationId);
+
+        // 2) suppliers
         APIResponse suppliersResp = supplierContactsClient.getAllSupplierContacts();
         int supStatus = suppliersResp.status();
 
@@ -63,7 +82,7 @@ public class ToolsE2ETests extends BaseApiTest {
 
         log.info("Resolved supplierId from /supplier-contacts: {}", supplierId);
 
-        // material tags
+        // 3) material tags
         APIResponse tagsResp = materialTagsClient.getMaterialTags(0, 20);
         int tagsStatus = tagsResp.status();
 
@@ -84,6 +103,27 @@ public class ToolsE2ETests extends BaseApiTest {
         log.info("Resolved materialTagId: {}, materialTagName: {}", materialTagId, materialTagName);
     }
 
+    @AfterAll
+    void cleanup() {
+        if (financingId != null) {
+            try {
+                APIResponse r = materialsFinancingsToolsClient.deleteToolsFinancing(financingId);
+                log.info("CLEANUP DELETE TOOLS FINANCING status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE TOOLS FINANCING failed: {}", e.getMessage());
+            }
+        }
+
+        if (createdLocationId != null) {
+            try {
+                APIResponse r = locationsClient.deleteLocation(createdLocationId, null, "Cleanup after Tools E2E test");
+                log.info("CLEANUP DELETE LOCATION status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE LOCATION failed: {}", e.getMessage());
+            }
+        }
+    }
+
     @DisplayName("Create Tool Financing with embedded tool unit")
     @Test
     @Order(1)
@@ -95,7 +135,7 @@ public class ToolsE2ETests extends BaseApiTest {
                 materialTagId,
                 materialTagName,
                 supplierId,
-                TestEnvironment.WAREHOUSE_MAIN_ID
+                createdLocationId
         );
 
         APIResponse response = materialsFinancingsToolsClient.createToolsFinancing(body);
@@ -138,9 +178,9 @@ public class ToolsE2ETests extends BaseApiTest {
         JsonNode locationNode = firstToolUnit.get("location");
         Assertions.assertNotNull(locationNode, "location object not found in firstToolUnit");
         Assertions.assertEquals(
-                TestEnvironment.WAREHOUSE_MAIN_ID,
+                createdLocationId,
                 locationNode.get("id").asText(),
-                "location.id must match warehouse location id"
+                "location.id must match created warehouse location id"
         );
 
         JsonNode supplierNode = firstToolUnit.get("supplier");
@@ -175,7 +215,7 @@ public class ToolsE2ETests extends BaseApiTest {
                 materialTagId,
                 materialTagName,
                 supplierId,
-                TestEnvironment.WAREHOUSE_MAIN_ID
+                createdLocationId
         );
 
         APIResponse response = materialsFinancingsToolsClient.updateToolsFinancing(financingId, body);
@@ -208,7 +248,7 @@ public class ToolsE2ETests extends BaseApiTest {
 
         JsonNode locationNode = firstToolUnit.get("location");
         Assertions.assertNotNull(locationNode, "location object not found in updated firstToolUnit");
-        Assertions.assertEquals(TestEnvironment.WAREHOUSE_MAIN_ID, locationNode.get("id").asText(), "location.id must remain same");
+        Assertions.assertEquals(createdLocationId, locationNode.get("id").asText(), "location.id must remain same");
 
         JsonNode supplierNode = firstToolUnit.get("supplier");
         Assertions.assertNotNull(supplierNode, "supplier object not found in updated firstToolUnit");
@@ -228,5 +268,7 @@ public class ToolsE2ETests extends BaseApiTest {
         log.debug("DELETE /materials-financings/tools/{id} body: '{}'", response.text());
 
         Assertions.assertEquals(204, status, "Expected 204 No Content from DELETE /materials-financings/tools/{id}");
+
+        financingId = null;
     }
 }
