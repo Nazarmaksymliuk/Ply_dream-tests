@@ -111,6 +111,22 @@ public class PickListsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(createdMaterialId, "createdMaterialId must not be null");
         log.info("Created material for PickLists: {}", createdMaterialId);
 
+        String materialVariationId = materialsClient.extractFirstVariationId(createMatResp);
+        Assertions.assertNotNull(materialVariationId, "materialVariationId must not be null");
+        log.info("Resolved materialVariationId: {}", materialVariationId);
+
+        // 3b) Attach material to FROM location
+        Map<String, Object> attachBody = MaterialsTestDataFactory.buildAttachMaterialToLocationRequest(
+                fromLocationId, createdMaterialId, materialVariationId, 1
+        );
+        APIResponse attachResp = materialsClient.attachMaterialToLocation(attachBody);
+        log.info("ATTACH MATERIAL status: {}", attachResp.status());
+        log.debug("ATTACH MATERIAL body: {}", attachResp.text());
+        Assertions.assertTrue(
+                attachResp.status() == 200 || attachResp.status() == 201 || attachResp.status() == 204,
+                "Expected attach to succeed, but got: " + attachResp.status()
+        );
+
         // Search materials in FROM location to get materialDetailsFromLocationId
         APIResponse materialsResp = locationMaterialsClient.searchMaterialsInLocation(fromLocationId);
         log.info("MATERIALS SEARCH status: {}", materialsResp.status());
