@@ -5,11 +5,13 @@ import com.microsoft.playwright.APIResponse;
 import org.example.Api.helpers.ConsumablesHelper.ConsumablesClient;
 import org.example.Api.helpers.LocationConsumables.LocationConsumablesClient;
 import org.example.Api.helpers.LocationMaterials.LocationMaterialsClient;
+import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.Api.helpers.MaterialsHelper.MaterialsClient;
 import org.example.Api.helpers.MeasurementUnits.MeasurementUnitsClient;
 import org.example.Api.helpers.PickListsHelper.PickListsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.ConsumablesTestDataFactory;
+import org.example.apifactories.LocationsTestDataFactory;
 import org.example.apifactories.MaterialsTestDataFactory;
 import org.example.apifactories.PickListsTestDataFactory;
 import org.example.config.TestEnvironment;
@@ -31,14 +33,15 @@ public class PickListsE2ETests extends BaseApiTest {
     private static final Logger log = LoggerFactory.getLogger(PickListsE2ETests.class);
 
     private PickListsClient pickListsClient;
+    private LocationsClient locationsClient;
     private LocationMaterialsClient locationMaterialsClient;
     private LocationConsumablesClient locationConsumablesClient;
     private MaterialsClient materialsClient;
     private ConsumablesClient consumablesClient;
     private MeasurementUnitsClient measurementUnitsClient;
 
-    private static final String FROM_LOCATION_ID = TestEnvironment.WAREHOUSE_MAIN_ID;
-    private static final String TO_LOCATION_ID   = TestEnvironment.WAREHOUSE_TRANSFER_ID;
+    private String fromLocationId;
+    private String toLocationId;
 
     private String materialDetailsFromLocationId;
     private String consumableUnitFromLocationId;
@@ -54,17 +57,46 @@ public class PickListsE2ETests extends BaseApiTest {
     @BeforeAll
     void initClientsAndResolveDependencies() throws IOException {
         pickListsClient = new PickListsClient(userApi);
+        locationsClient = new LocationsClient(userApi);
         locationMaterialsClient = new LocationMaterialsClient(userApi);
         locationConsumablesClient = new LocationConsumablesClient(userApi);
         materialsClient = new MaterialsClient(userApi);
         consumablesClient = new ConsumablesClient(userApi);
         measurementUnitsClient = new MeasurementUnitsClient(userApi);
 
-        // 1) Create material in FROM location (to guarantee it exists)
+        // 1) Create FROM warehouse location
+        Map<String, Object> fromLocBody = LocationsTestDataFactory.buildCreateWarehouseBody("API Warehouse PickList FROM ");
+        APIResponse createFromResp = locationsClient.createLocation(fromLocBody, false);
+        log.info("CREATE FROM LOCATION status: {}", createFromResp.status());
+        log.debug("CREATE FROM LOCATION body: {}", createFromResp.text());
+        Assertions.assertTrue(
+                createFromResp.status() == 201 || createFromResp.status() == 200,
+                "Expected 201 or 200 on FROM location create, got: " + createFromResp.status()
+        );
+
+        fromLocationId = locationsClient.extractLocationId(createFromResp);
+        Assertions.assertNotNull(fromLocationId, "fromLocationId must not be null");
+        log.info("Created FROM location: {}", fromLocationId);
+
+        // 2) Create TO warehouse location
+        Map<String, Object> toLocBody = LocationsTestDataFactory.buildCreateWarehouseBody("API Warehouse PickList TO ");
+        APIResponse createToResp = locationsClient.createLocation(toLocBody, false);
+        log.info("CREATE TO LOCATION status: {}", createToResp.status());
+        log.debug("CREATE TO LOCATION body: {}", createToResp.text());
+        Assertions.assertTrue(
+                createToResp.status() == 201 || createToResp.status() == 200,
+                "Expected 201 or 200 on TO location create, got: " + createToResp.status()
+        );
+
+        toLocationId = locationsClient.extractLocationId(createToResp);
+        Assertions.assertNotNull(toLocationId, "toLocationId must not be null");
+        log.info("Created TO location: {}", toLocationId);
+
+        // 3) Create material in FROM location
         Map<String, Object> materialBody = MaterialsTestDataFactory.buildCreateMaterialInLocationRequest(
                 "API Material For PickLists ",
                 "MAT-PL-",
-                FROM_LOCATION_ID
+                fromLocationId
         );
 
         APIResponse createMatResp = materialsClient.createMaterial(materialBody);
@@ -76,8 +108,8 @@ public class PickListsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(createdMaterialId, "createdMaterialId must not be null");
         log.info("Created material for PickLists: {}", createdMaterialId);
 
-        // Search materials in location to get materialDetailsFromLocationId
-        APIResponse materialsResp = locationMaterialsClient.searchMaterialsInLocation(FROM_LOCATION_ID);
+        // Search materials in FROM location to get materialDetailsFromLocationId
+        APIResponse materialsResp = locationMaterialsClient.searchMaterialsInLocation(fromLocationId);
         log.info("MATERIALS SEARCH status: {}", materialsResp.status());
         Assertions.assertEquals(200, materialsResp.status(), "Expected 200 from /v2/locations/{id}/materials/search");
 
@@ -89,7 +121,7 @@ public class PickListsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(materialDetailsFromLocationId, "materialDetailsFromLocationId could not be extracted");
         log.info("Resolved materialDetailsFromLocationId: {}", materialDetailsFromLocationId);
 
-        // 2) Get measurement units (needed for consumable creation)
+        // 4) Get measurement units (needed for consumable creation)
         APIResponse muResp = measurementUnitsClient.getMeasurementUnits();
         Assertions.assertEquals(200, muResp.status(), "Expected 200 from /materials/measurement-units");
 
@@ -101,13 +133,13 @@ public class PickListsE2ETests extends BaseApiTest {
         String muName = eachUnit.get("name").asText();
         String muAbbr = eachUnit.get("abbreviation").asText();
 
-        // 3) Create consumable with unit in FROM location
+        // 5) Create consumable with unit in FROM location
         Map<String, Object> consumableBody = ConsumablesTestDataFactory.buildCreateConsumableWithLocationBody(
                 "API Consumable For PickLists ",
                 "CNS-PL-",
                 "API Tag PL ",
                 muId, muName, muAbbr,
-                FROM_LOCATION_ID,
+                fromLocationId,
                 10
         );
 
@@ -120,8 +152,8 @@ public class PickListsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(createdConsumableId, "createdConsumableId must not be null");
         log.info("Created consumable for PickLists: {}", createdConsumableId);
 
-        // Search consumables in location to get consumableUnitFromLocationId
-        APIResponse consResp = locationConsumablesClient.getConsumablesInLocation(FROM_LOCATION_ID);
+        // Search consumables in FROM location to get consumableUnitFromLocationId
+        APIResponse consResp = locationConsumablesClient.getConsumablesInLocation(fromLocationId);
         log.info("CONSUMABLES IN LOCATION status: {}", consResp.status());
         Assertions.assertEquals(200, consResp.status(), "Expected 200 from /locations/{id}/consumables");
 
@@ -153,6 +185,24 @@ public class PickListsE2ETests extends BaseApiTest {
                 log.warn("CLEANUP DELETE MATERIAL failed: {}", e.getMessage());
             }
         }
+
+        if (fromLocationId != null) {
+            try {
+                APIResponse r = locationsClient.deleteLocation(fromLocationId, null, "Cleanup after PickLists E2E test");
+                log.info("CLEANUP DELETE FROM LOCATION status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE FROM LOCATION failed: {}", e.getMessage());
+            }
+        }
+
+        if (toLocationId != null) {
+            try {
+                APIResponse r = locationsClient.deleteLocation(toLocationId, null, "Cleanup after PickLists E2E test");
+                log.info("CLEANUP DELETE TO LOCATION status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE TO LOCATION failed: {}", e.getMessage());
+            }
+        }
     }
 
     @Test
@@ -160,8 +210,8 @@ public class PickListsE2ETests extends BaseApiTest {
     void createPickList_withMaterialAndConsumable_createsOk() throws IOException {
         Map<String, Object> body = PickListsTestDataFactory.buildCreatePickListBody(
                 "API Pick List ",
-                FROM_LOCATION_ID,
-                TO_LOCATION_ID,
+                fromLocationId,
+                toLocationId,
                 materialDetailsFromLocationId,
                 consumableUnitFromLocationId
         );
@@ -188,8 +238,8 @@ public class PickListsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(fromLoc, "fromLocation must be present in response");
         Assertions.assertNotNull(toLoc, "toLocation must be present in response");
 
-        Assertions.assertEquals(FROM_LOCATION_ID, fromLoc.get("id").asText(), "fromLocation.id must match FROM_LOCATION_ID");
-        Assertions.assertEquals(TO_LOCATION_ID, toLoc.get("id").asText(), "toLocation.id must match TO_LOCATION_ID");
+        Assertions.assertEquals(fromLocationId, fromLoc.get("id").asText(), "fromLocation.id must match fromLocationId");
+        Assertions.assertEquals(toLocationId, toLoc.get("id").asText(), "toLocation.id must match toLocationId");
 
         Assertions.assertNotNull(created.get("status"), "status in pick list response must not be null");
     }
@@ -202,7 +252,7 @@ public class PickListsE2ETests extends BaseApiTest {
         Map<String, Object> body = PickListsTestDataFactory.buildUpdatePickListBody(
                 pickListId,
                 "API Pick List UPDATED ",
-                TO_LOCATION_ID
+                toLocationId
         );
         lastUpdateBody = body;
 
@@ -224,7 +274,7 @@ public class PickListsE2ETests extends BaseApiTest {
 
         JsonNode toLoc = updated.get("toLocation");
         Assertions.assertNotNull(toLoc, "toLocation must be present in update response");
-        Assertions.assertEquals(TO_LOCATION_ID, toLoc.get("id").asText(), "Updated toLocation.id must still match TO_LOCATION_ID");
+        Assertions.assertEquals(toLocationId, toLoc.get("id").asText(), "Updated toLocation.id must still match toLocationId");
     }
 
     @Test

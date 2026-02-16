@@ -6,12 +6,14 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import org.example.Api.helpers.KitsHelper.KitsClient;
 import org.example.Api.helpers.LocationMaterials.LocationMaterialsClient;
+import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.Api.helpers.MaterialTagsHelper.MaterialTagsClient;
 import org.example.Api.helpers.MaterialsHelper.MaterialsClient;
 import org.example.Api.helpers.SuppliersContactsHelper.SupplierContactsClient;
 import org.example.Api.helpers.ToolsHelper.ToolsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.KitsTestDataFactory;
+import org.example.apifactories.LocationsTestDataFactory;
 import org.example.apifactories.MaterialsTestDataFactory;
 import org.example.apifactories.ToolsFinancingTestDataFactory;
 import org.example.config.TestEnvironment;
@@ -35,17 +37,18 @@ public class KitsE2ETests extends BaseApiTest {
     private static final Logger log = LoggerFactory.getLogger(KitsE2ETests.class);
 
     private KitsClient kitsClient;
-    private LocationMaterialsClient locationMaterialsClient;
+    private LocationsClient locationsClient;
     private MaterialsClient materialsClient;
 
     private ToolsClient toolsClient;
     private SupplierContactsClient supplierContactsClient;
     private MaterialTagsClient materialTagsClient;
 
-    private String kitId;
-    private String materialVariationId;
+    private String createdLocationId;
     private String createdMaterialId;
+    private String materialVariationId;
 
+    private String kitId;
     private String financingId;
     private String toolUnitId;
 
@@ -56,18 +59,32 @@ public class KitsE2ETests extends BaseApiTest {
     @BeforeAll
     void initClientsAndResolveDependencies() throws IOException {
         kitsClient = new KitsClient(userApi);
-        locationMaterialsClient = new LocationMaterialsClient(userApi);
+        locationsClient = new LocationsClient(userApi);
         materialsClient = new MaterialsClient(userApi);
 
         toolsClient = new ToolsClient(userApi);
         supplierContactsClient = new SupplierContactsClient(userApi);
         materialTagsClient = new MaterialTagsClient(userApi);
 
-        // 1) Create material in location (to guarantee it exists)
+        // 1) Create own warehouse location
+        Map<String, Object> locationBody = LocationsTestDataFactory.buildCreateWarehouseBody("API Warehouse For Kits ");
+        APIResponse createLocResp = locationsClient.createLocation(locationBody, false);
+        log.info("CREATE LOCATION status: {}", createLocResp.status());
+        log.debug("CREATE LOCATION body: {}", createLocResp.text());
+        Assertions.assertTrue(
+                createLocResp.status() == 201 || createLocResp.status() == 200,
+                "Expected 201 or 200 on location create, got: " + createLocResp.status()
+        );
+
+        createdLocationId = locationsClient.extractLocationId(createLocResp);
+        Assertions.assertNotNull(createdLocationId, "createdLocationId must not be null");
+        log.info("Created location for Kits: {}", createdLocationId);
+
+        // 2) Create material in that location
         Map<String, Object> materialBody = MaterialsTestDataFactory.buildCreateMaterialInLocationRequest(
                 "API Material For Kits ",
                 "MAT-KITS-",
-                TestEnvironment.WAREHOUSE_MAIN_ID
+                createdLocationId
         );
 
         APIResponse createMatResp = materialsClient.createMaterial(materialBody);
@@ -79,12 +96,11 @@ public class KitsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(createdMaterialId, "createdMaterialId must not be null");
         log.info("Created material for Kits: {}", createdMaterialId);
 
-        // Extract materialVariationId from create response
         materialVariationId = materialsClient.extractFirstVariationId(createMatResp);
         Assertions.assertNotNull(materialVariationId, "materialVariationId could not be extracted from create response");
         log.info("Resolved materialVariationId: {}", materialVariationId);
 
-        // 2) supplierId
+        // 3) supplierId
         APIResponse suppliersResp = supplierContactsClient.getAllSupplierContacts();
         Assertions.assertEquals(200, suppliersResp.status(), "Expected 200 from /supplier-contacts");
 
@@ -93,7 +109,7 @@ public class KitsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(supplierId, "No suppliers found – cannot create toolUnit");
         log.info("Resolved supplierId: {}", supplierId);
 
-        // 3) materialTagId/name
+        // 4) materialTagId/name
         APIResponse tagsResp = materialTagsClient.getMaterialTags(0, 20);
         Assertions.assertEquals(200, tagsResp.status(), "Expected 200 from material-tags endpoint");
 
@@ -103,7 +119,7 @@ public class KitsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(materialTagId, "No material tags found – cannot create tools financing");
         log.info("Resolved materialTagId: {}", materialTagId);
 
-        // 4) Create tools financing + embedded toolUnit
+        // 5) Create tools financing + embedded toolUnit (in our own location)
         Map<String, Object> toolsFinBody = ToolsFinancingTestDataFactory.buildCreateToolsFinancingBody(
                 "API Tools Financing For Kits ",
                 "Created to generate toolUnit for kits E2E",
@@ -111,7 +127,7 @@ public class KitsE2ETests extends BaseApiTest {
                 materialTagId,
                 materialTagName,
                 supplierId,
-                TestEnvironment.WAREHOUSE_MAIN_ID
+                createdLocationId
         );
 
         APIResponse createToolsResp = toolsClient.createToolsFinancing(toolsFinBody);
@@ -162,6 +178,15 @@ public class KitsE2ETests extends BaseApiTest {
                 log.warn("CLEANUP DELETE MATERIAL failed: {}", e.getMessage());
             }
         }
+
+        if (createdLocationId != null) {
+            try {
+                APIResponse r = locationsClient.deleteLocation(createdLocationId, null, "Cleanup after Kits E2E test");
+                log.info("CLEANUP DELETE LOCATION status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE LOCATION failed: {}", e.getMessage());
+            }
+        }
     }
 
     @DisplayName("Create Kit with material and tool unit")
@@ -174,7 +199,7 @@ public class KitsE2ETests extends BaseApiTest {
                 1.0,
                 materialVariationId,
                 toolUnitId,
-                TestEnvironment.WAREHOUSE_MAIN_ID
+                createdLocationId
         );
 
         APIResponse response = kitsClient.createKit(body);
@@ -213,7 +238,7 @@ public class KitsE2ETests extends BaseApiTest {
                 2.0,
                 materialVariationId,
                 toolUnitId,
-                TestEnvironment.WAREHOUSE_MAIN_ID
+                createdLocationId
         );
 
         APIResponse response = kitsClient.updateKit(kitId, body);
