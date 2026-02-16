@@ -1,16 +1,10 @@
 package org.example.UI.Material;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.playwright.APIRequest;
-import com.microsoft.playwright.APIRequestContext;
-import com.microsoft.playwright.APIResponse;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
-import org.example.Api.helpers.LocationsHelper.LocationsClient;
-import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
 import org.example.UI.Models.Material;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
 import org.example.UI.PageObjectModels.Material.MaterialEditAvailabilityFlow.MaterialEditAvailabilityPopUpPage;
@@ -19,20 +13,17 @@ import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.PriceAndVa
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialStockSetupPage;
 import org.example.UI.PageObjectModels.Material.MaterialsListPage;
 import org.example.UI.PageObjectModels.Stock.Warehouse.WarehousePage;
-import org.example.apifactories.LocationsTestDataFactory;
-import org.example.routes.Routes;
+import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Epic("Materials")
 @Feature("Material in Stock CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
+public class MaterialInStockTest extends PlaywrightUiApiBaseTest {
 
     private static final Logger log = LoggerFactory.getLogger(MaterialInStockTest.class);
 
@@ -46,59 +37,22 @@ public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
     private final String defaultVariation = "Single";
     private final String defaultUnitOfMeasurement = "Ea";
 
-    private APIRequestContext apiContext;
-    private String createdWarehouseId;
+    private static WarehouseApiFixture warehouseFixture;
+    private static String createdWarehouseId;
 
     @BeforeAll
-    void createWarehouseViaApi() throws IOException {
-        // Reuse auth token from UI login (stored in localStorage by frontend)
-        String plyUserRaw = (String) page.evaluate("() => localStorage.getItem('ply_user')");
-        org.junit.jupiter.api.Assertions.assertNotNull(plyUserRaw, "ply_user not found in localStorage after UI login");
+    void createWarehouse() throws IOException {
+        warehouseFixture = WarehouseApiFixture.create(userApi)
+                .provisionWarehouse("UI Test Warehouse ");
 
-        JsonNode plyUser = new ObjectMapper().readTree(plyUserRaw);
-        String token = plyUser.path("state").path("token").asText(null);
-        org.junit.jupiter.api.Assertions.assertNotNull(token, "Token not found in ply_user localStorage");
-
-        // Create authenticated API context
-        Map<String, String> authHeaders = new HashMap<>();
-        authHeaders.put("Content-Type", "application/json");
-        authHeaders.put("Accept", "*/*");
-        authHeaders.put("Authorization", "Bearer " + token);
-
-        apiContext = playwright.request().newContext(
-                new APIRequest.NewContextOptions()
-                        .setBaseURL(Routes.BASE_API_URL)
-                        .setExtraHTTPHeaders(authHeaders)
-        );
-
-        // Create warehouse location
-        LocationsClient locationsClient = new LocationsClient(apiContext);
-        Map<String, Object> body = LocationsTestDataFactory.buildCreateWarehouseBody("UI Test Warehouse ");
-        APIResponse createResp = locationsClient.createLocation(body, false);
-
-        log.info("CREATE WAREHOUSE status: {}", createResp.status());
-        Assertions.assertThat(createResp.status())
-                .as("Warehouse creation must succeed")
-                .isIn(200, 201);
-
-        createdWarehouseId = locationsClient.extractLocationId(createResp);
-        Assertions.assertThat(createdWarehouseId).isNotNull();
+        createdWarehouseId = warehouseFixture.warehouseId();
         log.info("Created warehouse for UI test: {}", createdWarehouseId);
     }
 
     @AfterAll
     void cleanupWarehouse() {
-        if (createdWarehouseId != null && apiContext != null) {
-            try {
-                LocationsClient locationsClient = new LocationsClient(apiContext);
-                APIResponse r = locationsClient.deleteLocation(createdWarehouseId, null, "Cleanup after UI MaterialInStock test");
-                log.info("CLEANUP DELETE WAREHOUSE status: {}", r.status());
-            } catch (Exception e) {
-                log.warn("CLEANUP DELETE WAREHOUSE failed: {}", e.getMessage());
-            }
-        }
-        if (apiContext != null) {
-            apiContext.dispose();
+        if (warehouseFixture != null) {
+            warehouseFixture.cleanup("Cleanup after UI MaterialInStock test");
         }
     }
 
