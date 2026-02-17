@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 public class CreateWarehousePopUpPage {
     private final Page page;
@@ -88,7 +89,7 @@ public class CreateWarehousePopUpPage {
     /** Вибрати першу доступну опцію штату/провінції у списку */
     public void chooseFirstWarehouseState() {
         setFirstStateForLocation();
-        firstStateOption.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+        firstStateOption.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.SHORT_TIMEOUT_MS));
         firstStateOption.click();
     }
 

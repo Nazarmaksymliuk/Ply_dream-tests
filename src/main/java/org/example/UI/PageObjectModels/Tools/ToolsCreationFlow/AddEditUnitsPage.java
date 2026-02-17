@@ -5,6 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Utils.LocationSelect;
+import org.example.config.TestEnvironment;
 
 public class AddEditUnitsPage {
     private final Page page;
@@ -108,7 +109,7 @@ public class AddEditUnitsPage {
 
     // ===== waits =====
     public void waitForLoaded() {
-        unitNameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(30000));
+        unitNameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.EXTENDED_TIMEOUT_MS));
     }
 
     // ===== setters (inputs) =====
@@ -160,7 +161,7 @@ public class AddEditUnitsPage {
 
     public void setWarehouseWithoutUtility(String warehouseName){
         warehouseForToolUnitInput.type(warehouseName);
-        page.waitForTimeout(1000);
+        page.waitForTimeout(TestEnvironment.MEDIUM_DELAY_MS);
         page.keyboard().press("Enter");
 
     }
@@ -196,7 +197,7 @@ public class AddEditUnitsPage {
         Locator option = page.locator(".react_select__option, .react-select__option, [role='option']")
                 .filter(new Locator.FilterOptions().setHasText(optionText))
                 .first();
-        option.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+        option.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.DROPDOWN_TIMEOUT_MS));
         option.click();
     }
 }

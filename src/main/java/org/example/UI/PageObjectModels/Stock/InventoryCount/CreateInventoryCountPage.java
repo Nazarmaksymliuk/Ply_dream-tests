@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 // ===== Create form =====
 public class CreateInventoryCountPage {
@@ -50,7 +51,7 @@ public class CreateInventoryCountPage {
     public void assignUserForInventoryCount(String userName) {
         chooseUserInput.waitFor();
         chooseUserInput.click();
-        page.waitForTimeout(2500); // як ти і просив
+        page.waitForTimeout(TestEnvironment.SEARCH_DELAY_MS);
         chooseUserInput.fill(userName);
         page.keyboard().press("Enter");
     }

@@ -138,6 +138,21 @@ jobs:
           echo "=== Curl (after) ==="
           curl -vkL --max-time 30 https://stage.getply.com/ || true
 
+      # ✅ Connectivity check to test target (dev-api)
+      - name: Debug connectivity to dev-api.getply.com
+        run: |
+          echo "=== DNS resolve dev-api.getply.com ==="
+          dig +short dev-api.getply.com || true
+          echo ""
+          echo "=== TCP 443 to dev-api.getply.com ==="
+          nc -vz -w 8 dev-api.getply.com 443 || true
+          echo ""
+          echo "=== Curl login endpoint (expect 4xx, proves reachability) ==="
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" --max-time 15 \
+            -X POST https://dev-api.getply.com/v3/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"test","password":"test"}' || true
+
       # ---------- JAVA + TESTS ----------
 
       - name: Set up Java 21
@@ -159,6 +174,35 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: "0"
           HEADLESS: "true"
         run: mvn -B clean verify
+
+      # ---------- DIAGNOSTICS (always, even when tests fail) ----------
+
+      - name: Print failsafe summary
+        if: always()
+        run: |
+          echo "=== Failsafe Summary ==="
+          cat target/failsafe-reports/failsafe-summary.xml 2>/dev/null || echo "No failsafe-summary.xml found"
+          echo ""
+          echo "=== Test failures ==="
+          for f in target/failsafe-reports/*.xml; do
+            [ -f "$f" ] || continue
+            if grep -qE '<failure|<error' "$f" 2>/dev/null; then
+              echo "--- $(basename "$f") ---"
+              grep -A5 '<failure\|<error' "$f" || true
+              echo ""
+            fi
+          done
+          echo "=== Allure results count ==="
+          find target/allure-results -name '*-result.json' 2>/dev/null | wc -l || echo "0"
+
+      - name: Upload failsafe reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failsafe-reports
+          path: target/failsafe-reports/
+          if-no-files-found: warn
+          retention-days: 14
 
       # ---------- UPLOAD PLAYWRIGHT ARTIFACTS ----------
 

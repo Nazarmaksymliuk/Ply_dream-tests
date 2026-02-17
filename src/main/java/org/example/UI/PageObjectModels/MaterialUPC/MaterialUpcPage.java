@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import org.example.UI.PageObjectModels.Utils.Waits.WaitUtils;
+import org.example.config.TestEnvironment;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
@@ -110,7 +111,7 @@ public class MaterialUpcPage {
         confirmDeleteBtn.click();
 
         WaitUtils.waitForLoaderToDisappear(page);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         return this;
     }
 
@@ -148,7 +149,7 @@ public class MaterialUpcPage {
         supplierSelectInput.fill(supplierName);
 
         // як ти сказав: Enter через ~2 секунди
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         supplierSelectInput.press("Enter");
 
         return this;

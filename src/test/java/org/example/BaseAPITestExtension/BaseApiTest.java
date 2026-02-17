@@ -1,42 +1,36 @@
 package org.example.BaseAPITestExtension;
 
 import com.microsoft.playwright.*;
-import com.microsoft.playwright.options.RequestOptions;
 import org.example.Api.helpers.LoginHelper.LoginClient;
 import org.example.Api.helpers.LoginHelper.LoginResponse;
+import org.example.creds.Users;
+import org.example.routes.Routes;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 @TestInstance(PER_CLASS)
 public abstract class BaseApiTest {
 
+    private static final Logger log = LoggerFactory.getLogger(BaseApiTest.class);
+
     protected Playwright playwright;
 
-    // 🔹 Контексти для запитів
     protected APIRequestContext userApi;
     protected APIRequestContext adminApi;
 
-    // 🔹 Статичні кешовані токени (спільні для всіх класів)
-    private static volatile String cachedUserToken;
-    private static volatile String cachedAdminToken;
-
-    // 🔹 Тести-юзери
-    private static final String USER_EMAIL = "maksimlukoleg56@gmail.com";
-    private static final String USER_PASSWORD = "Test+1234";
-
-    // 🔹 Адмінські креденшали
-    private static final String ADMIN_EMAIL = "admin@getply.com";  // <- впиши свого
-    private static final String ADMIN_PASSWORD = "WJoXYjE1n8m8!J";     // <- впиши свого
+    private static volatile CachedToken cachedUserToken;
+    private static volatile CachedToken cachedAdminToken;
 
     @BeforeAll
-    void setUp() throws IOException {
+    protected void setUpApi() throws IOException {
         playwright = Playwright.create();
 
         Map<String, String> defaultHeaders = Map.of(
@@ -44,42 +38,27 @@ public abstract class BaseApiTest {
                 "Accept", "*/*"
         );
 
-        // 1️⃣ Логін юзера
         String userToken = getOrCreateToken(
-                USER_EMAIL,
-                USER_PASSWORD,
-                "user",
-                defaultHeaders
+                Users.ADMIN.email(), Users.ADMIN.password(), "user", defaultHeaders
         );
-        cachedUserToken = userToken;
 
-        // 2️⃣ Логін адміна
         String adminToken = getOrCreateToken(
-                ADMIN_EMAIL,
-                ADMIN_PASSWORD,
-                "admin",
-                defaultHeaders
+                Users.SUPER_ADMIN.email(), Users.SUPER_ADMIN.password(), "admin", defaultHeaders
         );
-        cachedAdminToken = adminToken;
 
-        // 3️⃣ Створюємо окремі API контексти
         userApi = createApiContext(userToken);
         adminApi = createApiContext(adminToken);
 
-        System.out.println("=== USER CONTEXT READY ===");
-        System.out.println("=== ADMIN CONTEXT READY ===");
+        log.info("User API context ready");
+        log.info("Admin API context ready");
     }
 
     @AfterAll
-    void tearDown() {
+    protected void tearDownApi() {
         if (userApi != null) userApi.dispose();
         if (adminApi != null) adminApi.dispose();
         if (playwright != null) playwright.close();
     }
-
-    // -----------------------------------------------------------
-    //                 INTERNAL HELPERS
-    // -----------------------------------------------------------
 
     private APIRequestContext createApiContext(String token) {
         Map<String, String> headers = new HashMap<>();
@@ -89,14 +68,11 @@ public abstract class BaseApiTest {
 
         return playwright.request().newContext(
                 new APIRequest.NewContextOptions()
-                        .setBaseURL("https://dev-api.getply.com")
+                        .setBaseURL(Routes.BASE_API_URL)
                         .setExtraHTTPHeaders(headers)
         );
     }
 
-    /**
-     * Generic login method for both user and admin tokens.
-     */
     private static String getOrCreateToken(
             String email,
             String password,
@@ -104,21 +80,23 @@ public abstract class BaseApiTest {
             Map<String, String> headers
     ) throws IOException {
 
-        String cached = label.equals("admin") ? cachedAdminToken : cachedUserToken;
-        if (cached != null) return cached;
+        CachedToken cached = "admin".equals(label) ? cachedAdminToken : cachedUserToken;
+        if (cached != null && !cached.isExpired()) {
+            return cached.token;
+        }
 
         synchronized (BaseApiTest.class) {
+            cached = "admin".equals(label) ? cachedAdminToken : cachedUserToken;
+            if (cached != null && !cached.isExpired()) {
+                return cached.token;
+            }
 
-            cached = label.equals("admin") ? cachedAdminToken : cachedUserToken;
-            if (cached != null) return cached;
-
-            System.out.println("=== LOGIN (" + label.toUpperCase() + ") START ===");
+            log.info("Login ({}) starting...", label.toUpperCase());
 
             try (Playwright pw = Playwright.create()) {
-
                 APIRequestContext loginContext = pw.request().newContext(
                         new APIRequest.NewContextOptions()
-                                .setBaseURL("https://dev-api.getply.com")
+                                .setBaseURL(Routes.BASE_API_URL)
                                 .setExtraHTTPHeaders(headers)
                 );
 
@@ -128,37 +106,58 @@ public abstract class BaseApiTest {
                 int status = loginResponse.status();
                 String text = loginResponse.text();
 
-                System.out.println("LOGIN (" + label + ") STATUS: " + status);
-                System.out.println("LOGIN (" + label + ") BODY: " + text);
+                log.info("Login ({}) status: {}", label, status);
+                log.debug("Login ({}) body: {}", label, text);
 
-                String token;
-
-                if (status == 200 || status == 201) {
-                    LoginResponse parsed = loginClient.parseLoginResponse(loginResponse);
-                    token = parsed.getToken();
-                } else if (status == 409 && text.contains("uq_refresh_token")) {
-                    token = extractTokenFromConflict(text);
-                } else {
+                if (status != 200 && status != 201) {
                     throw new IllegalStateException(
                             "Login as " + label + " failed: status=" + status + ", body=" + text
                     );
                 }
 
+                LoginResponse parsed = loginClient.parseLoginResponse(loginResponse);
+                String token = parsed.getToken();
+
                 if (token == null || token.isEmpty()) {
                     throw new IllegalStateException("Token (" + label + ") is null or empty");
                 }
 
-                if (label.equals("admin")) cachedAdminToken = token;
-                else cachedUserToken = token;
+                Instant expiresAt = parseExpiresAt(parsed.getExpiresAt());
+                CachedToken newCached = new CachedToken(token, expiresAt);
+
+                if ("admin".equals(label)) cachedAdminToken = newCached;
+                else cachedUserToken = newCached;
 
                 return token;
             }
         }
     }
 
-    private static String extractTokenFromConflict(String body) {
-        Pattern p = Pattern.compile("Key \\(token\\)=\\(([^)]+)\\)");
-        Matcher m = p.matcher(body);
-        return m.find() ? m.group(1) : null;
+    private static Instant parseExpiresAt(String expiresAt) {
+        if (expiresAt == null || expiresAt.isEmpty()) {
+            // Default: assume token valid for 55 minutes (safety margin under 1h)
+            return Instant.now().plusSeconds(55 * 60);
+        }
+        try {
+            return Instant.parse(expiresAt);
+        } catch (Exception e) {
+            log.warn("Could not parse expiresAt '{}', defaulting to 55min from now", expiresAt);
+            return Instant.now().plusSeconds(55 * 60);
+        }
+    }
+
+    private static class CachedToken {
+        final String token;
+        final Instant expiresAt;
+
+        CachedToken(String token, Instant expiresAt) {
+            this.token = token;
+            this.expiresAt = expiresAt;
+        }
+
+        boolean isExpired() {
+            // Consider expired 2 minutes before actual expiry to avoid race conditions
+            return Instant.now().isAfter(expiresAt.minusSeconds(120));
+        }
     }
 }

@@ -3,6 +3,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 public class KitGeneralInformationPage {
     private final Page page;
 
@@ -44,7 +45,7 @@ public class KitGeneralInformationPage {
     public void setTag(String tag) {
         tagsInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         tagsInput.fill(tag);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         page.keyboard().press("Enter");
     }
 

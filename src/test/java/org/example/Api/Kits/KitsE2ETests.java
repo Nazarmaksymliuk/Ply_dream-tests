@@ -2,33 +2,53 @@ package org.example.Api.Kits;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.example.Api.helpers.KitsHelper.KitsClient;
 import org.example.Api.helpers.LocationMaterials.LocationMaterialsClient;
+import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.Api.helpers.MaterialTagsHelper.MaterialTagsClient;
+import org.example.Api.helpers.MaterialsHelper.MaterialsClient;
 import org.example.Api.helpers.SuppliersContactsHelper.SupplierContactsClient;
 import org.example.Api.helpers.ToolsHelper.ToolsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.KitsTestDataFactory;
+import org.example.apifactories.LocationsTestDataFactory;
+import org.example.apifactories.MaterialsTestDataFactory;
 import org.example.apifactories.ToolsFinancingTestDataFactory;
+import org.example.config.TestEnvironment;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.Timeout;
+
+@Epic("Kits")
+@Feature("Kits E2E CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class KitsE2ETests extends BaseApiTest {
 
+    private static final Logger log = LoggerFactory.getLogger(KitsE2ETests.class);
+
     private KitsClient kitsClient;
-    private LocationMaterialsClient locationMaterialsClient;
+    private LocationsClient locationsClient;
+    private MaterialsClient materialsClient;
 
     private ToolsClient toolsClient;
     private SupplierContactsClient supplierContactsClient;
     private MaterialTagsClient materialTagsClient;
 
-    private String kitId;
+    private String createdLocationId;
+    private String createdMaterialId;
     private String materialVariationId;
 
+    private String kitId;
     private String financingId;
     private String toolUnitId;
 
@@ -36,40 +56,63 @@ public class KitsE2ETests extends BaseApiTest {
     private String materialTagId;
     private String materialTagName;
 
-    private static final String LOCATION_ID_WAREHOUSE_MAIN =
-            "ac1f56fd-9919-137e-8199-1f504b6607e8";
-
     @BeforeAll
     void initClientsAndResolveDependencies() throws IOException {
         kitsClient = new KitsClient(userApi);
-        locationMaterialsClient = new LocationMaterialsClient(userApi);
+        locationsClient = new LocationsClient(userApi);
+        materialsClient = new MaterialsClient(userApi);
 
         toolsClient = new ToolsClient(userApi);
         supplierContactsClient = new SupplierContactsClient(userApi);
         materialTagsClient = new MaterialTagsClient(userApi);
 
-        // 1) materialVariationId
-        APIResponse materialsResp = locationMaterialsClient.searchMaterialsInLocation(LOCATION_ID_WAREHOUSE_MAIN);
-        Assertions.assertEquals(200, materialsResp.status(), "Expected 200 from materials search");
+        // 1) Create own warehouse location
+        Map<String, Object> locationBody = LocationsTestDataFactory.buildCreateWarehouseBody("API Warehouse For Kits ");
+        APIResponse createLocResp = locationsClient.createLocation(locationBody, false);
+        log.info("CREATE LOCATION status: {}", createLocResp.status());
+        log.debug("CREATE LOCATION body: {}", createLocResp.text());
+        Assertions.assertTrue(
+                createLocResp.status() == 201 || createLocResp.status() == 200,
+                "Expected 201 or 200 on location create, got: " + createLocResp.status()
+        );
 
-        JsonNode materialsRoot = locationMaterialsClient.parseResponse(materialsResp);
-        JsonNode firstMaterial = locationMaterialsClient.getFirstMaterial(materialsRoot);
-        Assertions.assertNotNull(firstMaterial, "No materials found in warehouse, cannot create kit");
+        createdLocationId = locationsClient.extractLocationId(createLocResp);
+        Assertions.assertNotNull(createdLocationId, "createdLocationId must not be null");
+        log.info("Created location for Kits: {}", createdLocationId);
 
-        materialVariationId = locationMaterialsClient.extractMaterialVariationId(firstMaterial);
-        Assertions.assertNotNull(materialVariationId, "materialVariationId could not be extracted");
-        System.out.println("Resolved materialVariationId: " + materialVariationId);
+        // 2) Create material in that location
+        Map<String, Object> materialBody = MaterialsTestDataFactory.buildCreateMaterialInLocationRequest(
+                "API Material For Kits ",
+                "MAT-KITS-",
+                createdLocationId
+        );
 
-        // 2) supplierId
+        APIResponse createMatResp = materialsClient.createMaterial(materialBody);
+        log.info("CREATE MATERIAL status: {}", createMatResp.status());
+        log.debug("CREATE MATERIAL body: {}", createMatResp.text());
+        Assertions.assertTrue(
+                createMatResp.status() == 200 || createMatResp.status() == 201,
+                "Expected 200 or 201 on material create, but got: " + createMatResp.status()
+        );
+
+        createdMaterialId = materialsClient.extractMaterialId(createMatResp);
+        Assertions.assertNotNull(createdMaterialId, "createdMaterialId must not be null");
+        log.info("Created material for Kits: {}", createdMaterialId);
+
+        materialVariationId = materialsClient.extractFirstVariationId(createMatResp);
+        Assertions.assertNotNull(materialVariationId, "materialVariationId could not be extracted from create response");
+        log.info("Resolved materialVariationId: {}", materialVariationId);
+
+        // 3) supplierId
         APIResponse suppliersResp = supplierContactsClient.getAllSupplierContacts();
         Assertions.assertEquals(200, suppliersResp.status(), "Expected 200 from /supplier-contacts");
 
         JsonNode suppliersRoot = supplierContactsClient.parseResponse(suppliersResp);
         supplierId = supplierContactsClient.extractFirstSupplierId(suppliersRoot);
         Assertions.assertNotNull(supplierId, "No suppliers found – cannot create toolUnit");
-        System.out.println("Resolved supplierId: " + supplierId);
+        log.info("Resolved supplierId: {}", supplierId);
 
-        // 3) materialTagId/name
+        // 4) materialTagId/name
         APIResponse tagsResp = materialTagsClient.getMaterialTags(0, 20);
         Assertions.assertEquals(200, tagsResp.status(), "Expected 200 from material-tags endpoint");
 
@@ -77,9 +120,9 @@ public class KitsE2ETests extends BaseApiTest {
         materialTagId = materialTagsClient.extractFirstTagId(tagsRoot);
         materialTagName = materialTagsClient.extractFirstTagName(tagsRoot);
         Assertions.assertNotNull(materialTagId, "No material tags found – cannot create tools financing");
-        System.out.println("Resolved materialTagId: " + materialTagId);
+        log.info("Resolved materialTagId: {}", materialTagId);
 
-        // 4) Create tools financing + embedded toolUnit
+        // 5) Create tools financing + embedded toolUnit (in our own location)
         Map<String, Object> toolsFinBody = ToolsFinancingTestDataFactory.buildCreateToolsFinancingBody(
                 "API Tools Financing For Kits ",
                 "Created to generate toolUnit for kits E2E",
@@ -87,12 +130,12 @@ public class KitsE2ETests extends BaseApiTest {
                 materialTagId,
                 materialTagName,
                 supplierId,
-                LOCATION_ID_WAREHOUSE_MAIN
+                createdLocationId
         );
 
         APIResponse createToolsResp = toolsClient.createToolsFinancing(toolsFinBody);
-        System.out.println("CREATE TOOLS FINANCING status: " + createToolsResp.status());
-        System.out.println("CREATE TOOLS FINANCING body: " + createToolsResp.text());
+        log.info("CREATE TOOLS FINANCING status: {}", createToolsResp.status());
+        log.debug("CREATE TOOLS FINANCING body: {}", createToolsResp.text());
 
         Assertions.assertEquals(201, createToolsResp.status(), "Expected 201 on tools financing create");
 
@@ -107,32 +150,49 @@ public class KitsE2ETests extends BaseApiTest {
         Assertions.assertNotNull(toolUnitId, "toolUnitId must not be null");
         Assertions.assertFalse(toolUnitId.isEmpty(), "toolUnitId must not be empty");
 
-        System.out.println("Created toolUnitId for kits test: " + toolUnitId);
+        log.info("Created toolUnitId for kits test: {}", toolUnitId);
     }
 
     @AfterAll
     void cleanup() {
-        // kit може вже бути видалений тестом — це ок
         if (kitId != null) {
             try {
                 APIResponse r = kitsClient.deleteKits(Collections.singletonList(kitId));
-                System.out.println("CLEANUP DELETE KIT status: " + r.status());
+                log.info("CLEANUP DELETE KIT status: {}", r.status());
             } catch (Exception e) {
-                System.out.println("CLEANUP DELETE KIT failed: " + e.getMessage());
+                log.warn("CLEANUP DELETE KIT failed: {}", e.getMessage());
             }
         }
 
-        // видаляємо financing (і очікуємо каскадне прибирання toolUnit)
         if (financingId != null) {
             try {
                 APIResponse r = toolsClient.deleteToolsFinancing(financingId);
-                System.out.println("CLEANUP DELETE TOOLS FINANCING status: " + r.status());
+                log.info("CLEANUP DELETE TOOLS FINANCING status: {}", r.status());
             } catch (Exception e) {
-                System.out.println("CLEANUP DELETE TOOLS FINANCING failed: " + e.getMessage());
+                log.warn("CLEANUP DELETE TOOLS FINANCING failed: {}", e.getMessage());
+            }
+        }
+
+        if (createdMaterialId != null) {
+            try {
+                APIResponse r = materialsClient.deleteMaterial(createdMaterialId);
+                log.info("CLEANUP DELETE MATERIAL status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE MATERIAL failed: {}", e.getMessage());
+            }
+        }
+
+        if (createdLocationId != null) {
+            try {
+                APIResponse r = locationsClient.deleteLocation(createdLocationId, null, "Cleanup after Kits E2E test");
+                log.info("CLEANUP DELETE LOCATION status: {}", r.status());
+            } catch (Exception e) {
+                log.warn("CLEANUP DELETE LOCATION failed: {}", e.getMessage());
             }
         }
     }
 
+    @DisplayName("Create Kit with material and tool unit")
     @Test
     @Order(1)
     void createKitWithMaterialAndCreatedToolUnit_createsRichKit() throws IOException {
@@ -142,12 +202,12 @@ public class KitsE2ETests extends BaseApiTest {
                 1.0,
                 materialVariationId,
                 toolUnitId,
-                LOCATION_ID_WAREHOUSE_MAIN
+                createdLocationId
         );
 
         APIResponse response = kitsClient.createKit(body);
-        System.out.println("CREATE KIT status: " + response.status());
-        System.out.println("CREATE KIT body: " + response.text());
+        log.info("CREATE KIT status: {}", response.status());
+        log.debug("CREATE KIT body: {}", response.text());
 
         Assertions.assertEquals(201, response.status(), "Expected 201 on create kit");
 
@@ -169,6 +229,7 @@ public class KitsE2ETests extends BaseApiTest {
         Assertions.assertEquals(toolUnitId, tools.get(0).get("id").asText());
     }
 
+    @DisplayName("Update Kit - update fields, keep links")
     @Test
     @Order(2)
     void updateKit_updatesMainFieldsButKeepsLinks() throws IOException {
@@ -180,12 +241,12 @@ public class KitsE2ETests extends BaseApiTest {
                 2.0,
                 materialVariationId,
                 toolUnitId,
-                LOCATION_ID_WAREHOUSE_MAIN
+                createdLocationId
         );
 
         APIResponse response = kitsClient.updateKit(kitId, body);
-        System.out.println("UPDATE KIT status: " + response.status());
-        System.out.println("UPDATE KIT body: " + response.text());
+        log.info("UPDATE KIT status: {}", response.status());
+        log.debug("UPDATE KIT body: {}", response.text());
 
         Assertions.assertTrue(response.status() == 200 || response.status() == 201);
 
@@ -200,17 +261,18 @@ public class KitsE2ETests extends BaseApiTest {
         Assertions.assertEquals(toolUnitId, tools.get(0).get("id").asText());
     }
 
+    @DisplayName("Delete Kit by ID")
     @Test
     @Order(3)
     void deleteKit_deletesById() {
         Assertions.assertNotNull(kitId, "kitId is null – previous tests probably failed");
 
         APIResponse response = kitsClient.deleteKits(Collections.singletonList(kitId));
-        System.out.println("DELETE KIT status: " + response.status());
-        System.out.println("DELETE KIT body: '" + response.text() + "'");
+        log.info("DELETE KIT status: {}", response.status());
+        log.debug("DELETE KIT body: '{}'", response.text());
 
         Assertions.assertEquals(204, response.status());
 
-        kitId = null; // щоб cleanup не видаляв вдруге
+        kitId = null;
     }
 }

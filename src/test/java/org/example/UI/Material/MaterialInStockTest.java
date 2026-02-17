@@ -1,7 +1,10 @@
 package org.example.UI.Material;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
-import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
 import org.example.UI.Models.Material;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
 import org.example.UI.PageObjectModels.Material.MaterialEditAvailabilityFlow.MaterialEditAvailabilityPopUpPage;
@@ -10,39 +13,66 @@ import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.PriceAndVa
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialStockSetupPage;
 import org.example.UI.PageObjectModels.Material.MaterialsListPage;
 import org.example.UI.PageObjectModels.Stock.Warehouse.WarehousePage;
+import org.example.fixtures.WarehouseApiFixture;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Random;
+import java.io.IOException;
 
+@Epic("Materials")
+@Feature("Material in Stock CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
+public class MaterialInStockTest extends PlaywrightUiApiBaseTest {
+
+    private static final Logger log = LoggerFactory.getLogger(MaterialInStockTest.class);
+
     WarehousePage warehousePage;
     MaterialSpecsPage materialSpecsPage;
     PriceAndVariantsPage priceAndVariantsPage;
     MaterialStockSetupPage stockSetupPage;
     MaterialsListPage materialsListPage;
 
+    private final Faker faker = new Faker();
     private final String defaultVariation = "Single";
     private final String defaultUnitOfMeasurement = "Ea";
 
+    private static WarehouseApiFixture warehouseFixture;
+    private static String createdWarehouseId;
+
+    @BeforeAll
+    void createWarehouse() throws IOException {
+        warehouseFixture = WarehouseApiFixture.create(userApi)
+                .provisionWarehouse("UI Test Warehouse ");
+
+        createdWarehouseId = warehouseFixture.warehouseId();
+        log.info("Created warehouse for UI test: {}", createdWarehouseId);
+    }
+
+    @AfterAll
+    void cleanupWarehouse() {
+        if (warehouseFixture != null) {
+            warehouseFixture.cleanup("Cleanup after UI MaterialInStock test");
+        }
+    }
+
     @BeforeEach
     public void setUp() {
-        // йдемо одразу в головний склад
-        openPath("/stock/warehouse/warehousemain/ac1f56fd-9919-137e-8199-1f504b6607e8");
+        openPath("/stock/warehouse/warehousemain/" + createdWarehouseId);
         warehousePage = new WarehousePage(page);
         materialsListPage = new MaterialsListPage(page);
         warehousePage.waitForLoaded();
     }
 
     Material material = new Material(
-            "Material" + new Random().nextInt(100000),
-            "ITEM-" + new Random().nextInt(100000),
+            "Material" + new Faker().number().numberBetween(10000, 99999),
+            "ITEM-" + new Faker().number().numberBetween(10000, 99999),
             "Sample description",
             "BrandXXX",
             "ManufacturerYYY",
             "CategoryZZZ",
-            defaultUnitOfMeasurement,
-            defaultVariation,
+            "Ea",
+            "Single",
             "Single Description",
             25.5,
             15.5,
@@ -54,82 +84,64 @@ public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
     @Test
     public void createMaterialFromStockTest() {
 
-        // 1) Стартуємо флоу створення матеріалу зі складу
         materialSpecsPage = warehousePage.clickOnAddNewMaterialButton();
 
-        // 2) Специфікація
         materialSpecsPage.setMaterialName(material.name);
         materialSpecsPage.setItemNumber(material.itemNumber);
         materialSpecsPage.setDescription(material.description);
         materialSpecsPage.setBrand(material.brand);
         materialSpecsPage.setManufacturer(material.manufacturer);
 
-        // noo needs now
-        //materialSpecsPage.clickAddMaterialVariantButton();
         materialSpecsPage.setVariantName(material.variationName);
         materialSpecsPage.setVariantDescription(material.variationDescription);
 
-        // 3) Ціни
         priceAndVariantsPage = materialSpecsPage.clickNextButton();
         priceAndVariantsPage.setCostForClient(material.costForClient);
         priceAndVariantsPage.setCostForBusiness(material.costForBusiness);
 
-        // 4) Stock Setup
-        // У ВWarehouseMain **склад уже вибрано автоматично**, тому:
-        // - НЕ клікаємо Add Location / Choose Location / selectWarehouse
         stockSetupPage = priceAndVariantsPage.clickNextButton();
         stockSetupPage.clickAddLocationButton();
         stockSetupPage.setQuantity(material.quantity);
         stockSetupPage.clickSaveLocationButton();
         stockSetupPage.clickSaveButton();
 
-        // 5) Перевірки
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
-        // текст може відрізнятися від каталогу: робимо перевірку «містить»
         Assertions.assertThat(alert).contains("successfully");
         AlertUtils.waitForAlertHidden(page);
 
-        // Список матеріалів у межах цього складу
         Assertions.assertThat(materialsListPage.getFirstMaterialNameInTheList()).isEqualTo(material.name);
         Assertions.assertThat(materialsListPage.getFirstItemNumberInTheList()).isEqualTo(material.itemNumber);
-
-        // Якщо у списку на складі є дропдаун локацій — можна розкрити і звірити кількість:
-        // materialsListPage.clickFirstLocationArrowDown();
-        // Assertions.assertThat(materialsListPage.getQtyFromMaterialLocation()).isEqualTo(material.quantity);
     }
 
-
     Material editedMaterial = new Material(
-            "Material-edited" + new Random().nextInt(100000),
-            "ITEM-edited" + new Random().nextInt(100000),
+            "Material-edited" + new Faker().number().numberBetween(10000, 99999),
+            "ITEM-edited" + new Faker().number().numberBetween(10000, 99999),
             "Sample description-edited",
             "BrandXXX-edited",
             "ManufacturerYYY-edited",
             "CategoryZZZ",
-            defaultUnitOfMeasurement,
-            defaultVariation,
+            "Ea",
+            "Single",
             "Single Description-edited",
             25.5,
             15.5,
             1000
     );
+
     @DisplayName("Update Material in Stock (WarehouseMain)")
     @Order(1)
     @Test
     public void updateMaterialAvailabilityInStockTest(){
-        // знімаємо поточне значення кількості з першого рядка
         int beforeQty = materialsListPage.getFirstRowQuantity();
 
-        // відкриваємо "..." → Edit availability
         materialsListPage.openFirstRowMaterialStockThreeDots();
         materialsListPage.chooseMenuEditMaterialAvailability();
 
-        // працюємо в попапі
         MaterialEditAvailabilityPopUpPage popup = new MaterialEditAvailabilityPopUpPage(page);
         popup.waitForLoaded();
 
-        int newQty = 100;  // будь-яке коректне нове значення
+        int newQty = 100;
         int newMin = 50;
         int newMax = 150;
 
@@ -140,16 +152,13 @@ public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
 
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
-        // текст може різнитись → просто contains
         Assertions.assertThat(alert).contains("successfully");
         AlertUtils.waitForAlertHidden(page);
 
-        // перевіряємо, що кількість у гріді оновилася
         int afterQty = materialsListPage.getFirstRowQuantity();
         Assertions.assertThat(afterQty)
                 .as("Quantity in grid should be updated")
                 .isEqualTo(newQty);
-
     }
 
     @DisplayName("Delete Material in Stock (WarehouseMain)")
@@ -164,12 +173,10 @@ public class MaterialInStockTest extends PlaywrightUiLoginBaseTest {
 
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
-        // текст в stock може відрізнятись — перевіримо по contains
         Assertions.assertThat(alert).contains("deleted");
         AlertUtils.waitForAlertHidden(page);
 
         waitForElementRemoved(firstNameForDeleting);
         Assertions.assertThat(materialsListPage.getMaterialNamesList()).doesNotContain(firstNameForDeleting);
     }
-
 }

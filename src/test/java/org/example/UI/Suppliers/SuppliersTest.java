@@ -1,6 +1,8 @@
 package org.example.UI.Suppliers;
 
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
@@ -10,7 +12,8 @@ import org.example.UI.PageObjectModels.Suppliers.SupplierPopUpPage;
 import org.example.UI.PageObjectModels.Suppliers.SuppliersPage;
 import org.junit.jupiter.api.*;
 
-import java.util.Random;
+@Epic("Suppliers")
+@Feature("Suppliers UI CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SuppliersTest extends PlaywrightUiLoginBaseTest {
     SuppliersPage suppliersPage;
@@ -24,12 +27,12 @@ public class SuppliersTest extends PlaywrightUiLoginBaseTest {
 
     Faker faker = new Faker();
     Supplier expectedSupplier = new Supplier(
-            "Supplier-AQA-" + new Random().nextInt(100000),   // name
-            faker.address().city(),              // city
-            "Fast delivery every Monday note", // note
-            faker.name().fullName(),                 // contactName
-            faker.internet().emailAddress(),    // contactEmail
-            "1234567890"           // contactPhone
+            "Supplier-AQA-" + faker.number().numberBetween(10000, 99999),
+            faker.address().city(),
+            "Fast delivery every Monday note",
+            faker.name().fullName(),
+            faker.internet().emailAddress(),
+            "1234567890"
     );
 
     @DisplayName("Create Supplier Test")
@@ -60,18 +63,17 @@ public class SuppliersTest extends PlaywrightUiLoginBaseTest {
         Assertions.assertThat(suppliersPage.getFirstSupplierEmail()).isEqualTo(expectedSupplier.contactEmail);
         Assertions.assertThat(suppliersPage.getFirstSupplierPhone()).isEqualTo("+1" + expectedSupplier.contactPhone);
         Assertions.assertThat(suppliersPage.getFirstSupplierCity()).isEqualTo(expectedSupplier.city);
-
     }
 
     Supplier editedSupplier = new Supplier(
-            "Supplier-AQA-edited-" + new Random().nextInt(100000),   // name
-            faker.address().city() + " " + "edited",              // city
-            "Fast delivery every Monday note edited", // note
-            faker.name().fullName() + " " + "edited" ,
-            // contactName
-            faker.internet().emailAddress() + "edited",    // contactEmail
-            "0987654321"           // contactPhone
+            "Supplier-AQA-edited-" + faker.number().numberBetween(10000, 99999),
+            faker.address().city() + " edited",
+            "Fast delivery every Monday note edited",
+            faker.name().fullName() + " edited",
+            faker.internet().emailAddress(),
+            "0987654321"
     );
+
     @DisplayName("Update Supplier Test")
     @Order(1)
     @Test
@@ -101,7 +103,6 @@ public class SuppliersTest extends PlaywrightUiLoginBaseTest {
         Assertions.assertThat(suppliersPage.getFirstSupplierEmail()).isEqualTo(editedSupplier.contactEmail);
         Assertions.assertThat(suppliersPage.getFirstSupplierPhone()).isEqualTo("+1" + editedSupplier.contactPhone);
         Assertions.assertThat(suppliersPage.getFirstSupplierCity()).isEqualTo(editedSupplier.city);
-
     }
 
     @DisplayName("Delete Supplier Test")
@@ -121,9 +122,7 @@ public class SuppliersTest extends PlaywrightUiLoginBaseTest {
         Assertions.assertThat(alert).isEqualTo("Supplier successfully deleted");
         AlertUtils.waitForAlertHidden(page);
 
-
         waitForElementRemoved(supplierName);
         Assertions.assertThat(suppliersPage.getSuppliersList()).doesNotContain(supplierName);
     }
-
 }

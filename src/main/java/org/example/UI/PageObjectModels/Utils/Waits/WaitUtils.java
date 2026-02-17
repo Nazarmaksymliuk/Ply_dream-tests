@@ -3,13 +3,14 @@ package org.example.UI.PageObjectModels.Utils.Waits;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 /**
  * Універсальний клас для очікувань елементів на сторінках.
  */
 public class WaitUtils {
 
-    private static final int DEFAULT_TIMEOUT = 15_000;
+    private static final int DEFAULT_TIMEOUT = TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS;
     private static final String LOADER_SELECTOR = "img[alt='loader']";
 
     // =========================

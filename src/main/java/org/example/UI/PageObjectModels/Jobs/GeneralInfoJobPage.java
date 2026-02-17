@@ -5,6 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Utils.LocationSelect;
+import org.example.config.TestEnvironment;
 
 public class GeneralInfoJobPage {
     private final Page page;
@@ -53,7 +54,7 @@ public class GeneralInfoJobPage {
         selectInputTruck.fill("");                 // на всяк випадок очистити
         selectInputTruck.type(truckToJobValue);    // type краще для react-select
 
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         page.keyboard().press("Enter");
 //
 //        // 3) дочекайся, що комбобокс відкрився і з’явились опції

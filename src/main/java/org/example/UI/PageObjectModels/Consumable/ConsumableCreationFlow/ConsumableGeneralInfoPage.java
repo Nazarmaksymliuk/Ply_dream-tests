@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 public class ConsumableGeneralInfoPage {
     private final Page page;
@@ -61,7 +62,7 @@ public class ConsumableGeneralInfoPage {
     public void setTag(String tag) {
         tagsInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         tagsInput.fill(tag);
-        page.waitForTimeout(2500);
+        page.waitForTimeout(TestEnvironment.SEARCH_DELAY_MS);
         page.keyboard().press("Enter");
     }
 

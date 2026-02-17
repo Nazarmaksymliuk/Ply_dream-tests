@@ -7,6 +7,8 @@ import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import org.example.config.TestEnvironment;
+
 import java.util.regex.Pattern;
 
 public class AlertUtils {
@@ -14,7 +16,7 @@ public class AlertUtils {
         Locator alert = page.locator("[role='alert']");
         alert.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(15000));
+                .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
 
         return alert.innerText().trim();
     }
@@ -29,24 +31,24 @@ public class AlertUtils {
         Locator alert = page.locator("[role='alert']");
         alert.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.HIDDEN)
-                .setTimeout(20000));
+                .setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
     }
     public static void waitForAlertHiddenWithToast(Page page) {
         Locator successToast = page
                 .locator("div.Toastify__toast-body[role='alert']");
         successToast.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.HIDDEN)
-                .setTimeout(20000));
+                .setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
     }
     public static void waitForAlertVisible(Page page) {
-        page.waitForTimeout(500);
+        page.waitForTimeout(TestEnvironment.SMALL_DELAY_MS);
         Locator alert = page.locator("[role='alert']");
         alert.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(20000));
+                .setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
     }
     public static void waitForAlertVisibleWithToast(Page page) {
-        page.waitForTimeout(500);
+        page.waitForTimeout(TestEnvironment.SMALL_DELAY_MS);
         Locator successToast = page
                 .locator("div.Toastify__toast-body[role='alert']");
 

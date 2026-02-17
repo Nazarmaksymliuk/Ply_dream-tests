@@ -5,6 +5,8 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import org.example.config.TestEnvironment;
+
 import java.util.List;
 
 import static org.example.UI.PageObjectModels.Utils.Waits.WaitUtils.waitForVisible;
@@ -44,7 +46,7 @@ public class TrucksListPage {
     public void waitForLoaded() {
         addTruckButton.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(15000));
+                .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
     }
 
     public TruckFormPopUpPage clickOnAddTruckButton() {

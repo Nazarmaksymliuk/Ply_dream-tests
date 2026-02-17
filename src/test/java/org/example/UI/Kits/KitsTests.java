@@ -1,5 +1,8 @@
 package org.example.UI.Kits;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.Models.Kit;
@@ -11,10 +14,10 @@ import org.example.UI.PageObjectModels.Kits.KitsCreationFlow.KitStockSetupPage;
 import org.example.UI.PageObjectModels.Kits.KitsListPage;
 import org.junit.jupiter.api.*;
 
-import java.util.Random;
-
 import static org.example.domain.LocationName.WAREHOUSE_MAIN;
 
+@Epic("Kits")
+@Feature("Kits UI CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class KitsTests extends PlaywrightUiLoginBaseTest {
     KitGeneralInformationPage generalInformationPage;
@@ -22,6 +25,8 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
     CatalogPage catalogPage;
     KitStockSetupPage kitStockSetupPage;
     KitSettingsPage kitSettingsPage;
+
+    private final Faker faker = new Faker();
 
     @BeforeEach
     public void setUp() {
@@ -31,7 +36,7 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
     }
 
     Kit kit = new Kit(
-            "Kit-" + new Random().nextInt(100000),
+            "Kit-" + new Faker().number().numberBetween(10000, 99999),
             "High-performance kit for any type of work.",
             "test tag",
             WAREHOUSE_MAIN.value()
@@ -57,7 +62,6 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
         kitStockSetupPage.clickAddCode();
         kitStockSetupPage.setWarehouseUsingUtility(kit.location);
 
-
         kitSettingsPage = kitStockSetupPage.clickNext();
         kitSettingsPage.addFirstMaterialByName("Test");
         kitSettingsPage.setQtyForMaterialInKit(5);
@@ -66,20 +70,17 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
 
         kitSettingsPage.clickBottomSave();
 
-
         AlertUtils.waitForAlertVisible(page);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully created", kit.name);
         AlertUtils.waitForAlertHidden(page);
 
-        //waitForElementPresent(kit.name);
         Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(kit.name);
         Assertions.assertThat(kitsListPage.getFirstKitCostInTheListAsDouble()).isEqualTo(kitPrice);
-
     }
 
     Kit editedKit = new Kit(
-            "Kit-edited" + new Random().nextInt(100000),
+            "Kit-edited" + new Faker().number().numberBetween(10000, 99999),
             "High-performance kit for any type of work-edited",
             "test tag-edited",
             WAREHOUSE_MAIN.value()
@@ -108,9 +109,7 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
         Assertions.assertThat(alert).isEqualTo("Kit \"%s\" has been successfully updated", editedKit.name);
         AlertUtils.waitForAlertHidden(page);
 
-        //waitForElementPresent(editedKit.name);
         Assertions.assertThat(kitsListPage.getFirstKitNameInTheList()).isEqualTo(editedKit.name);
-
     }
 
     @DisplayName("Delete Kit Test")
@@ -134,8 +133,5 @@ public class KitsTests extends PlaywrightUiLoginBaseTest {
 
         waitForElementRemoved(kitName);
         Assertions.assertThat(kitsListPage.getKitNamesList()).doesNotContain(kitName);
-
     }
-
-
 }

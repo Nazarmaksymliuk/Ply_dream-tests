@@ -3,6 +3,7 @@ package org.example.UI.PageObjectModels.Stock.Templates;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
+import org.example.config.TestEnvironment;
 
 import java.util.List;
 
@@ -48,7 +49,7 @@ public class TemplatesListPage {
     public void waitForLoaded() {
         addTemplateButton.waitFor(new Locator.WaitForOptions()
                 .setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE)
-                .setTimeout(20_000));
+                .setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
     }
 
     public CreateLocationTemplatePage clickAddTemplate() {

@@ -2,6 +2,7 @@ package org.example.UI.Consumable;
 
 import org.assertj.core.api.Assertions;
 import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
+import org.example.config.TestEnvironment;
 import org.example.UI.Models.Consumable;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
 import org.example.UI.PageObjectModels.Catalog.CatalogPage;
@@ -133,7 +134,7 @@ public class ConsumableTests extends PlaywrightUiApiBaseTest {
         consumableGeneralInfoPage.clickSaveButton();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("\"%s\" has been successfully updated",editedConsumable.name);
         AlertUtils.waitForAlertHidden(page);
@@ -158,7 +159,7 @@ public class ConsumableTests extends PlaywrightUiApiBaseTest {
         catalogPage.confirmDeleteItemInModal();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(1000);
+        page.waitForTimeout(TestEnvironment.MEDIUM_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Consumable has been successfully deleted");
         AlertUtils.waitForAlertHidden(page);
@@ -225,7 +226,7 @@ public class ConsumableTests extends PlaywrightUiApiBaseTest {
         consumableGeneralInfoPage.clickSaveButton();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("\"%s\" has been successfully updated",editedConsumable.name);
         AlertUtils.waitForAlertHidden(page);
@@ -252,7 +253,7 @@ public class ConsumableTests extends PlaywrightUiApiBaseTest {
         warehousePage.confirmDeletion();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(1000);
+        page.waitForTimeout(TestEnvironment.MEDIUM_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Consumable has been successfully deleted");
         AlertUtils.waitForAlertHidden(page);

@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 import java.util.List;
 
@@ -127,7 +128,7 @@ public class WarehousesListPage {
         firstWarehouseLink.waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.VISIBLE)
-                        .setTimeout(15000)
+                        .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS)
         );
     }
 }

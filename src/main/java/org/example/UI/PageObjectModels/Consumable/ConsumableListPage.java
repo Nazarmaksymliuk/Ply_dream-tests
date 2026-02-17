@@ -6,6 +6,8 @@ import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Consumable.ConsumableCreationFlow.ConsumableGeneralInfoPage;
 
+import org.example.config.TestEnvironment;
+
 import java.util.List;
 
 public class ConsumableListPage {
@@ -62,7 +64,7 @@ public class ConsumableListPage {
     // ===== Waits =====
     public void waitFirstRowVisible() {
         consumableFirstNameInTheList.waitFor(
-                new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(60000)
+                new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.NAVIGATION_TIMEOUT_MS)
         );
     }
 
