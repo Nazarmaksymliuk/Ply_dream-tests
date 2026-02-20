@@ -2,8 +2,8 @@ name: E2E Tests & Allure (Kyiv 07:00)
 
 on:
   schedule:
-    - cron: "0 4 * 4-10 *"        # 07:00 Kyiv (DST)
-    - cron: "0 5 * 11,12,1,2,3 *" # 07:00 Kyiv (standard)
+    - cron: "0 3 * 4-10 *"        # 07:00 Kyiv (DST)
+    - cron: "0 4 * 11,12,1,2,3 *" # 07:00 Kyiv (standard)
   workflow_dispatch:
 
 permissions:
