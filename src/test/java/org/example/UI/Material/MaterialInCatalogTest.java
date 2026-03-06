@@ -71,7 +71,7 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
         materialSpecsPage.setBrand(material.brand);
         materialSpecsPage.setManufacturer(material.manufacturer);
 
-        materialSpecsPage.clickAddMaterialVariantButton();
+        //materialSpecsPage.clickAddMaterialVariantButton();
         materialSpecsPage.setVariantName(material.variationName);
         materialSpecsPage.setVariantDescription(material.variationDescription);
 
