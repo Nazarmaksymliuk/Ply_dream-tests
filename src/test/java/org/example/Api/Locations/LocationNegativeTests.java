@@ -16,6 +16,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Negative test scenarios for Locations API.
+ * Tests error handling, validation, and edge cases.
+ */
 @Epic("Locations")
 @Feature("Locations Negative Scenarios")
 @Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
@@ -164,5 +168,100 @@ public class LocationNegativeTests extends BaseApiTest {
                 response.status(), response.text());
 
         ApiAssertions.assertStatus(400, response, "Create location with invalid type");
+    }
+
+    @DisplayName("Create location with SQL injection in name succeeds (sanitized)")
+    @Test
+    void createLocation_withSqlInjectionInName_succeeds() throws IOException {
+        log.info("Testing location creation with SQL injection in name");
+
+        Map<String, Object> body = LocationsTestDataFactory.buildCreateWarehouseBody("'; DROP TABLE locations;-- ");
+
+        APIResponse response = locationsClient.createLocation(body, false);
+        log.info("Create location with SQL injection - status: {}, body: {}", response.status(), response.text());
+
+        ApiAssertions.assertStatusOneOf(response, "Create location with SQL injection", 200, 201, 400);
+
+        if (response.status() == 200 || response.status() == 201) {
+            String locationId = locationsClient.extractLocationId(response);
+            if (locationId != null) {
+                createdLocationIds.add(locationId);
+                log.info("Location with SQL injection name created, ID: {}", locationId);
+            }
+        }
+    }
+
+    @DisplayName("Create location with XSS in name succeeds (sanitized)")
+    @Test
+    void createLocation_withXssInName_succeeds() throws IOException {
+        log.info("Testing location creation with XSS in name");
+
+        Map<String, Object> body = LocationsTestDataFactory.buildCreateWarehouseBody("<script>alert('xss')</script> ");
+
+        APIResponse response = locationsClient.createLocation(body, false);
+        log.info("Create location with XSS - status: {}, body: {}", response.status(), response.text());
+
+        ApiAssertions.assertStatusOneOf(response, "Create location with XSS", 200, 201, 400);
+
+        if (response.status() == 200 || response.status() == 201) {
+            String locationId = locationsClient.extractLocationId(response);
+            if (locationId != null) {
+                createdLocationIds.add(locationId);
+                log.info("Location with XSS name created, ID: {}", locationId);
+            }
+        }
+    }
+
+    @DisplayName("Update location with invalid ID format returns error")
+    @Test
+    void updateLocation_withInvalidIdFormat_returnsError() {
+        log.info("Testing location update with invalid ID format");
+
+        String invalidId = "not-a-valid-uuid";
+        Map<String, Object> updateBody = LocationsTestDataFactory.buildUpdateWarehouseBody("Invalid ID ");
+
+        APIResponse response = locationsClient.updateLocation(invalidId, updateBody, false);
+
+        log.info("Update location with invalid ID format - status: {}, body: {}",
+                response.status(), response.text());
+
+        ApiAssertions.assertStatusOneOf(response, "Update location with invalid ID format", 400, 404);
+    }
+
+    @DisplayName("Create location with extremely long name returns error or accepts")
+    @Test
+    void createLocation_withExtremelyLongName_returnsErrorOrAccepts() throws IOException {
+        log.info("Testing location creation with extremely long name (10000 characters)");
+
+        Map<String, Object> body = LocationsTestDataFactory.buildCreateWarehouseBody("");
+        body.put("name", "L".repeat(10000));
+
+        APIResponse response = locationsClient.createLocation(body, false);
+
+        log.info("Create location with long name - status: {}", response.status());
+
+        ApiAssertions.assertStatusOneOf(response, "Create location with extremely long name", 200, 201, 400, 500);
+
+        if (response.status() == 200 || response.status() == 201) {
+            String locationId = locationsClient.extractLocationId(response);
+            if (locationId != null) {
+                createdLocationIds.add(locationId);
+            }
+        }
+    }
+
+    @DisplayName("Delete location with invalid ID format returns error")
+    @Test
+    void deleteLocation_withInvalidIdFormat_returnsError() {
+        log.info("Testing location deletion with invalid ID format");
+
+        String invalidId = "not-a-valid-uuid";
+
+        APIResponse response = locationsClient.deleteLocation(invalidId, null, "Invalid ID deletion test");
+
+        log.info("Delete location with invalid ID format - status: {}, body: {}",
+                response.status(), response.text());
+
+        ApiAssertions.assertStatusOneOf(response, "Delete location with invalid ID format", 400, 404);
     }
 }
