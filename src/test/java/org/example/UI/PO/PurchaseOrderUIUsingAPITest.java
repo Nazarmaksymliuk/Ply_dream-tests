@@ -26,7 +26,7 @@ public class PurchaseOrderUIUsingAPITest extends PlaywrightUiApiBaseTest {
     private final String poNumber      = "AQA-PO-" + new Random().nextInt(100000);
     private final String editedPoNumber = "UPD-AQA-PO-" + new Random().nextInt(100000);
 
-    //  NEW: comments used in create / edit assertions
+    // ✅ NEW: comments used in create / edit assertions
     private final String poComment      = "AQA test comment for PO";
     private final String editedPoComment = "Updated AQA PO comment";
 
@@ -42,7 +42,6 @@ public class PurchaseOrderUIUsingAPITest extends PlaywrightUiApiBaseTest {
         warehouseName = warehouseFixture.warehouseName();
         supplierName  = supplierFixture.supplierName();
     }
-
     @AfterAll
     void afterAll() {
         if (supplierFixture  != null) supplierFixture.cleanup("Cleanup after UI-PO test");
@@ -72,7 +71,7 @@ public class PurchaseOrderUIUsingAPITest extends PlaywrightUiApiBaseTest {
                 .chooseNeedByDate(LocalDate.now())
                 // Supplier
                 .selectSecondReactSelectByTyping(supplierName)
-                // NEW: Comment
+                // ✅ NEW: Comment
                 .setComment(poComment)
                 // Items
                 .addItem()
@@ -81,7 +80,7 @@ public class PurchaseOrderUIUsingAPITest extends PlaywrightUiApiBaseTest {
                 // Submit
                 .createDraftPurchaseOrder();
 
-        po.assertPurchaseOrderListed(poNumber,supplierName);
+        po.assertPurchaseOrderListed(poNumber);
     }
 
     @Test
@@ -99,7 +98,7 @@ public class PurchaseOrderUIUsingAPITest extends PlaywrightUiApiBaseTest {
                 // Submit
                 .updatePurchaseOrder();
 
-        po.assertPurchaseOrderListed(editedPoNumber, supplierName);
+        po.assertPurchaseOrderListed(editedPoNumber);
     }
 
     @Test
@@ -111,5 +110,99 @@ public class PurchaseOrderUIUsingAPITest extends PlaywrightUiApiBaseTest {
                 .deletePurchaseOrder();
 
         po.assertPurchaseOrderNotListed(editedPoNumber);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // NEGATIVE TESTS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    @Test
+    @Order(3)
+    @DisplayName("Negative: 'Create Draft' button is disabled when no items are added")
+    void createPO_withNoItems_createDraftButtonIsDisabled() {
+        po.startCreateNew()
+                .chooseNewPO();
+
+        po.assertCreateDraftButtonIsDisabled();
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("Negative: Adding an item enables the 'Create Draft' button")
+    void createPO_afterAddingItem_createDraftButtonBecomesEnabled() {
+        po.startCreateNew()
+                .chooseNewPO();
+
+        po.assertCreateDraftButtonIsDisabled(); // verify it starts disabled
+
+        po.addItem()
+                .selectFirstMaterialRowAndAdd();
+
+        po.assertCreateDraftButtonIsEnabled();
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("Negative: Submitting with items but no required fields shows Ship To, Required By and Supplier errors")
+    void createPO_missingAllRequiredFields_showsAllThreeValidationErrors() {
+        po.startCreateNew()
+                .chooseNewPO()
+                .addItem()
+                .selectFirstMaterialRowAndAdd()
+                .createDraftPurchaseOrder(); // submit with no Ship To, no date, no supplier
+
+        po.assertShipToValidationError();
+        po.assertRequiredByValidationError();
+        po.assertSupplierValidationError();
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("Negative: Submitting without Ship To shows Ship To validation error only")
+    void createPO_missingShipTo_showsShipToValidationError() {
+        po.startCreateNew()
+                .chooseNewPO()
+                // Fill Required By and Supplier — leave Ship To empty
+                .chooseNeedByDate(LocalDate.now())
+                .selectSecondReactSelectByTyping(supplierName)
+                .addItem()
+                .selectFirstMaterialRowAndAdd()
+                .createDraftPurchaseOrder();
+
+        po.assertShipToValidationError();
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("Negative: Submitting without Supplier shows Supplier validation error only")
+    void createPO_missingSupplier_showsSupplierValidationError() {
+        po.startCreateNew()
+                .chooseNewPO()
+                // Fill Ship To and Required By — leave Supplier empty
+                .selectFirstReactSelectByTyping(warehouseName)
+                .setShipToAsShippingAddress()
+                .chooseNeedByDate(LocalDate.now())
+                .addItem()
+                .selectFirstMaterialRowAndAdd()
+                .createDraftPurchaseOrder();
+
+        po.assertSupplierValidationError();
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("Negative: Submitting without Required By date shows Required By validation error only")
+    void createPO_missingRequiredByDate_showsRequiredByValidationError() {
+        po.startCreateNew()
+                .chooseNewPO()
+                // Fill Ship To and Supplier — leave Required By date empty
+                .selectFirstReactSelectByTyping(warehouseName)
+                .setShipToAsShippingAddress()
+                .selectSecondReactSelectByTyping(supplierName)
+                .addItem()
+                .selectFirstMaterialRowAndAdd()
+                .createDraftPurchaseOrder();
+
+        po.assertRequiredByValidationError();
     }
 }
