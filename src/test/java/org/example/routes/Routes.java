@@ -5,12 +5,12 @@ public final class Routes {
 
     public static final String BASE_URL = System.getProperty(
             "baseUrl",
-            "https://epic-one.getply.com"
+            "https://dev.getply.com"
     );
 
     public static final String BASE_API_URL = System.getProperty(
             "baseApiUrl",
-            "https://epic-one-api.getply.com"
+            "https://dev-api.getply.com"
     );
 
     public static final String LOGIN = "/sign-in";
