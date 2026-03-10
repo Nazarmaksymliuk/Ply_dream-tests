@@ -2,16 +2,29 @@ package org.example.Api.Suppliers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.example.Api.helpers.SupplierHelper.SuppliersClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.SuppliersTestDataFactory;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.example.config.TestEnvironment;
+import org.junit.jupiter.api.Timeout;
+
+@Epic("Suppliers")
+@Feature("Suppliers E2E CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class SupplierE2ETests extends BaseApiTest {
+
+    private static final Logger log = LoggerFactory.getLogger(SupplierE2ETests.class);
 
     private SuppliersClient suppliersClient;
     private String supplierId;
@@ -21,6 +34,7 @@ public class SupplierE2ETests extends BaseApiTest {
         suppliersClient = new SuppliersClient(userApi);
     }
 
+    @DisplayName("Create Supplier")
     @Test
     @Order(1)
     void createSupplier_createsAndStoresId() throws IOException {
@@ -28,13 +42,13 @@ public class SupplierE2ETests extends BaseApiTest {
                 "API North Star Transport "
         );
 
-        System.out.println("CREATE SUPPLIER request body: " + body);
+        log.debug("CREATE SUPPLIER request body: {}", body);
 
         APIResponse response = suppliersClient.createSupplier(body);
         int status = response.status();
 
-        System.out.println("CREATE SUPPLIER status: " + status);
-        System.out.println("CREATE SUPPLIER body: " + response.text());
+        log.info("CREATE SUPPLIER status: {}", status);
+        log.debug("CREATE SUPPLIER body: {}", response.text());
 
         Assertions.assertTrue(
                 status == 200 || status == 201,
@@ -46,6 +60,7 @@ public class SupplierE2ETests extends BaseApiTest {
         Assertions.assertFalse(supplierId.isEmpty(), "supplierId must not be empty");
     }
 
+    @DisplayName("Update Supplier")
     @Test
     @Order(2)
     void updateSupplier_updatesPreviouslyCreated() throws IOException {
@@ -59,8 +74,8 @@ public class SupplierE2ETests extends BaseApiTest {
         APIResponse response = suppliersClient.updateSupplier(supplierId, updateBody);
         int status = response.status();
 
-        System.out.println("UPDATE SUPPLIER status: " + status);
-        System.out.println("UPDATE SUPPLIER body: " + response.text());
+        log.info("UPDATE SUPPLIER status: {}", status);
+        log.debug("UPDATE SUPPLIER body: {}", response.text());
 
         Assertions.assertEquals(200, status, "Expected 200 on update");
 
@@ -78,6 +93,7 @@ public class SupplierE2ETests extends BaseApiTest {
         );
     }
 
+    @DisplayName("Delete Supplier")
     @Test
     @Order(3)
     void deleteSupplier_deletesPreviouslyCreated() {
@@ -86,8 +102,8 @@ public class SupplierE2ETests extends BaseApiTest {
         APIResponse response = suppliersClient.deleteSupplier(supplierId);
         int status = response.status();
 
-        System.out.println("DELETE SUPPLIER status: " + status);
-        System.out.println("DELETE SUPPLIER body: " + response.text());
+        log.info("DELETE SUPPLIER status: {}", status);
+        log.debug("DELETE SUPPLIER body: {}", response.text());
 
         Assertions.assertTrue(
                 status == 200 || status == 204,

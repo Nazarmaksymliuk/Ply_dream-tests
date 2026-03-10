@@ -4,13 +4,21 @@ import com.microsoft.playwright.APIResponse;
 import org.example.Api.helpers.MaterialsHelper.MaterialsClient;
 import org.example.BaseAPITestExtension.BaseApiTest;
 import org.example.apifactories.MaterialsTestDataFactory;
+import org.example.config.TestEnvironment;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class MaterialNegativeTests extends BaseApiTest {
+
+    private static final Logger log = LoggerFactory.getLogger(MaterialNegativeTests.class);
 
     private MaterialsClient materialsClient;
     private final List<String> createdIds = new ArrayList<>();
@@ -23,7 +31,11 @@ public class MaterialNegativeTests extends BaseApiTest {
     @AfterAll
     void cleanup() {
         for (String id : createdIds) {
-            try { materialsClient.deleteMaterial(id); } catch (Exception ignored) {}
+            try {
+                materialsClient.deleteMaterial(id);
+            } catch (Exception e) {
+                log.warn("Cleanup: failed to delete material {}: {}", id, e.getMessage());
+            }
         }
     }
 

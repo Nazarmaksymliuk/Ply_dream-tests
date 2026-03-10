@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.Api.helpers.RegistrationHelper.RegistrationClient;
 import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.config.TestEnvironment;
 
 import org.example.UI.PageObjectModels.Authorization.Registration.SignUpAccountPage;
 import org.example.UI.PageObjectModels.Authorization.Registration.SignUpEmailPage;
@@ -30,7 +30,7 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 public class CreateNewBusinessUITest extends PlaywrightUiApiBaseTest {
 
     private static final Pattern OTP_PATTERN = Pattern.compile("🔐\\s*(\\d{6})");
-    private static final String API_KEY = "sk_IpYmWCns7XrA0Hce_69ApcsQfppgQn9i5GAR87le1VrqtsW5xz7VoGhJgb0Caxr2N8abNG8ouNSpq0y93";
+    // API key loaded from env/system property via TestEnvironment
 
     private RegistrationClient adminRegistrationClient;
     private String createdBusinessId;
@@ -57,10 +57,9 @@ public class CreateNewBusinessUITest extends PlaywrightUiApiBaseTest {
     void createNewBusiness_success() throws Exception {
 
         // ==== MailSlurp init ====
-        String apiKey = System.getenv("MAILSLURP_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            apiKey = API_KEY;
-        }
+        String apiKey = TestEnvironment.MAILSLURP_API_KEY;
+        Assumptions.assumeFalse(apiKey.isBlank(),
+                "MAILSLURP_API_KEY must be set via env variable or -DmailslurpApiKey system property — skipping");
 
 
         ApiClient apiClient = new ApiClient();

@@ -5,6 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Utils.LocationSelect;
+import org.example.config.TestEnvironment;
 
 public class TransferModalPage {
     private final Page page;
@@ -79,7 +80,7 @@ public class TransferModalPage {
     public void waitForLoaded() {
         dialogRoot.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(20_000));
+                .setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
     }
 
     /** Обирає локацію для трансферу (через react-select) */
@@ -89,7 +90,7 @@ public class TransferModalPage {
 
     public void selectDestinationForConsumable(String locationName) {
         chooseDestinationInput.click();
-        page.waitForTimeout(1500);
+        page.waitForTimeout(TestEnvironment.MEDIUM_DELAY_MS);
         chooseDestinationInput.fill(locationName);
         page.keyboard().press("Enter");
     }

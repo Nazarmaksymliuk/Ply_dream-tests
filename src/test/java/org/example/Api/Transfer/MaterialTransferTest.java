@@ -15,8 +15,13 @@ import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.example.config.TestEnvironment;
+import org.junit.jupiter.api.Timeout;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(value = TestEnvironment.E2E_TEST_TIMEOUT_SECONDS, unit = TimeUnit.SECONDS)
 public class MaterialTransferTest extends BaseApiTest {
 
     private LocationsClient locationsClient;

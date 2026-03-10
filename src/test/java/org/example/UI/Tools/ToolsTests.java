@@ -1,8 +1,11 @@
 package org.example.UI.Tools;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
-import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.config.TestEnvironment;
 import org.example.UI.Models.Tool;
 import org.example.UI.Models.ToolUnit;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
@@ -16,10 +19,11 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
 
 import static org.example.domain.LocationName.WAREHOUSE_MAIN;
 
+@Epic("Tools")
+@Feature("Tools UI CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ToolsTests extends PlaywrightUiApiBaseTest {
     CatalogPage catalogPage;
@@ -31,6 +35,8 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
 
     private static String warehouseId;
     private static String warehouseName;
+
+    private final Faker faker = new Faker();
 
     @BeforeEach
     public void setUp() {
@@ -56,15 +62,15 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
     }
 
     Tool tool = new Tool(
-            "Tool-" + new Random().nextInt(100000),
-            "MFG-" + new Random().nextInt(100000),
+            "Tool-" + new Faker().number().numberBetween(10000, 99999),
+            "MFG-" + new Faker().number().numberBetween(10000, 99999),
             "High-performance tool for any type of work.",
             "test tag"
     );
 
     ToolUnit toolUnit = new ToolUnit(
-            "Impact Driver Unit-" + new Random().nextInt(100000) ,
-            "SerialNumber-" + new Random().nextInt(100000),
+            "Impact Driver Unit-" + new Faker().number().numberBetween(10000, 99999),
+            "SerialNumber-" + new Faker().number().numberBetween(10000, 99999),
             WAREHOUSE_MAIN.value(),
             250.00,
             400.00
@@ -103,7 +109,6 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
         Assertions.assertThat(alert).isEqualTo("Tool \"%s\" has been successfully created", tool.name);
         AlertUtils.waitForAlertHidden(page);
 
-        //waitForElementPresent(tool.name);
         Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(tool.name);
         Assertions.assertThat(toolsListPage.getFirstUnitNameInTheList()).isEqualTo(toolUnit.unitName);
         Assertions.assertThat(toolsListPage.getFirstToolMFGInTheList()).isEqualTo(toolUnit.serialNumber);
@@ -118,14 +123,14 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
                 .isEqualTo(today);
     }
 
-
     ToolUnit editedToolUnit = new ToolUnit(
-            "Impact Driver Unit A",  // unitName
-            "SN-DRILL-12345",       // serialNumber
-            WAREHOUSE_MAIN.value(),        // location
-            250.00,                 // purchaseCost
-            400.00                  // unitValue
+            "Impact Driver Unit A",
+            "SN-DRILL-12345",
+            WAREHOUSE_MAIN.value(),
+            250.00,
+            400.00
     );
+
     @DisplayName("Edit Tool Unit in the Catalog Test")
     @Order(1)
     @Test
@@ -140,19 +145,16 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
 
         addUnitsPage.setUnitName(toolUnit.unitName);
         addUnitsPage.setSerialNumber(toolUnit.serialNumber);
-        //addUnitsPage.selectFirstStatus();
-        //addUnitsPage.setWarehouseUsingUtility(toolUnit.location);
         addUnitsPage.setPurchaseCost(toolUnit.purchaseCost);
         addUnitsPage.setValue(toolUnit.unitValue);
 
         addUnitsPage.clickSaveInformationButton();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Unit updated successfully");
         AlertUtils.waitForAlertHidden(page);
-
 
         Assertions.assertThat(toolsListPage.getFirstToolNameInTheList()).isEqualTo(toolName);
         Assertions.assertThat(toolsListPage.getFirstUnitNameInTheList()).isEqualTo(toolUnit.unitName);
@@ -182,15 +184,12 @@ public class ToolsTests extends PlaywrightUiApiBaseTest {
         catalogPage.confirmDeleteItemInModal();
 
         AlertUtils.waitForAlertVisible(page);
-        page.waitForTimeout(2000);
+        page.waitForTimeout(TestEnvironment.DROPDOWN_DELAY_MS);
         String alert = AlertUtils.getAlertText(page);
         Assertions.assertThat(alert).isEqualTo("Tool deleted successfully");
         AlertUtils.waitForAlertHidden(page);
 
-
         waitForElementRemoved(toolName);
         Assertions.assertThat(toolsListPage.getToolNamesList()).doesNotContain(toolName);
-
     }
-
 }

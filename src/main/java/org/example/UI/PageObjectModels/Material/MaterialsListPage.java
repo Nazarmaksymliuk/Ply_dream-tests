@@ -9,6 +9,8 @@ import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSp
 import org.example.UI.PageObjectModels.Transfer.TransferModalPage;
 import org.example.UI.PageObjectModels.Utils.Waits.WaitUtils;
 
+import org.example.config.TestEnvironment;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -112,7 +114,7 @@ public class MaterialsListPage {
     // ===== Waits =====
     public void waitFirstRowVisible() {
         materialFirstNameInTheList.waitFor(
-                new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(6000)
+                new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(TestEnvironment.SHORT_TIMEOUT_MS)
         );
     }
 
@@ -138,7 +140,7 @@ public class MaterialsListPage {
         // підтвердження — Enter (у codegen був клік по якомусь ._button_*)
         page.keyboard().press("Enter");
 
-        page.waitForTimeout(1500);
+        page.waitForTimeout(TestEnvironment.MEDIUM_DELAY_MS);
 
     }
 
@@ -178,13 +180,13 @@ public class MaterialsListPage {
         page.keyboard().press("Control+A");
         page.keyboard().press("Backspace");
 
-        page.waitForTimeout(2500);
+        page.waitForTimeout(TestEnvironment.SEARCH_DELAY_MS);
         // 3) якщо є спінер — дочекаємося, що він зник (не валимося, якщо його немає)
 
         // 2) вводимо терм
         searchByItemInput.fill(expectedName);
 
-        page.waitForTimeout(2500);
+        page.waitForTimeout(TestEnvironment.SEARCH_DELAY_MS);
 
         waitFirstRowVisible();
         // якщо пошук підтверджується Enter — розкоментуй:

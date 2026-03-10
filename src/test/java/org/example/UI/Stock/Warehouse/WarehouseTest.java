@@ -5,6 +5,7 @@ import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import net.datafaker.Faker;
 import org.assertj.core.api.Assertions;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
+import org.example.config.TestEnvironment;
 import org.example.UI.Models.Warehouse;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
 import org.example.UI.PageObjectModels.Stock.StockPage;
@@ -42,7 +43,7 @@ public class WarehouseTest extends PlaywrightUiLoginBaseTest {
     @Test
     public void createWarehouseTest() {
         PlaywrightAssertions.assertThat(stockPage.warehousesTabButton())
-                .isVisible(new LocatorAssertions.IsVisibleOptions().setTimeout(20_000));
+                .isVisible(new LocatorAssertions.IsVisibleOptions().setTimeout(TestEnvironment.DIALOG_TIMEOUT_MS));
 
         createNewLocationPopUpPage = warehousesListPage.clickOnAddWarehouseButton();
 

@@ -1,5 +1,8 @@
 package org.example.UI.Material;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import net.datafaker.Faker;
 import org.example.BaseUITestExtension.PlaywrightUiLoginBaseTest;
 import org.example.UI.PageObjectModels.Alerts.AlertUtils;
 import org.example.UI.PageObjectModels.Catalog.CatalogPage;
@@ -13,10 +16,10 @@ import org.junit.jupiter.api.*;
 import org.assertj.core.api.Assertions;
 import org.example.UI.Models.Material;
 
-import java.util.Random;
-
 import static org.example.domain.LocationName.WAREHOUSE_MAIN;
 
+@Epic("Materials")
+@Feature("Material in Catalog CRUD")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
     MaterialPage materialPage;
@@ -26,9 +29,9 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
     MaterialStockSetupPage stockSetupPage;
     MaterialsListPage materialsListPage;
 
+    private final Faker faker = new Faker();
     private final String defaultVariation = "Single";
     private final String defaultUnitOfMeasurement = "Ea";
-    //private final String warehouse = "WarehouseMain";
 
     @BeforeEach
     public void setUp() {
@@ -39,14 +42,14 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
     }
 
     Material material = new Material(
-            "Material" + new Random().nextInt(100000),
-            "ITEM-" + new Random().nextInt(100000),
+            "Material" + new Faker().number().numberBetween(10000, 99999),
+            "ITEM-" + new Faker().number().numberBetween(10000, 99999),
             "Sample description",
             "BrandXXX",
             "ManufacturerYYY",
             "CategoryZZZ",
-            defaultUnitOfMeasurement,
-            defaultVariation,
+            "Ea",
+            "Single",
             "Single Description",
             25.5,
             15.5,
@@ -68,7 +71,7 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
         materialSpecsPage.setBrand(material.brand);
         materialSpecsPage.setManufacturer(material.manufacturer);
 
-        materialSpecsPage.clickAddMaterialVariantButton();
+        //materialSpecsPage.clickAddMaterialVariantButton();
         materialSpecsPage.setVariantName(material.variationName);
         materialSpecsPage.setVariantDescription(material.variationDescription);
 
@@ -102,20 +105,19 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
     }
 
     Material editedMaterial = new Material(
-            "Material-edited" + new Random().nextInt(100000),
-            "ITEM-edited" + new Random().nextInt(100000),
+            "Material-edited" + new Faker().number().numberBetween(10000, 99999),
+            "ITEM-edited" + new Faker().number().numberBetween(10000, 99999),
             "Sample description-edited",
             "BrandXXX-edited",
             "ManufacturerYYY-edited",
             "CategoryZZZ",
-            defaultUnitOfMeasurement,
-            defaultVariation,
+            "Ea",
+            "Single",
             "Single Description-edited",
             25.5,
             15.5,
             1000
     );
-
 
     @DisplayName("Update Material in the Catalog")
     @Order(1)
@@ -130,7 +132,6 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
 
         waitForElementPresent(firstNameForEditing);
 
-        // 3️⃣ Заповнити основну інформацію
         materialSpecsPage.setMaterialName(editedMaterial.name);
         materialSpecsPage.setItemNumber(editedMaterial.itemNumber);
         materialSpecsPage.setDescription(editedMaterial.description);
@@ -142,7 +143,6 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
         waitForElementPresent(editedMaterial.name);
         Assertions.assertThat(materialsListPage.getFirstMaterialNameInTheList()).isEqualTo(editedMaterial.name);
         Assertions.assertThat(materialsListPage.getFirstItemNumberInTheList()).isEqualTo(editedMaterial.itemNumber);
-
     }
 
     @DisplayName("Delete Material Test")
@@ -165,8 +165,4 @@ public class MaterialInCatalogTest extends PlaywrightUiLoginBaseTest {
         waitForElementRemoved(firstNameForDeleting);
         Assertions.assertThat(materialsListPage.getMaterialNamesList()).doesNotContain(firstNameForDeleting);
     }
-
-
-
-
 }

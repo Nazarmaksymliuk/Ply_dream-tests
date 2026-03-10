@@ -6,6 +6,7 @@ import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Stock.Trucks.TrucksListPage;
 import org.example.UI.PageObjectModels.Stock.Warehouse.WarehousesListPage;
+import org.example.config.TestEnvironment;
 
 public class StockPage {
     private final Page page;
@@ -98,7 +99,7 @@ public class StockPage {
         warehousesTabButton.waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.VISIBLE)
-                        .setTimeout(15000)
+                        .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS)
         );
     }
 

@@ -5,6 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Utils.LocationSelect;
+import org.example.config.TestEnvironment;
 
 import java.util.List;
 
@@ -111,7 +112,7 @@ public class ConsumableStockSetupPage {
     public void verifyIfErrorAppears() {
         try {
             errorMessageToast.waitFor(new Locator.WaitForOptions()
-                    .setTimeout(5000)
+                    .setTimeout(TestEnvironment.SHORT_TIMEOUT_MS)
                     .setState(WaitForSelectorState.VISIBLE));
             String message = errorMessageToast.textContent();
             System.out.println("❌ Error appears: " + message);

@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.config.TestEnvironment;
 
 public class TruckFormPopUpPage {
     private final Page page;
@@ -36,7 +37,7 @@ public class TruckFormPopUpPage {
     public void waitForLoaded() {
         dialogRoot.waitFor(new Locator.WaitForOptions()
                 .setState(WaitForSelectorState.VISIBLE)
-                .setTimeout(15000));
+                .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
     }
 
     public void setTruckName(String value)  { nameInput.fill(value); }

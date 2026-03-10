@@ -6,6 +6,7 @@ import com.microsoft.playwright.assertions.LocatorAssertions;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import org.assertj.core.api.Assertions;
 import org.example.Api.helpers.LocationsHelper.LocationsClient;
+import org.example.config.TestEnvironment;
 import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
 import org.example.UI.Models.ClientContacts;
 import org.example.UI.Models.Job;
@@ -123,7 +124,7 @@ public class JobsUsingAPITest extends PlaywrightUiApiBaseTest {
                 .isEqualTo("The job '%s' has been successfully added", customJob.jobName);
 
         PlaywrightAssertions.assertThat(activeJobsPage.getAlertMessageLocator())
-                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(15000));
+                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
 
         activeJobsPage.waitForJobVisible(customJob.jobName);
         Assertions.assertThat(activeJobsPage.getFirstJobName()).isVisible();
@@ -166,7 +167,7 @@ public class JobsUsingAPITest extends PlaywrightUiApiBaseTest {
                 .isEqualTo("The job has been successfully updated");
 
         PlaywrightAssertions.assertThat(activeJobsPage.getAlertMessageLocator())
-                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(15000));
+                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
 
         activeJobsPage.waitForJobVisible(editedJob.jobName);
         Assertions.assertThat(activeJobsPage.getFirstJobName()).isVisible();
@@ -181,7 +182,7 @@ public class JobsUsingAPITest extends PlaywrightUiApiBaseTest {
     @Test
     public void FinishJobTest() {
         PlaywrightAssertions.assertThat(activeJobsPage.getJobsTitle())
-                .isVisible(new LocatorAssertions.IsVisibleOptions().setTimeout(60000));
+                .isVisible(new LocatorAssertions.IsVisibleOptions().setTimeout(TestEnvironment.NAVIGATION_TIMEOUT_MS));
 
         activeJobsPage.waitForJobsToLoad();
         Assertions.assertThat(activeJobsPage.getFirstJobName()).isVisible();
@@ -199,7 +200,7 @@ public class JobsUsingAPITest extends PlaywrightUiApiBaseTest {
         PlaywrightAssertions.assertThat(activeJobsPage.getAlertMessageLocator()).isVisible();
         Assertions.assertThat(activeJobsPage.getAlertMessage()).isEqualTo("Job is successfully completed");
         PlaywrightAssertions.assertThat(activeJobsPage.getAlertMessageLocator())
-                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(15000));
+                .isHidden(new LocatorAssertions.IsHiddenOptions().setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS));
 
         PlaywrightAssertions.assertThat(activeJobsPage.getJobListLocator()).isVisible();
         Assertions.assertThat(activeJobsPage.getJobList()).doesNotContain(jobForFinishName);

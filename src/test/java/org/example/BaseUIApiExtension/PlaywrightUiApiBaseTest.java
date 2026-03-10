@@ -2,70 +2,47 @@ package org.example.BaseUIApiExtension;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.*;
-import org.example.Api.helpers.LoginHelper.LoginClient;
-import org.example.Api.helpers.LoginHelper.LoginResponse;
 import org.example.BaseAPITestExtension.BaseApiTest;
-import org.example.BaseUITestExtension.TestBase.PlaywrightBaseTest;
 import org.example.UI.PageObjectModels.Authorization.SignIn.SignInPage;
+import org.example.config.TestEnvironment;
+import org.example.creds.Users;
+import org.example.routes.Routes;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.example.routes.Routes.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Combined UI + API base test.
+ * <p>
+ * Inherits API contexts ({@code userApi}, {@code adminApi}) from {@link BaseApiTest}.
+ * Adds browser automation (Playwright) with UI login.
+ * </p>
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
 
-    // =======================
-    // URLs
-    // =======================
-    protected static final String UI_BASE  = "https://dev.getply.com";
-    protected static final String API_BASE = "https://dev-api.getply.com";
+    private static final Logger log = LoggerFactory.getLogger(PlaywrightUiApiBaseTest.class);
+
     protected static final String DASHBOARD_PATH = "/dashboard";
 
-    // =======================
-    // Creds (same user for UI + API)
-    // =======================
-    protected static final String USER_EMAIL =
-            System.getenv().getOrDefault("PLY_EMAIL", "maksimlukoleg56@gmail.com");
-    protected static final String USER_PASSWORD =
-            System.getenv().getOrDefault("PLY_PASSWORD", "Test+1234");
-
-    protected APIRequestContext adminApi;
-    private static volatile String cachedAdminToken;
-
-    protected static final String ADMIN_EMAIL =
-            System.getenv().getOrDefault("PLY_ADMIN_EMAIL", "admin@getply.com");
-    protected static final String ADMIN_PASSWORD =
-            System.getenv().getOrDefault("PLY_ADMIN_PASSWORD", "WJoXYjE1n8m8!J");
-
-    // =======================
-    // Playwright UI objects
-    // =======================
-    protected Playwright playwright;
     protected Browser browser;
     protected BrowserContext context;
     protected Page page;
 
-    // =======================
-    // API context (user)
-    // =======================
-    protected APIRequestContext userApi;
-
-    // =======================
-    // Cached token (for whole JVM run)
-    // =======================
-    private static volatile String cachedUserToken;
-
     @BeforeAll
-    void beforeAll_setupUiAndApi() throws IOException {
-        playwright = Playwright.create();
+    void beforeAll_setupUi() throws IOException {
+        // BaseApiTest.setUpApi() should have already run and set up userApi, adminApi, playwright.
+        // Safety net: if parent @BeforeAll didn't execute (cross-package visibility),
+        // initialise playwright ourselves.
+        if (playwright == null) {
+            log.warn("playwright was null – calling setUpApi() explicitly");
+            setUpApi();
+        }
 
         boolean headless = Boolean.parseBoolean(
                 System.getProperty("headless",
@@ -82,66 +59,46 @@ public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
                         ))
         );
 
-        // =======================
-        // 1) API LOGIN (user) -> userApi
-        // =======================
-        String userToken = getOrCreateUserToken(USER_EMAIL, USER_PASSWORD);
-        userApi = createApiContextWithBearer(userToken);
-        String adminToken = getOrCreateToken("admin", ADMIN_EMAIL, ADMIN_PASSWORD);
-        adminApi = createApiContextWithBearer(adminToken);
-
-        // =======================
-        // 2) UI LOGIN (same user)
-        // =======================
         context = browser.newContext(new Browser.NewContextOptions()
                 .setIgnoreHTTPSErrors(true)
                 .setBypassCSP(true)
         );
 
-        context.setDefaultTimeout(50_000);
-        context.setDefaultNavigationTimeout(50_000);
+        context.setDefaultTimeout(TestEnvironment.DEFAULT_TIMEOUT_MS);
+        context.setDefaultNavigationTimeout(TestEnvironment.DEFAULT_TIMEOUT_MS);
 
         page = context.newPage();
 
-        // optional diagnostics
-        page.onResponse(r -> { if (r.status() >= 400) System.out.println("[HTTP " + r.status() + "] " + r.url()); });
-        page.onConsoleMessage(m -> System.out.println("[CONSOLE] " + m.type() + " " + m.text()));
+        page.onResponse(r -> {
+            if (r.status() >= 400) log.warn("[HTTP {}] {}", r.status(), r.url());
+        });
+        page.onConsoleMessage(m -> log.debug("[CONSOLE] {} {}", m.type(), m.text()));
 
-        page.navigate(UI_BASE, new Page.NavigateOptions().setWaitUntil(WaitUntilState.COMMIT));
+        page.navigate(Routes.BASE_URL, new Page.NavigateOptions().setWaitUntil(WaitUntilState.COMMIT));
 
         SignInPage signIn = new SignInPage(page);
         page.waitForResponse(
                 r -> r.url().contains("/users") && r.status() == 200,
-                () -> signIn.signIntoApplication(USER_EMAIL, USER_PASSWORD)
+                () -> signIn.signIntoApplication(Users.ADMIN.email(), Users.ADMIN.password())
         );
 
-        // sanity: we are not on sign-in
         page.waitForURL(u -> !u.toString().contains("/sign-in"),
-                new Page.WaitForURLOptions().setTimeout(60_000));
-
-//        // optional: go to dashboard
-//        page.navigate(UI_BASE + DASHBOARD_PATH, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
-//        assertFalse(page.url().contains("/sign-in"), "UI login failed, still on /sign-in");
+                new Page.WaitForURLOptions().setTimeout(TestEnvironment.NAVIGATION_TIMEOUT_MS));
     }
 
     @AfterAll
-    void afterAll_closeEverything() {
-        if (userApi != null) userApi.dispose();
-        if (adminApi != null) adminApi.dispose();
+    void afterAll_closeBrowser() {
         if (context != null) context.close();
         if (browser != null) browser.close();
-        if (playwright != null) playwright.close();
+        // playwright and API contexts are closed by BaseApiTest.tearDownApi()
     }
 
-    // =======================
-    // UI helper
-    // =======================
     protected void openPath(String path) {
         page.navigate(
-                UI_BASE + path,
+                Routes.BASE_URL + path,
                 new Page.NavigateOptions()
                         .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
-                        .setTimeout(100_000)
+                        .setTimeout(TestEnvironment.NAVIGATION_TIMEOUT_MS)
         );
     }
 
@@ -149,7 +106,7 @@ public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
         page.getByText(elementName).first().waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.VISIBLE)
-                        .setTimeout(15000)
+                        .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS)
         );
     }
 
@@ -157,125 +114,7 @@ public abstract class PlaywrightUiApiBaseTest extends BaseApiTest {
         page.getByText(elementName).waitFor(
                 new Locator.WaitForOptions()
                         .setState(WaitForSelectorState.DETACHED)
-                        .setTimeout(15000)
+                        .setTimeout(TestEnvironment.ELEMENT_WAIT_TIMEOUT_MS)
         );
-    }
-
-    // =======================
-    // API helpers
-    // =======================
-    private APIRequestContext createApiContextWithBearer(String jwt) {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
-        headers.put("Accept", "*/*");
-        headers.put("Authorization", "Bearer " + jwt);
-
-        return playwright.request().newContext(
-                new APIRequest.NewContextOptions()
-                        .setBaseURL(API_BASE)
-                        .setExtraHTTPHeaders(headers)
-                        .setIgnoreHTTPSErrors(true)
-        );
-    }
-
-    private static String getOrCreateUserToken(String email, String password) throws IOException {
-        if (cachedUserToken != null) return cachedUserToken;
-
-        synchronized (PlaywrightUiApiBaseTest.class) {
-            if (cachedUserToken != null) return cachedUserToken;
-
-            Map<String, String> headers = Map.of(
-                    "Content-Type", "application/json",
-                    "Accept", "*/*"
-            );
-
-            System.out.println("=== LOGIN (USER API) START ===");
-
-            try (Playwright pw = Playwright.create()) {
-                APIRequestContext loginContext = pw.request().newContext(
-                        new APIRequest.NewContextOptions()
-                                .setBaseURL(API_BASE)
-                                .setExtraHTTPHeaders(headers)
-                                .setIgnoreHTTPSErrors(true)
-                );
-
-                LoginClient loginClient = new LoginClient(loginContext);
-                APIResponse loginResponse = loginClient.login(email, password);
-
-                int status = loginResponse.status();
-                String body = loginResponse.text();
-
-                System.out.println("LOGIN (user) STATUS: " + status);
-                // System.out.println("LOGIN (user) BODY: " + body); // не друкуй токен
-
-                String token;
-                if (status == 200 || status == 201) {
-                    LoginResponse parsed = loginClient.parseLoginResponse(loginResponse);
-                    token = parsed.getToken();
-                } else if (status == 409 && body.contains("uq_refresh_token")) {
-                    token = extractTokenFromConflict(body);
-                } else {
-                    throw new IllegalStateException("User API login failed: status=" + status + ", body=" + body);
-                }
-
-                if (token == null || token.isBlank()) {
-                    throw new IllegalStateException("User token is null/empty after API login");
-                }
-
-                cachedUserToken = token;
-                return token;
-            }
-        }
-    }
-    private static String getOrCreateToken(String label, String email, String password) throws IOException {
-        if ("admin".equals(label) && cachedAdminToken != null) return cachedAdminToken;
-        if ("user".equals(label) && cachedUserToken != null) return cachedUserToken;
-
-        synchronized (PlaywrightUiApiBaseTest.class) {
-            if ("admin".equals(label) && cachedAdminToken != null) return cachedAdminToken;
-            if ("user".equals(label) && cachedUserToken != null) return cachedUserToken;
-
-            Map<String, String> headers = Map.of("Content-Type", "application/json", "Accept", "*/*");
-            System.out.println("=== LOGIN (" + label.toUpperCase() + " API) START ===");
-
-            try (Playwright pw = Playwright.create()) {
-                APIRequestContext loginContext = pw.request().newContext(
-                        new APIRequest.NewContextOptions()
-                                .setBaseURL(API_BASE)
-                                .setExtraHTTPHeaders(headers)
-                                .setIgnoreHTTPSErrors(true)
-                );
-
-                LoginClient loginClient = new LoginClient(loginContext);
-                APIResponse loginResponse = loginClient.login(email, password);
-
-                int status = loginResponse.status();
-                String body = loginResponse.text();
-
-                String token;
-                if (status == 200 || status == 201) {
-                    LoginResponse parsed = loginClient.parseLoginResponse(loginResponse);
-                    token = parsed.getToken();
-                } else if (status == 409 && body.contains("uq_refresh_token")) {
-                    token = extractTokenFromConflict(body);
-                } else {
-                    throw new IllegalStateException(label + " API login failed: status=" + status + ", body=" + body);
-                }
-
-                if (token == null || token.isBlank()) throw new IllegalStateException(label + " token is null/empty");
-
-                if ("admin".equals(label)) cachedAdminToken = token;
-                else cachedUserToken = token;
-
-                return token;
-            }
-        }
-    }
-
-
-    private static String extractTokenFromConflict(String body) {
-        Pattern p = Pattern.compile("Key \\(token\\)=\\(([^)]+)\\)");
-        Matcher m = p.matcher(body);
-        return m.find() ? m.group(1) : null;
     }
 }

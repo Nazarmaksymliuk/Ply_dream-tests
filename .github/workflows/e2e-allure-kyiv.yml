@@ -2,21 +2,158 @@ name: E2E Tests & Allure (Kyiv 07:00)
 
 on:
   schedule:
-    - cron: "0 4 * 4-10 *"        # 07:00 Kyiv у період DST
-    - cron: "0 5 * 11,12,1,2,3 *" # 07:00 Kyiv у стандартний час
+    - cron: "0 3 * 4-10 *"        # 07:00 Kyiv (DST)
+    - cron: "0 4 * 11,12,1,2,3 *" # 07:00 Kyiv (standard)
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   test-and-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       MAVEN_OPTS: -Xmx2g
       PLAYWRIGHT_HEADLESS: "true"
       PLAYWRIGHT_BROWSERS_PATH: "0"
+      HEADLESS: "true" # твій Java код читає HEADLESS
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # ---------- VPN BLOCK ----------
+
+      - name: Install OpenVPN + tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openvpn curl dnsutils netcat-openbsd
+
+      - name: Start VPN (OpenVPN via .ovpn profile)
+        env:
+          OVPN_PROFILE:  ${{ secrets.OVPN_PROFILE }}
+          OVPN_USERNAME: ${{ secrets.OVPN_USERNAME }}
+          OVPN_PASSWORD: ${{ secrets.OVPN_PASSWORD }}
+        run: |
+          printf '%s\n' "$OVPN_PROFILE" > config.ovpn
+          printf '%s\n%s\n' "$OVPN_USERNAME" "$OVPN_PASSWORD" > auth.txt
+          chmod 600 auth.txt || true
+
+          sudo openvpn --config config.ovpn --auth-user-pass auth.txt > openvpn.log 2>&1 &
+
+          for i in {1..90}; do
+            if grep -q "Initialization Sequence Completed" openvpn.log; then
+              echo "VPN UP"
+              break
+            fi
+            sleep 1
+          done
+
+          echo "===== OpenVPN LOG (FULL) ====="
+          cat openvpn.log || true
+          echo "================================"
+
+          if ! grep -q "Initialization Sequence Completed" openvpn.log; then
+            echo "❌ VPN FAILED — дивись лог вище"
+            exit 1
+          fi
+
+          echo "Public IP after VPN:"
+          curl -s https://ifconfig.me || true
+          echo
+
+      # ✅ ROUTES: ensure VPC reachable via tun0
+      - name: Add route to VPC (172.31.0.0/16) via tun0
+        run: |
+          echo "=== ip addr (after VPN) ==="
+          ip addr
+          echo
+          echo "=== ip route (before) ==="
+          ip route
+          echo
+          echo "Adding route 172.31.0.0/16 dev tun0"
+          sudo ip route add 172.31.0.0/16 dev tun0 || true
+          echo
+          echo "=== ip route (after) ==="
+          ip route
+
+      # ✅ DNS + Connectivity debug (NO /etc/hosts)
+      - name: Debug DNS + connectivity to stage (no hosts hacks)
+        run: |
+          echo "=== /etc/resolv.conf ==="
+          cat /etc/resolv.conf || true
+          echo
+
+          echo "=== getent hosts ==="
+          getent hosts stage.getply.com || true
+          echo
+
+          echo "=== dig stage.getply.com ==="
+          dig stage.getply.com || true
+          echo
+
+          echo "=== dig CNAME (trace) ==="
+          dig +trace stage.getply.com || true
+          echo
+
+          echo "=== TCP 443 to stage.getply.com ==="
+          nc -vz -w 8 stage.getply.com 443 || true
+          echo
+
+          echo "=== Curl (30s max) ==="
+          curl -vkL --max-time 30 https://stage.getply.com/ || true
+
+      # (Optional) Try to apply DNS pushed by OpenVPN if present in log
+      - name: Try apply VPN DNS from OpenVPN log (best-effort)
+        run: |
+          # Якщо у вашому openvpn.log є push "dhcp-option DNS X.X.X.X" — спробуємо витягнути і прописати.
+          DNS_IP=$(grep -Eo 'dhcp-option DNS [0-9.]+|DHCP-option DNS [0-9.]+' openvpn.log | head -n 1 | awk '{print $3}')
+          if [ -z "$DNS_IP" ]; then
+            echo "No pushed DNS found in openvpn.log (this is likely the problem)."
+            exit 0
+          fi
+
+          echo "Found pushed DNS: $DNS_IP"
+          echo "Setting /etc/resolv.conf to use VPN DNS (best-effort)"
+          sudo bash -c "printf 'nameserver %s\noptions timeout:1 attempts:2\n' '$DNS_IP' > /etc/resolv.conf"
+
+          echo "=== /etc/resolv.conf (after) ==="
+          cat /etc/resolv.conf
+          echo
+
+          echo "=== dig stage.getply.com (after) ==="
+          dig stage.getply.com || true
+          echo
+
+          echo "=== TCP 443 (after) ==="
+          nc -vz -w 8 stage.getply.com 443 || true
+          echo
+
+          echo "=== Curl (after) ==="
+          curl -vkL --max-time 30 https://stage.getply.com/ || true
+
+      # ✅ Connectivity check to test target (dev-api)
+      - name: Debug connectivity to dev-api.getply.com
+        run: |
+          echo "=== DNS resolve dev-api.getply.com ==="
+          dig +short dev-api.getply.com || true
+          echo ""
+          echo "=== TCP 443 to dev-api.getply.com ==="
+          nc -vz -w 8 dev-api.getply.com 443 || true
+          echo ""
+          echo "=== Curl login endpoint (expect 4xx, proves reachability) ==="
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" --max-time 15 \
+            -X POST https://dev-api.getply.com/v3/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"test","password":"test"}' || true
+
+      # ---------- JAVA + TESTS ----------
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
@@ -25,20 +162,106 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ms-playwright-${{ runner.os }}-v1
+      - name: Install Playwright system deps & browsers
+        run: |
+          mvn -B org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+            -Dexec.mainClass=com.microsoft.playwright.CLI \
+            -Dexec.args="install --with-deps"
 
-      - name: Run tests (Failsafe:clean verify)
+      - name: Run tests
+        env:
+          PLAYWRIGHT_HEADLESS: "true"
+          PLAYWRIGHT_BROWSERS_PATH: "0"
+          HEADLESS: "true"
         run: mvn -B clean verify
-        
+
+      # ---------- DIAGNOSTICS (always, even when tests fail) ----------
+
+      - name: Print failsafe summary
+        if: always()
+        run: |
+          echo "=== Failsafe Summary ==="
+          cat target/failsafe-reports/failsafe-summary.xml 2>/dev/null || echo "No failsafe-summary.xml found"
+          echo ""
+          echo "=== Test failures ==="
+          for f in target/failsafe-reports/*.xml; do
+            [ -f "$f" ] || continue
+            if grep -qE '<failure|<error' "$f" 2>/dev/null; then
+              echo "--- $(basename "$f") ---"
+              grep -A5 '<failure\|<error' "$f" || true
+              echo ""
+            fi
+          done
+          echo "=== Allure results count ==="
+          find target/allure-results -name '*-result.json' 2>/dev/null | wc -l || echo "0"
+
+      - name: Upload failsafe reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failsafe-reports
+          path: target/failsafe-reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+      # ---------- UPLOAD PLAYWRIGHT ARTIFACTS ----------
+
+      - name: Upload Playwright traces & screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            **/build/trace*.zip
+            **/build/traces/**/*.zip
+            **/build/screenshots/**
+            **/build/ui-auth-storage-state.json
+            **/build/ui-auth.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      # ---------- ALLURE ----------
+
       - name: Generate Allure report
+        if: always()
         run: mvn -B allure:report
 
-      - name: Upload Allure report (artifact)
+      - name: Upload Allure report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: target/allure-report
+
+      - name: Upload Allure site
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-site
+          path: target/allure-report/**
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy-allure:
+    needs: test-and-report
+    if: always()
+    runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download Allure site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-site
+          path: ./allure-site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./allure-site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
