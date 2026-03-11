@@ -2,6 +2,7 @@ package org.example.UI.Material;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
+import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import org.assertj.core.api.Assertions;
 import org.example.Api.helpers.LocationsHelper.LocationsClient;
 import org.example.BaseUIApiExtension.PlaywrightUiApiBaseTest;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.util.Random;
+
+import static org.example.domain.LocationName.WAREHOUSE_MAIN;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
@@ -69,7 +72,7 @@ public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
             "Sample description",
             "BrandXXX",
             "ManufacturerYYY",
-            "CategoryZZZ",
+            "Aqa-test",
             defaultUnitOfMeasurement,
             defaultVariation,
             "Single Description",
@@ -83,7 +86,7 @@ public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
             "Sample description",
             "BrandXXX",
             "ManufacturerYYY",
-            "CategoryZZZ",
+            "Aqa-test",
             defaultUnitOfMeasurement,
             defaultVariation,
             "Single Description",
@@ -103,6 +106,7 @@ public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
         materialSpecsPage.setDescription(material.description);
         materialSpecsPage.setBrand(material.brand);
         materialSpecsPage.setManufacturer(material.manufacturer);
+        materialSpecsPage.chooseCategory(material.category);
 
         //materialSpecsPage.clickAddMaterialVariantButton();
         materialSpecsPage.setVariantName(material.variationName);
@@ -126,6 +130,15 @@ public class MaterialInCatalogUsingApiTest extends PlaywrightUiApiBaseTest {
         AlertUtils.waitForAlertVisible(page);
         Assertions.assertThat(AlertUtils.getAlertText(page)).contains("successfully");
         AlertUtils.waitForAlertHidden(page);
+
+        Assertions.assertThat(materialsListPage.getFirstMaterialNameInTheList()).isEqualTo(material.name);
+        Assertions.assertThat(materialsListPage.getFirstItemNumberInTheList()).isEqualTo(material.itemNumber);
+        Assertions.assertThat(materialsListPage.getFirstCategoryInTheList()).isEqualTo(material.category);
+
+        materialsListPage.clickFirstLocationArrowDown();
+
+        Assertions.assertThat(materialsListPage.getFirstMaterialVariation()).isEqualTo(material.variationName);
+        Assertions.assertThat(materialsListPage.getQtyFromMaterialLocation()).isEqualTo(material.quantity);
     }
 
     @Test

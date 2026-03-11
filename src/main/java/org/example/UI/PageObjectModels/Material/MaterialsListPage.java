@@ -7,6 +7,7 @@ import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.example.UI.PageObjectModels.Material.MaterialsCreationFlow.MaterialSpecsPage;
 import org.example.UI.PageObjectModels.Transfer.TransferModalPage;
+import org.example.UI.PageObjectModels.Utils.Assertions.RootAssertions;
 import org.example.UI.PageObjectModels.Utils.Waits.WaitUtils;
 
 import org.example.config.TestEnvironment;
@@ -26,6 +27,7 @@ public class MaterialsListPage {
     private final Locator materialFirstNameInTheList;
     private final Locator materialNamesInTheList;
     private final Locator firstItemNumberInTheList;
+    private final Locator firstCategoryInTheList;
     private final Locator firstMaterialVariation;
 
     private final Locator firstRowThreeDots;
@@ -66,6 +68,7 @@ public class MaterialsListPage {
         materialNamesInTheList      = page.locator("a.link_black[href^='/material/']");
         firstItemNumberInTheList    = page.locator(".cursor-pointer.w-fit").first();
         firstMaterialVariation      = page.locator(".status_xs.variation_name").first();
+        firstCategoryInTheList      = page.locator(".status.status_category").first();
 
         firstRowThreeDots = page.locator("[class^='_table_item_'][data-testid='MoreHorizIcon']");
         menuItemEdit      = page.getByRole(AriaRole.MENUITEM,   new GetByRoleOptions().setName("Edit Material"));
@@ -269,6 +272,10 @@ public class MaterialsListPage {
         return firstItemNumberInTheList.innerText();
     }
 
+    public String getFirstCategoryInTheList() {
+        return firstCategoryInTheList.innerText();
+    }
+
     public String getFirstMaterialVariation() {
         waitForVisible(firstMaterialVariation);
         waitFirstRowVisible();
@@ -345,4 +352,7 @@ public class MaterialsListPage {
         return new BigDecimal(parts[1].trim()).setScale(2, RoundingMode.HALF_UP);
     }
 
+    public void assertThatRootContainsText(String text){
+        RootAssertions.assertTextOnRoot(page, text);
+    }
 }

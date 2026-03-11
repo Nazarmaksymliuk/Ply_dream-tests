@@ -24,6 +24,10 @@ public class WaitUtils {
                 .setTimeout(timeoutMs));
     }
 
+    public static void waitForText(Page page, String text) {
+        page.getByText(text).first().waitFor();
+    }
+
     public static void waitForVisible(Locator locator) {
         waitForVisible(locator, DEFAULT_TIMEOUT);
     }

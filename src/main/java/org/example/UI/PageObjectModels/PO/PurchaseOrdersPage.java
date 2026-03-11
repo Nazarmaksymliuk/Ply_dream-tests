@@ -71,6 +71,14 @@ public class PurchaseOrdersPage {
     // Supplier: same wrapper error class, filtered by text "Supplier".
     private final Locator supplierValidationError;
 
+    private final Locator changeStatusMenuItem;
+    private final Locator changeStatusDialog;
+    private final Locator statusDropdownIndicator;
+    private final Locator saveChangesBtn;
+    private final Locator boardViewBtn;
+
+    private final Locator sendEmailToSupplierCheckbox;
+
     public PurchaseOrdersPage(Page page) {
         this.page = page;
 
@@ -141,6 +149,24 @@ public class PurchaseOrdersPage {
         supplierValidationError = page.locator(".react_select_wrapper_error")
                 .filter(new Locator.FilterOptions().setHasText("Supplier"))
                 .locator("span.input_error");
+
+        changeStatusMenuItem = page.getByRole(AriaRole.MENUITEM)
+                .filter(new Locator.FilterOptions().setHasText("Change status"));
+
+        changeStatusDialog = page.getByRole(AriaRole.DIALOG);
+
+// Відкриває dropdown — react-select реагує на mousedown на стрілці,
+// а не на click по загальному контролю
+        statusDropdownIndicator = changeStatusDialog
+                .locator(".react_select__dropdown-indicator");
+
+        saveChangesBtn = changeStatusDialog
+                .getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Save changes"));
+
+        boardViewBtn = page.getByRole(AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Board"));
+
+        sendEmailToSupplierCheckbox = page.getByTestId("ply_checkbox");
     }
 
     // ─── Navigation / open form ───────────────────────────────────────────────
@@ -357,6 +383,103 @@ public class PurchaseOrdersPage {
         assertThat(supplierValidationError).isVisible();
         assertThat(supplierValidationError).hasText("Field is required");
     }
+
+    /** Клікає «Change status» у контекстному меню ПО. */
+    public PurchaseOrdersPage clickChangeStatusFromMenu() {
+        waitForVisible(changeStatusMenuItem);
+        changeStatusMenuItem.click();
+        assertThat(changeStatusDialog).isVisible();
+        return this;
+    }
+
+    /**
+     * Вибирає потрібний статус у react-select всередині діалогу.
+     * Допустимі значення: "Waiting for approval", "Sent", "Confirmed",
+     *                     "Paid", "Partially Received", "Received",
+     *                     "Archived", "Canceled", "Declined"
+     *
+     * Dropdown відкривається через mousedown на стрілці (.react_select__dropdown-indicator),
+     * а опція вибирається за data-testid="ply_select_component_option_{STATUS_ID}".
+     */
+    public PurchaseOrdersPage selectStatusInDialog(String status) {
+        String optionTestId = "ply_select_component_option_" + toBoardColumnId(status);
+
+        // react-select відкривається тільки на mousedown, не на click
+        waitForVisible(statusDropdownIndicator);
+        statusDropdownIndicator.dispatchEvent("mousedown");
+
+        Locator option = page.getByTestId(optionTestId);
+        waitForVisible(option);
+        option.click();
+        return this;
+    }
+
+    /** Натискає «Save changes» у діалозі зміни статусу. */
+    public PurchaseOrdersPage confirmStatusChange() {
+        assertThat(saveChangesBtn).isEnabled();
+        saveChangesBtn.click();
+        assertThat(changeStatusDialog).not().isVisible();
+        return this;
+    }
+
+    public PurchaseOrdersPage confirmStatusChangeAndDoNotSendToSupplier() {
+        assertThat(saveChangesBtn).isEnabled();
+        assertThat(sendEmailToSupplierCheckbox).isVisible();
+        assertThat(sendEmailToSupplierCheckbox).isChecked();
+        sendEmailToSupplierCheckbox.uncheck();
+        assertThat(sendEmailToSupplierCheckbox).not().isChecked();
+        saveChangesBtn.click();
+        assertThat(changeStatusDialog).not().isVisible();
+        return this;
+    }
+
+    /** Перемикає вигляд на Board. */
+    public PurchaseOrdersPage switchToBoardView() {
+        waitForVisible(boardViewBtn);
+        boardViewBtn.click();
+        waitForLoaderDetached(page);
+        return this;
+    }
+
+    /**
+     * Перевіряє, що ПО з заданим номером знаходиться у колонці
+     * відповідного статусу на Board.
+     *
+     * Кожна колонка Board має атрибут data-rbd-draggable-id зі значенням
+     * у верхньому регістрі (наприклад DRAFT, WAITING_FOR_APPROVAL, SENT…).
+     * Метод маппить людський текст статусу → id колонки.
+     *
+     * @param poNumber номер ПО (наприклад "STATUS-PO-12345")
+     * @param status   відображуваний статус ("Draft", "Sent", "Confirmed" тощо)
+     */
+    public void assertPOInStatusColumnOnBoard(String poNumber, String status) {
+        String columnId = toBoardColumnId(status);
+
+        // Знаходимо колонку за data-rbd-draggable-id і перевіряємо,
+        // що всередині неї є текст з номером ПО
+        Locator statusColumn = page.locator(String.format("[data-rbd-draggable-id=%s]", columnId))
+                .filter(new Locator.FilterOptions().setHasText(poNumber));
+
+        assertThat(statusColumn).isVisible();
+    }
+
+    /** Маппінг відображуваного статусу → значення data-rbd-draggable-id колонки Board. */
+    private static String toBoardColumnId(String displayStatus) {
+        return switch (displayStatus) {
+            case "Draft"                -> "DRAFT";
+            case "Waiting for approval" -> "WAITING_FOR_APPROVAL";
+            case "Sent"                 -> "SENT";
+            case "Confirmed"            -> "CONFIRMED";
+            case "Paid"                 -> "PAID";
+            case "Partially Received"   -> "PARTIALLY_RECEIVED";
+            case "Received"             -> "RECEIVED";
+            case "Archived"             -> "ARCHIVED";
+            case "Canceled"             -> "CANCELED";
+            case "Declined"             -> "DECLINED";
+            default -> throw new IllegalArgumentException("Unknown PO status: " + displayStatus);
+        };
+    }
+
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
