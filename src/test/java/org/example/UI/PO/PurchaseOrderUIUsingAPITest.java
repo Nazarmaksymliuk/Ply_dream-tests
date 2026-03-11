@@ -26,7 +26,7 @@ public class PurchaseOrderUIUsingAPITest extends PlaywrightUiApiBaseTest {
     private final String poNumber      = "AQA-PO-" + new Random().nextInt(100000);
     private final String editedPoNumber = "UPD-AQA-PO-" + new Random().nextInt(100000);
 
-    // ✅ NEW: comments used in create / edit assertions
+    // NEW: comments used in create / edit assertions
     private final String poComment      = "AQA test comment for PO";
     private final String editedPoComment = "Updated AQA PO comment";
 

@@ -3,7 +3,11 @@ package org.example.UI.PageObjectModels.Material.MaterialsCreationFlow;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import org.example.UI.PageObjectModels.Utils.Waits.WaitUtils;
+
+import static org.example.UI.PageObjectModels.Utils.Waits.WaitUtils.waitForVisible;
 
 public class MaterialSpecsPage {
     private final Page page;
@@ -23,6 +27,10 @@ public class MaterialSpecsPage {
     private final Locator serializedCheckBox;
     private final Locator addNewMaterialButton;
     private final Locator specialorderItemCheckBox;
+    private final Locator chooseCategoryButton;
+    private final Locator searchCategoryInput;
+    private final Locator closeCategoryListButton;
+    private final Locator firstCategoryInTheList;
 
     // === Constructor ===
     public MaterialSpecsPage(Page page) {
@@ -42,9 +50,24 @@ public class MaterialSpecsPage {
         serializedCheckBox = page.getByTestId("ply_checkbox").nth(1);
         addNewMaterialButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add New Material"));
         specialorderItemCheckBox = page.getByTestId("ply_checkbox").nth(2);
+        chooseCategoryButton = page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Choose Category"));
+        searchCategoryInput = page.getByPlaceholder("Search category");
+        closeCategoryListButton = page.getByTestId("HighlightOffIcon");
+        firstCategoryInTheList = page.locator("button.grow.text-left");
     }
 
     // === Actions ===
+
+    public void chooseCategory(String categoryName) {
+        chooseCategoryButton.click();
+        searchCategoryInput.click();
+        searchCategoryInput.fill(categoryName);
+        page.waitForTimeout(2500);
+        WaitUtils.waitForText(page, categoryName);
+        page.waitForLoadState(LoadState.NETWORKIDLE);
+        firstCategoryInTheList.click();
+        closeCategoryListButton.click();
+    }
 
     public void setMaterialName(String materialValue) {
         materialNameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
